@@ -1,23 +1,24 @@
 \begin{table}[ht]
   \centering
-  \caption{TOST equivalence test: ST-GNN vs.\ ARIMA (squared forecast errors).}
+  \caption{TOST equivalence test: ST-GNN vs.\ ARIMA (RMSE difference).}
   \label{tab:tost}
   \begin{tabular}{lrr}
     \toprule
     Parameter & Value \\
     \midrule
     Equivalence margin (\% of ARIMA RMSE) & 10.0\\
-    Margin (absolute) & 0.305\\
-    Mean difference (ST-GNN - ARIMA) & 2.3472\\
-    TOST $p$-value & 0.932\\
-    Equivalence supported ($p < 0.05$) & YES\\
+    Margin (absolute RMSE) & 0.305\\
+    RMSE difference (ST-GNN - ARIMA) & 0.3879\\
+    TOST $p$-value & 0.643\\
+    Equivalence supported ($p < 0.05$) & NO\\
     $N$ & 292\\
     \bottomrule
   \end{tabular}
   \vspace{0.5em}
   \begin{minipage}{\linewidth}
     \footnotesize
-    \textit{Notes:} TOST tests whether mean difference in squared errors is within pre-specified margin.
-    H0: $|\text{mean diff}| \geq \text{margin}$ (not equivalent); H1: $|\text{mean diff}| < \text{margin}$ (equivalent).
+    \textit{Notes:} TOST tests whether the ex-Argentina RMSE difference is within a 10 percent margin based on the 22-country ARIMA RMSE (Argentina excluded).
+    H0: $|\text{RMSE diff}| \geq \text{margin}$ (not equivalent); H1: $|\text{RMSE diff}| < \text{margin}$ (equivalent).
+    Bootstrap SE estimation with 1000 resamples.
   \end{minipage}
 \end{table}

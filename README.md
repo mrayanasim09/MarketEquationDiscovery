@@ -119,7 +119,8 @@ cd paper
   title={Inflation Forecasting with Spatio-Temporal Graph Neural Networks},
   author={Author},
   journal={SSRN},
-  year={2026}
+  year={2026},
+  url={https://github.com/mrayanasim09/MarketEquationDiscovery}
 }
 ```
 

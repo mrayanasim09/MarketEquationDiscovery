@@ -173,11 +173,12 @@ def main() -> None:
     )
     
     # TOST equivalence test with margin based on 10% of ARIMA RMSE
+    # Test RMSE difference directly (not squared error) to match units
     arima_rmse = baseline_metrics["arima"]["metrics"]["test"]["rmse"]
-    equiv_margin = 0.1 * arima_rmse  # 10% margin
+    equiv_margin = 0.1 * arima_rmse  # 10% margin in RMSE units
     tost_arima = tost_equivalence_test(
         merged["actual"].values, merged["stgnn_pred"].values, merged["arima_pred"].values,
-        margin=equiv_margin, loss="squared"
+        margin=equiv_margin, loss="rmse"  # Use RMSE difference, not squared error
     )
     
     # Apples-to-apples comparison: same country sets

@@ -382,13 +382,46 @@ def tost_equivalence_test(
     e_b = actual - pred_b
     if loss == "squared":
         d = e_a**2 - e_b**2
+    elif loss == "rmse":
+        # For RMSE, compute the difference in RMSE values directly
+        rmse_a = np.sqrt(np.mean(e_a**2))
+        rmse_b = np.sqrt(np.mean(e_b**2))
+        d_mean = rmse_a - rmse_b
+        # Use bootstrap to estimate SE for RMSE difference
+        n = len(actual)
+        bootstrap_diffs = []
+        for _ in range(1000):
+            idx = np.random.choice(n, n, replace=True)
+            rmse_a_boot = np.sqrt(np.mean((e_a[idx])**2))
+            rmse_b_boot = np.sqrt(np.mean((e_b[idx])**2))
+            bootstrap_diffs.append(rmse_a_boot - rmse_b_boot)
+        se = np.std(bootstrap_diffs, ddof=1)
+        from scipy import stats
+        # Two one-sided tests
+        t1 = (d_mean - margin) / se
+        p1 = stats.norm.cdf(t1)
+        t2 = (d_mean + margin) / se
+        p2 = 1 - stats.norm.cdf(t2)
+        p_tost = max(p1, p2)
+        
+        return {
+            "p_value": float(p_tost),
+            "equivalence_rejected": str(p_tost < alpha),
+            "n": int(n),
+            "mean_diff": float(d_mean),
+            "margin": margin,
+            "t1": float(t1),
+            "t2": float(t2),
+            "p1": float(p1),
+            "p2": float(p2),
+        }
     else:
         d = np.abs(e_a) - np.abs(e_b)
 
     d = d[np.isfinite(d)]
     T = len(d)
     if T < 5:
-        return {"p_value": np.nan, "equivalence_rejected": False, "n": T, "mean_diff": np.nan}
+        return {"p_value": np.nan, "equivalence_rejected": str(False), "n": T, "mean_diff": np.nan, "margin": margin}
 
     d_mean = d.mean()
     d_std = np.std(d, ddof=1)

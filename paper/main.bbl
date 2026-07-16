@@ -1,0 +1,73 @@
+\begin{thebibliography}{}
+
+\bibitem[Acemoglu et~al., 2016]{acemoglu2016networks}
+Acemoglu, D., Carvalho, V.~M., Ozdaglar, A., and Tahbaz-Salehi, A. (2016).
+\newblock Networks and the macroeconomy: An empirical exploration.
+\newblock {\em American Economic Review}, 106(5):564--580.
+
+\bibitem[Baqaee and Farhi, 2020]{baqaee2020networks}
+Baqaee, D. and Farhi, E. (2020).
+\newblock Networks, barriers, and trade.
+\newblock {\em NBER Working Paper}.
+
+\bibitem[Box et~al., 2015]{box2015time}
+Box, G.~E., Jenkins, G.~M., Reinsel, G.~C., and Ljung, G.~M. (2015).
+\newblock Time series analysis: Forecasting and control.
+
+\bibitem[{CEPII}, 2026]{cepiibaci2026}
+{CEPII} (2026).
+\newblock Cepii baci: International trade database at the product-level.
+\newblock \url{http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=37}.
+
+\bibitem[Diebold and Mariano, 1995]{diebold1995comparing}
+Diebold, F.~X. and Mariano, R.~S. (1995).
+\newblock Comparing predictive accuracy.
+\newblock {\em Journal of Business \& Economic Statistics}, 13(3):253--263.
+
+\bibitem[{Federal Reserve Bank of St. Louis}, 2026]{fred2026}
+{Federal Reserve Bank of St. Louis} (2026).
+\newblock Federal reserve economic data (fred).
+\newblock \url{https://fred.stlouisfed.org/}.
+
+\bibitem[Forbes and Rigobon, 2002]{forbes2001no}
+Forbes, K.~J. and Rigobon, R. (2002).
+\newblock No contagion, only interdependence: Measuring stock market
+  comovements.
+\newblock {\em Journal of Finance}, 57(5):2223--2261.
+
+\bibitem[Galeotti et~al., 2010]{galeotti2010network}
+Galeotti, A., Goyal, S., and Kamphorst, J. (2010).
+\newblock The complex network of economic interdependence.
+\newblock {\em Journal of Economic Theory}, 145(6):2258--2282.
+
+\bibitem[Hamilton, 2022]{hamilton2022surge}
+Hamilton, J.~D. (2022).
+\newblock Why did global inflation surge after covid?
+\newblock {\em Brookings Papers on Economic Activity}.
+
+\bibitem[Kipf and Welling, 2017]{kipf2017semi}
+Kipf, T.~N. and Welling, M. (2017).
+\newblock Semi-supervised classification with graph convolutional networks.
+\newblock {\em International Conference on Learning Representations}.
+
+\bibitem[Monken et~al., 2021]{monken2021predicting}
+Monken, J. et~al. (2021).
+\newblock Predicting international trade flows with graph neural networks.
+\newblock {\em Working Paper}.
+
+\bibitem[Nason and Palasciano, 2025]{nason2025inflation}
+Nason, J. and Palasciano, A. (2025).
+\newblock Machine learning approaches to uk inflation components.
+\newblock {\em Working Paper}.
+
+\bibitem[Sims, 1980]{sims1980macroeconomics}
+Sims, C.~A. (1980).
+\newblock Macroeconomics and reality.
+\newblock {\em Econometrica}, 48(1):1--48.
+
+\bibitem[Sundararajan et~al., 2017]{sundararajan2017axiomatic}
+Sundararajan, M., Taly, A., and Yan, Q. (2017).
+\newblock Axiomatic attribution for deep networks.
+\newblock {\em International Conference on Machine Learning}, pages 3319--3328.
+
+\end{thebibliography}

@@ -23,8 +23,8 @@ The post-COVID surge in global inflation exposed the limits of country-by-countr
 We forecast one-step-ahead quarterly CPI inflation (year-over-year) for 23 major economies using a spatio-temporal graph neural network (ST-GNN) built on dynamic CEPII bilateral trade networks.
 Each quarter, node features combine domestic macro variables with a COVID shock indicator and global energy prices; edges encode log-transformed bilateral trade flows.
 The model stacks a two-layer graph convolutional network (GCN) with an LSTM over four quarters and a persistence skip connection that anchors forecasts to current inflation.
-On a strict hold-out test period (2021Q1--2024Q4), rolling refits yield RMSE of 3.87 and MAE of 1.58---higher than univariate ARIMA(0,1,1) (RMSE 3.05) but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.94), while retaining all 23 countries that break the VAR(4) panel.
-Cluster-robust Diebold--Mariano tests do not reject equal accuracy at the 5\% level ($p=0.12$ vs.\ ARIMA), and a TOST equivalence test with a 10\% margin does not support equivalence ($p=0.18$).
+On a strict hold-out test period (2021Q1--2024Q4), rolling refits yield RMSE of 3.87 and MAE of 1.58---higher than univariate ARIMA(0,1,1) (RMSE 3.05) but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.83), while retaining all 23 countries that break the VAR(4) panel.
+Cluster-robust Diebold--Mariano tests do not reject equal accuracy at the 5\% level ($p=0.12$ vs.\ ARIMA), and a TOST equivalence test with a 10\% margin does not support equivalence ($p=0.64$).
 Integrated Gradients on trade edge weights identify China, the United States, and the Netherlands as the dominant spillover channels for Germany during the 2020 COVID shock and the 2022 energy crisis; Indonesia exhibits the highest trade-versus-domestic attribution ratio (9.44) in the panel, indicating that network spillovers dictate forecasts for open emerging economies.
 Central banks monitoring cost-push inflation should track trade-network topology, not domestic CPI alone.
 \end{abstract}
@@ -43,7 +43,7 @@ Input--output and network macroeconomics formalize shock propagation through pro
 
 This paper makes three contributions.
 First, to our knowledge, we provide the first application of ST-GNNs specifically to inflation forecasting using trade networks---prior GNN work in trade targets flow prediction rather than inflation \citep{monken2021predicting}, while ML inflation papers typically ignore network topology \citep{nason2025inflation}.
-Second, we evaluate the model in a pseudo-real-time expanding-window design against ARIMA and VAR baselines on a 2021--2024 hold-out; while ST-GNN does not outperform ARIMA in RMSE, it achieves comparable accuracy when excluding Argentina (RMSE 3.22 vs.\ 2.94) while retaining high-dimensional panel structure that breaks VAR estimation.
+Second, we evaluate the model in a pseudo-real-time expanding-window design against ARIMA and VAR baselines on a 2021--2024 hold-out; while ST-GNN does not outperform ARIMA in RMSE, it achieves comparable accuracy when excluding Argentina (RMSE 3.22 vs.\ 2.83) while retaining high-dimensional panel structure that breaks VAR estimation.
 Third, we apply Integrated Gradients \citep{sundararajan2017axiomatic} to trade edge weights, producing interpretable case studies for the COVID supply-chain period, the 2022 energy shock, and an emerging economy where partner spillovers dominate domestic features.
 
 \section{Related Literature}
@@ -75,6 +75,7 @@ The sample spans 2000Q1--2024Q4 (100 quarters).
 We split data into training (2000Q1--2018Q4), validation (2019Q1--2020Q4), and test (2021Q1--2024Q4) periods.
 All evaluation metrics reported below refer exclusively to the test hold-out.
 \textbf{Limitation:} The test period covers two unusual regimes (COVID pandemic and energy crisis) back-to-back; we cannot yet assess how the ST-GNN would perform in calmer macro environments.
+Seed-robustness checks were not run because of computational cost and are left for future work.
 
 \subsection{Data Sources and Features}
 
@@ -145,13 +146,13 @@ Argentina is excluded due to missing CPI observations; \texttt{policy\_rate} is 
 
 We report root mean squared error (RMSE), mean absolute error (MAE), and Diebold--Mariano tests \citep{diebold1995comparing} comparing ST-GNN squared forecast errors to each baseline on paired test observations.
 Given the panel structure with cross-sectional correlation across countries within each quarter, we report both standard DM tests and cluster-robust DM tests (clustered by quarter).
-We also report a Two One-Sided Test (TOST) for equivalence with a pre-specified margin of 10\% of ARIMA RMSE.
+We also report a Two One-Sided Test (TOST) for equivalence with a pre-specified margin of 10% of the ARIMA RMSE from the apples-to-apples 22-country comparison (Argentina excluded), testing whether the ex-Argentina RMSE difference falls within this margin.
 
 \section{Results}
 \label{sec:results}
 
 Table~\ref{tab:benchmark} summarizes out-of-sample accuracy on the 2021--2024 test period.
-The rolling ST-GNN achieves RMSE of 3.87 and MAE of 1.58---higher than ARIMA (RMSE 3.05, MAE 1.34) but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.94), while retaining all 23 countries that break VAR estimation.
+The rolling ST-GNN achieves RMSE of 3.87 and MAE of 1.58---higher than ARIMA (RMSE 3.05, MAE 1.34) but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.83), while retaining all 23 countries that break VAR estimation.
 Table~\ref{tab:apples} provides an apples-to-apples comparison with all models evaluated on the same country set (excluding Argentina).
 
 \input{generated/table1.tex}
@@ -160,7 +161,7 @@ Table~\ref{tab:apples} provides an apples-to-apples comparison with all models e
 
 The ST-GNN processes the full trade graph and six node features per country---high-dimensional structure that the VAR cannot absorb without dropping countries and variables.
 Diebold--Mariano tests in Table~\ref{tab:dm} show that ST-GNN has a numerically higher RMSE than ARIMA ($p=0.087$ standard, $p=0.12$ cluster-robust) and a numerically lower RMSE than VAR ($p=0.200$), though neither difference is statistically significant at the 5\% level.
-A TOST equivalence test with a 10\% margin does not support equivalence between ST-GNN and ARIMA ($p=0.18$).
+A TOST equivalence test with a 10\% margin based on the ex-Argentina ARIMA RMSE does not support equivalence between ST-GNN and ARIMA ($p=0.64$).
 
 \input{generated/table2.tex}
 
@@ -217,8 +218,10 @@ Our most striking finding concerns Indonesia.
 Scanning all 23 countries at 2022Q2, Indonesia exhibits the highest ratio of trade-edge to domestic-feature attribution (9.44), indicating that the model's inflation forecast for Indonesia is driven primarily through bilateral trade topology rather than domestic macro inputs alone.
 Figure~\ref{fig:indonesia} shows China, the United States, and Singapore as the top partner channels---reflecting Indonesia's integration into Asian manufacturing networks and commodity export chains.
 
-\textbf{Robustness checks:} We verify that attribution rankings are not merely tracking trade volume by comparing shock periods (2020Q2, 2022Q2) to a calm baseline period (2017Q2); if rankings barely change, the shock-specific story does not hold up.
-We also conduct seed-robustness checks by retraining the model 5 times with different random seeds to ensure top partner attributions are stable.
+\textbf{Robustness checks:} We verify that attribution rankings are not merely tracking trade volume by comparing shock periods (2020Q2, 2022Q2) to a calm baseline period (2017Q2).
+For Germany, the top 3 trade partners during COVID were China, Netherlands, and USA; during the calm 2017Q2 baseline they were China, France, and Netherlands.
+The partial overlap (2/3 partners: China, Netherlands) is suggestive, but it should be read as a limited robustness check rather than definitive evidence, because the exercise was performed for Germany only and does not yet cover the Indonesia case that motivates the paper's strongest claim.
+Seed-robustness checks were not run because of computational cost and are left for future work.
 
 \begin{figure}[ht]
   \centering
@@ -227,13 +230,13 @@ We also conduct seed-robustness checks by retraining the model 5 times with diff
   \label{fig:indonesia}
 \end{figure}
 
-This case supports the contagion hypothesis: for open emerging economies, monitoring partner-country inflation and trade-link intensity is as important as domestic CPI when forecasting cost-push pressures.
+This case is consistent with the contagion hypothesis: for open emerging economies, monitoring partner-country inflation and trade-link intensity is as important as domestic CPI when forecasting cost-push pressures, although the robustness exercise above is limited to Germany and should therefore be interpreted as suggestive rather than definitive.
 Supplementary domestic-versus-trade decomposition charts appear in the Online Appendix.
 
 \section{Conclusion}
 
 We introduced an ST-GNN that forecasts quarterly CPI inflation across 23 major economies on dynamic CEPII trade networks.
-On a 2021--2024 hold-out with rolling refits, the model achieves RMSE of 3.87---higher than univariate ARIMA but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.94) while encoding trade structure that panel VARs cannot accommodate without excluding countries and variables.
+On a 2021--2024 hold-out with rolling refits, the model achieves RMSE of 3.87---higher than univariate ARIMA but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.83) while encoding trade structure that panel VARs cannot accommodate without excluding countries and variables.
 Cluster-robust Diebold--Mariano tests do not reject equal accuracy at the 5\% level, and a TOST equivalence test does not support equivalence.
 Integrated Gradients reveal that China and the United States consistently rank among the top trade spillover channels for Germany during the COVID and energy crises; Indonesia demonstrates network-dominated forecasting with a trade-versus-domestic attribution ratio of 9.44.
 
@@ -242,7 +245,7 @@ Future work could incorporate directed trade flows, input--output coefficients, 
 
 \section*{Data and Code Availability}
 
-The replication code, data processing scripts, and processed datasets are available at: \url{https://github.com/yourusername/inflation-stgnn} (placeholder link to be updated upon submission).
+The replication code, data processing scripts, and processed datasets are available at: \url{https://github.com/mrayanasim09/MarketEquationDiscovery}.
 
 \section*{Acknowledgments}
 

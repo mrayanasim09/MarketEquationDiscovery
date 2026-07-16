@@ -164,15 +164,15 @@ def main() -> None:
     table_tost = r"""
 \begin{table}[ht]
   \centering
-  \caption{TOST equivalence test: ST-GNN vs.\ ARIMA (squared forecast errors).}
+  \caption{TOST equivalence test: ST-GNN vs.\ ARIMA (RMSE difference).}
   \label{tab:tost}
   \begin{tabular}{lrr}
     \toprule
     Parameter & Value \\
     \midrule
     Equivalence margin (\%% of ARIMA RMSE) & %.1f\\
-    Margin (absolute) & %.3f\\
-    Mean difference (ST-GNN - ARIMA) & %.4f\\
+    Margin (absolute RMSE) & %.3f\\
+    RMSE difference (ST-GNN - ARIMA) & %.4f\\
     TOST $p$-value & %.3f\\
     Equivalence supported ($p < 0.05$) & %s\\
     $N$ & %d\\
@@ -181,8 +181,9 @@ def main() -> None:
   \vspace{0.5em}
   \begin{minipage}{\linewidth}
     \footnotesize
-    \textit{Notes:} TOST tests whether mean difference in squared errors is within pre-specified margin.
-    H0: $|\text{mean diff}| \geq \text{margin}$ (not equivalent); H1: $|\text{mean diff}| < \text{margin}$ (equivalent).
+    \textit{Notes:} TOST tests whether RMSE difference is within pre-specified margin.
+    H0: $|\text{RMSE diff}| \geq \text{margin}$ (not equivalent); H1: $|\text{RMSE diff}| < \text{margin}$ (equivalent).
+    Bootstrap SE estimation with 1000 resamples.
   \end{minipage}
 \end{table}
 """ % (
@@ -190,7 +191,7 @@ def main() -> None:
         tost["margin"],
         tost["stgnn_vs_arima_squared"]["mean_diff"],
         tost["stgnn_vs_arima_squared"]["p_value"],
-        "YES" if tost["stgnn_vs_arima_squared"]["equivalence_rejected"] else "NO",
+        "YES" if tost["stgnn_vs_arima_squared"]["equivalence_rejected"] == "True" else "NO",
         tost["stgnn_vs_arima_squared"]["n"],
     )
 
