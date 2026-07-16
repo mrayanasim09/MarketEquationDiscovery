@@ -1,0 +1,22 @@
+\begin{table}[ht]
+  \centering
+  \caption{Diebold--Mariano tests: ST-GNN vs.\ baselines (squared forecast errors, $h=1$).}
+  \label{tab:dm}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Comparison & DM statistic & $p$-value & $N$ & Clusters \\
+    \midrule
+    ST-GNN vs.\ ARIMA (standard) & 1.714 & 0.087 & 292 & -- \\
+    ST-GNN vs.\ ARIMA (cluster-robust) & 1.741 & 0.082 & 292 & 15 \\
+    ST-GNN vs.\ VAR (standard) & -1.281 & 0.200 & 292 & -- \\
+    ST-GNN vs.\ VAR (cluster-robust) & -1.340 & 0.180 & 292 & 15 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5em}
+  \begin{minipage}{\linewidth}
+    \footnotesize
+    \textit{Notes:} Cluster-robust tests cluster by quarter to account for cross-sectional correlation.
+    Paired on test-period observations with non-missing ARIMA and VAR forecasts ($N=292$).
+    Negative statistic implies lower average squared error for ST-GNN.
+  \end{minipage}
+\end{table}

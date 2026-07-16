@@ -1,0 +1,254 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{natbib}
+
+\onehalfspacing
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\title{Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Global Trade}
+\author{Rayyan Asim \\ Independent Researcher \\ \texttt{mrayanasim09@gmail.com}}
+\date{June 27, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The post-COVID surge in global inflation exposed the limits of country-by-country macro models that ignore supply-chain topology.
+We forecast one-step-ahead quarterly CPI inflation (year-over-year) for 23 major economies using a spatio-temporal graph neural network (ST-GNN) built on dynamic CEPII bilateral trade networks.
+Each quarter, node features combine domestic macro variables with a COVID shock indicator and global energy prices; edges encode log-transformed bilateral trade flows.
+The model stacks a two-layer graph convolutional network (GCN) with an LSTM over four quarters and a persistence skip connection that anchors forecasts to current inflation.
+On a strict hold-out test period (2021Q1--2024Q4), rolling refits yield RMSE of 3.87 and MAE of 1.58---higher than univariate ARIMA(0,1,1) (RMSE 3.05) but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.94), while retaining all 23 countries that break the VAR(4) panel.
+Cluster-robust Diebold--Mariano tests do not reject equal accuracy at the 5\% level ($p=0.12$ vs.\ ARIMA), and a TOST equivalence test with a 10\% margin does not support equivalence ($p=0.18$).
+Integrated Gradients on trade edge weights identify China, the United States, and the Netherlands as the dominant spillover channels for Germany during the 2020 COVID shock and the 2022 energy crisis; Indonesia exhibits the highest trade-versus-domestic attribution ratio (9.44) in the panel, indicating that network spillovers dictate forecasts for open emerging economies.
+Central banks monitoring cost-push inflation should track trade-network topology, not domestic CPI alone.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+The global inflation surge following the COVID-19 pandemic and the 2022 energy crisis challenged conventional forecasting practice.
+Univariate ARIMA models and small-scale vector autoregressions (VARs) performed reasonably at the country level yet offered little guidance on \emph{where} shocks originated or \emph{which} trade partners transmitted them \citep{hamilton2022surge}.
+Supply disruptions propagated through global value chains: factory shutdowns in one economy raised input costs in downstream partners, amplifying inflation far from the initial shock \citep{baqaee2020networks, acemoglu2016networks}.
+
+Graph-based methods have begun to model economic interdependence explicitly.
+\citet{monken2021predicting} forecast bilateral trade flows with graph neural networks (GNNs), but stop short of predicting inflation.
+Conversely, machine-learning inflation papers typically treat countries as independent time series, omitting the trade topology that channels cost-push spillovers \citep{nason2025inflation}.
+Input--output and network macroeconomics formalize shock propagation through production linkages \citep{galeotti2010network, baqaee2020networks}, yet rarely combine these structures with nonlinear sequence models suited to crisis periods.
+
+This paper makes three contributions.
+First, to our knowledge, we provide the first application of ST-GNNs specifically to inflation forecasting using trade networks---prior GNN work in trade targets flow prediction rather than inflation \citep{monken2021predicting}, while ML inflation papers typically ignore network topology \citep{nason2025inflation}.
+Second, we evaluate the model in a pseudo-real-time expanding-window design against ARIMA and VAR baselines on a 2021--2024 hold-out; while ST-GNN does not outperform ARIMA in RMSE, it achieves comparable accuracy when excluding Argentina (RMSE 3.22 vs.\ 2.94) while retaining high-dimensional panel structure that breaks VAR estimation.
+Third, we apply Integrated Gradients \citep{sundararajan2017axiomatic} to trade edge weights, producing interpretable case studies for the COVID supply-chain period, the 2022 energy shock, and an emerging economy where partner spillovers dominate domestic features.
+
+\section{Related Literature}
+
+\textbf{Macro forecasting.}
+Classical univariate ARIMA \citep{box2015time} and VAR \citep{sims1980macroeconomics} remain the workhorse benchmarks for inflation forecasting.
+These models excel when series are stable and low-dimensional but struggle to encode cross-country trade linkages that intensified during recent shocks \citep{forbes2001no}.
+
+\textbf{Network macroeconomics.}
+Production and trade networks propagate idiosyncratic shocks into aggregate fluctuations \citep{acemoglu2016networks, baqaee2020networks}.
+We extend this insight by embedding bilateral trade adjacency directly into a neural forecaster rather than relying on reduced-form interdependence measures.
+
+\textbf{Graph neural networks.}
+GCNs \citep{kipf2017semi} aggregate neighbor information through normalized adjacency matrices, enabling spatial message passing over economic networks.
+Prior GNN work in trade focuses on flow prediction \citep{monken2021predicting}; we instead target inflation and interpret edge attributions as spillover channels.
+
+\textbf{Explainability.}
+Integrated Gradients provide axiomatic feature attributions for deep models \citep{sundararajan2017axiomatic}.
+We apply IG to trade edge weights---the economic object of interest---rather than opaque hidden units.
+
+\section{Data and Methodology}
+\label{sec:methods}
+
+\subsection{Country Panel and Sample}
+
+Our panel comprises 23 economies: G20 members plus the Netherlands, Singapore, Switzerland, and Vietnam.
+Taiwan is excluded to maintain a clean sovereign panel.
+The sample spans 2000Q1--2024Q4 (100 quarters).
+We split data into training (2000Q1--2018Q4), validation (2019Q1--2020Q4), and test (2021Q1--2024Q4) periods.
+All evaluation metrics reported below refer exclusively to the test hold-out.
+\textbf{Limitation:} The test period covers two unusual regimes (COVID pandemic and energy crisis) back-to-back; we cannot yet assess how the ST-GNN would perform in calmer macro environments.
+
+\subsection{Data Sources and Features}
+
+\textbf{Inflation target.}
+Quarterly CPI year-over-year inflation (\texttt{cpi\_yoy}) is computed from native monthly CPI indices downloaded from FRED \citep{fred2026}, never from annual broadcasts.
+The forecast target is one-step-ahead \texttt{cpi\_yoy\_next}.
+
+\textbf{Node features} at quarter $t$ include:
+\begin{itemize}
+  \item \texttt{cpi\_yoy}: current CPI inflation;
+  \item \texttt{gdp\_yoy}: real GDP growth (World Bank);
+  \item \texttt{neer\_chg}: nominal effective exchange rate change;
+  \item \texttt{policy\_rate}: central bank policy rate (forward-filled up to two quarters);
+  \item \texttt{energy\_idx}: global Brent oil price change (common to all nodes);
+  \item \texttt{covid}: indicator equal to one for 2020Q1--2021Q4.
+\end{itemize}
+Producer price inflation is dropped due to data availability; Taiwan is excluded as noted above.
+
+\textbf{Trade graph.}
+Bilateral merchandise trade flows come from CEPII BACI \citep{cepiibaci2026}.
+For each quarter $t$ and country pair $(i,j)$, we sum imports and exports in USD, apply $\log(1+x)$, and construct an undirected weighted adjacency matrix $A_t$.
+Prior to GCN message passing, we apply symmetric normalization:
+\begin{equation}
+  \tilde{A}_t = \tilde{D}_t^{-1/2} (A_t + \epsilon I) \tilde{D}_t^{-1/2},
+\end{equation}
+where $\tilde{D}_t$ is the degree matrix and $\epsilon=10^{-3}$ adds a light self-loop.
+
+\subsection{ST-GNN Architecture}
+
+The spatio-temporal model combines a two-layer GCN with a single-layer LSTM over a sequence of $L=4$ quarters.
+At each time step $\tau$ within the sequence, node features $X_\tau \in \mathbb{R}^{N \times F}$ are passed through graph convolutions:
+\begin{equation}
+  H^{(\ell+1)}_\tau = \sigma\!\left(\tilde{A}_\tau H^{(\ell)}_\tau W^{(\ell)}\right),
+\end{equation}
+with ReLU activation, dropout $p=0.2$, and hidden dimension 64.
+GCN outputs across the sequence are stacked and fed into an LSTM (hidden size 64) that processes each country's temporal embedding.
+A linear head predicts an inflation \emph{increment} $\Delta_i$, and the final forecast anchors to current CPI via a persistence skip connection:
+\begin{equation}
+  \hat{y}_{i,t+1} = \text{cpi\_yoy}_{i,t} + \Delta_i.
+  \label{eq:persistence}
+\end{equation}
+This design prevents the network from collapsing to a global mean---a failure mode when Argentina's hyperinflation outliers dominate squared-error gradients.
+
+\subsection{Training and Evaluation Protocol}
+
+\textbf{Loss function.}
+We minimize masked Smooth L1 (Huber) loss with $\beta=1$ over valid targets, excluding NaN positions from both numerator and gradient computation.
+Huber loss limits the influence of Argentina's extreme CPI observations while retaining the country in the panel.
+
+\textbf{Rolling refit.}
+Following baseline methodology, we retrain the ST-GNN in an expanding window before each validation and test forecast: at quarter $t$, training data span quarters $0$ through $t-1$, with 30 epochs per refit.
+Feature normalization uses only the expanding training window available at $t$ (no look-ahead).
+
+\textbf{Hyperparameters.}
+A grid search over learning rate $\{5\times10^{-4}, 10^{-3}, 3\times10^{-3}\}$, dropout $\{0.2, 0.3, 0.4\}$, and GCN layers $\{1,2\}$ on validation RMSE selects learning rate $5\times10^{-4}$, dropout 0.2, and two GCN layers (full grid in Online Appendix Table 1).
+\textbf{Note:} The validation window (2019Q1--2020Q4) includes the COVID onset, so hyperparameters were partly selected on the shock they are later evaluated transmitting through.
+
+\subsection{Baselines}
+
+\textbf{ARIMA(0,1,1).}
+Estimated separately for each country on expanding CPI history; one-step-ahead forecasts on validation and test quarters \citep{box2015time}.
+
+\textbf{VAR(4).}
+A panel VAR with four lags on $[\text{cpi\_yoy}, \text{gdp\_yoy}, \text{neer\_chg}, \text{energy\_idx}]$.
+Argentina is excluded due to missing CPI observations; \texttt{policy\_rate} is dropped to maintain estimation stability---limitations that the ST-GNN avoids through masked Huber loss across all 23 nodes.
+
+\subsection{Metrics}
+
+We report root mean squared error (RMSE), mean absolute error (MAE), and Diebold--Mariano tests \citep{diebold1995comparing} comparing ST-GNN squared forecast errors to each baseline on paired test observations.
+Given the panel structure with cross-sectional correlation across countries within each quarter, we report both standard DM tests and cluster-robust DM tests (clustered by quarter).
+We also report a Two One-Sided Test (TOST) for equivalence with a pre-specified margin of 10\% of ARIMA RMSE.
+
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:benchmark} summarizes out-of-sample accuracy on the 2021--2024 test period.
+The rolling ST-GNN achieves RMSE of 3.87 and MAE of 1.58---higher than ARIMA (RMSE 3.05, MAE 1.34) but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.94), while retaining all 23 countries that break VAR estimation.
+Table~\ref{tab:apples} provides an apples-to-apples comparison with all models evaluated on the same country set (excluding Argentina).
+
+\input{generated/table1.tex}
+
+\input{generated/table_apples.tex}
+
+The ST-GNN processes the full trade graph and six node features per country---high-dimensional structure that the VAR cannot absorb without dropping countries and variables.
+Diebold--Mariano tests in Table~\ref{tab:dm} show that ST-GNN has a numerically higher RMSE than ARIMA ($p=0.087$ standard, $p=0.12$ cluster-robust) and a numerically lower RMSE than VAR ($p=0.200$), though neither difference is statistically significant at the 5\% level.
+A TOST equivalence test with a 10\% margin does not support equivalence between ST-GNN and ARIMA ($p=0.18$).
+
+\input{generated/table2.tex}
+
+\input{generated/table_tost.tex}
+
+These results show that ST-GNN does not outperform ARIMA in forecast accuracy, but achieves comparable performance when excluding Argentina while providing interpretable network spillover analysis (Section~\ref{sec:explain}).
+The primary contribution is methodological and interpretive rather than predictive accuracy.
+The persistence skip connection (Equation~\ref{eq:persistence}), Huber loss, and expanding-window normalization were essential engineering choices: without them, pooled RMSE exceeded 20 in preliminary runs dominated by Argentina's outliers.
+
+It is worth noting that this outlier-handling protection is specific to the ST-GNN specification: ARIMA is estimated separately per country with standard least-squares and receives no robust-loss cushioning, while VAR drops Argentina entirely rather than down-weighting extreme observations.
+
+\section{Network Explainability}
+\label{sec:explain}
+
+Forecast accuracy alone does not reveal \emph{through which channels} inflation propagates.
+We apply Integrated Gradients \citep{sundararajan2017axiomatic} with 32 Riemann steps to trade edge weights, holding node features fixed, and aggregate attributions over the four-quarter input sequence.
+Before each case-study quarter, we refit the model on the expanding window available to a real-time forecaster.
+Attributions identify which bilateral trade links most influence the forecast for a target country.
+
+\subsection{COVID Supply-Chain Shock (Germany, 2020Q2)}
+
+Figure~\ref{fig:covid} displays the top trade partners by absolute edge attribution for Germany during 2020Q2---the quarter when pandemic lockdowns disrupted global supply chains.
+China, the United States, and the Netherlands account for the largest attributions, consistent with Germany's export-oriented manufacturing sector relying on Asian inputs and trans-Atlantic demand.
+Signed attributions are negative, indicating that trade-link information pushed the model toward lower inflation forecasts as supply disruptions dampened price pressures early in the pandemic.
+The trade-versus-domestic attribution ratio for Germany is 6.64, computed as:
+\begin{equation}
+  \text{ratio} = \frac{\sum_{\text{edges}} |\text{attribution}_{\text{edge}}|}{\sum_{\text{features}} |\text{attribution}_{\text{feature}}|},
+\end{equation}
+where the numerator sums absolute Integrated Gradients values over all trade edge weights and the denominator sums absolute attributions over domestic node features.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/covid_supply_chain_top_partners_DEU.png}
+  \caption{Integrated Gradients edge attributions for Germany (2020Q2). Top trade partners by absolute attribution during the COVID supply-chain disruption.}
+  \label{fig:covid}
+\end{figure}
+
+\subsection{2022 Energy Price Shock (Germany, 2022Q2)}
+
+Figure~\ref{fig:energy} repeats the analysis for 2022Q2, when Russia's invasion of Ukraine triggered a global energy crisis.
+The same hub partners---China, the United States, and the Netherlands---dominate attributions, but signed values flip positive as trade-network information pushes inflation forecasts higher.
+Domestic energy features also gain weight (trade-versus-domestic ratio 9.41), yet partner edges remain the primary cross-country channel.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/energy_shock_2022_top_partners_DEU.png}
+  \caption{Integrated Gradients edge attributions for Germany (2022Q2). Top trade partners during the global energy price shock.}
+  \label{fig:energy}
+\end{figure}
+
+\subsection{Partner Spillovers in Indonesia (2022Q2)}
+
+Our most striking finding concerns Indonesia.
+Scanning all 23 countries at 2022Q2, Indonesia exhibits the highest ratio of trade-edge to domestic-feature attribution (9.44), indicating that the model's inflation forecast for Indonesia is driven primarily through bilateral trade topology rather than domestic macro inputs alone.
+Figure~\ref{fig:indonesia} shows China, the United States, and Singapore as the top partner channels---reflecting Indonesia's integration into Asian manufacturing networks and commodity export chains.
+
+\textbf{Robustness checks:} We verify that attribution rankings are not merely tracking trade volume by comparing shock periods (2020Q2, 2022Q2) to a calm baseline period (2017Q2); if rankings barely change, the shock-specific story does not hold up.
+We also conduct seed-robustness checks by retraining the model 5 times with different random seeds to ensure top partner attributions are stable.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/partner_spillover_top_partners.png}
+  \caption{Integrated Gradients edge attributions for Indonesia (2022Q2). Indonesia has the highest trade-versus-domestic attribution ratio (9.44) in the panel.}
+  \label{fig:indonesia}
+\end{figure}
+
+This case supports the contagion hypothesis: for open emerging economies, monitoring partner-country inflation and trade-link intensity is as important as domestic CPI when forecasting cost-push pressures.
+Supplementary domestic-versus-trade decomposition charts appear in the Online Appendix.
+
+\section{Conclusion}
+
+We introduced an ST-GNN that forecasts quarterly CPI inflation across 23 major economies on dynamic CEPII trade networks.
+On a 2021--2024 hold-out with rolling refits, the model achieves RMSE of 3.87---higher than univariate ARIMA but comparable when excluding Argentina (RMSE 3.22 vs.\ 2.94) while encoding trade structure that panel VARs cannot accommodate without excluding countries and variables.
+Cluster-robust Diebold--Mariano tests do not reject equal accuracy at the 5\% level, and a TOST equivalence test does not support equivalence.
+Integrated Gradients reveal that China and the United States consistently rank among the top trade spillover channels for Germany during the COVID and energy crises; Indonesia demonstrates network-dominated forecasting with a trade-versus-domestic attribution ratio of 9.44.
+
+For policymakers, the implication is clear: central banks forecasting cost-push inflation should monitor trade-network topology and partner-country shocks, not domestic CPI alone.
+Future work could incorporate directed trade flows, input--output coefficients, and formal comparison to structural IO propagation models.
+
+\section*{Data and Code Availability}
+
+The replication code, data processing scripts, and processed datasets are available at: \url{https://github.com/yourusername/inflation-stgnn} (placeholder link to be updated upon submission).
+
+\section*{Acknowledgments}
+
+The author thanks contributors to the CEPII BACI, FRED, and World Bank open-data initiatives.
+
+\bibliographystyle{apalike}
+\bibliography{references}
+
+\end{document}

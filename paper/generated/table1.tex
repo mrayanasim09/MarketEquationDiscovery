@@ -1,0 +1,21 @@
+\begin{table}[ht]
+  \centering
+  \caption{Out-of-sample forecast accuracy on the test period (2021Q1--2024Q4).}
+  \label{tab:benchmark}
+  \begin{tabular}{lrrr}
+    \toprule
+    Model & RMSE & MAE & $N$ \\
+    \midrule
+    ST-GNN (rolling refit) & 3.87 & 1.58 & 303 \\
+    ARIMA(0,1,1)           & 3.05 & 1.34 & 303 \\
+    VAR(4)                 & 3.45 & 1.61 & 292 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5em}
+  \begin{minipage}{\linewidth}
+    \footnotesize
+    \textit{Notes:} ST-GNN uses expanding-window refit with Huber loss and persistence skip connection.
+    VAR excludes Argentina; $N=292$ for VAR and Diebold--Mariano comparisons.
+    ST-GNN RMSE excluding Argentina: 3.22.
+  \end{minipage}
+\end{table}

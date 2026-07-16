@@ -1,0 +1,143 @@
+{
+  "run_at": "2026-07-16T15:35:08.794458+00:00",
+  "milestone": 7,
+  "phase1": {
+    "loss": "Huber (Smooth L1)",
+    "persistence_skip": true,
+    "expanding_window_norm": true,
+    "best_config": {
+      "lr": 0.0005,
+      "dropout": 0.2,
+      "gcn_layers": 2,
+      "gcn_hidden": 64,
+      "lstm_hidden": 64,
+      "max_epochs": 60,
+      "patience": 10,
+      "huber_delta": 1.0
+    },
+    "rolling_refit": true,
+    "refit_epochs_per_step": 30
+  },
+  "metrics": {
+    "stgnn_rolling_val": {
+      "rmse": 1.4057508815122335,
+      "mae": 0.9193034037218794,
+      "mape": 37.64618369337377,
+      "n": 184
+    },
+    "stgnn_rolling_test": {
+      "rmse": 3.8710935419326,
+      "mae": 1.584533997212011,
+      "mape": 21.194082282366303,
+      "n": 303
+    },
+    "stgnn_rolling_test_excl_ARG": {
+      "rmse": 3.21975653551221,
+      "mae": 1.2706236942505387,
+      "mape": 21.59188427019803,
+      "n": 292
+    },
+    "arima_test": {
+      "rmse": 3.050081812222111,
+      "mae": 1.3392660324913883,
+      "mape": 21.114451042780743,
+      "n": 303
+    },
+    "var_test": {
+      "rmse": 3.454393047976031,
+      "mae": 1.6107914073910525,
+      "mape": 34.969843603311894,
+      "n": 292
+    }
+  },
+  "diebold_mariano_test": {
+    "stgnn_vs_arima_squared": {
+      "statistic": 1.7136203134481884,
+      "p_value": 0.0865984803775246,
+      "n": 292,
+      "mean_diff": 2.347160698446427
+    },
+    "stgnn_vs_arima_absolute": {
+      "statistic": 1.15647702590792,
+      "p_value": 0.24748609142698252,
+      "n": 292,
+      "mean_diff": 0.08973614929043357
+    },
+    "stgnn_vs_var_squared": {
+      "statistic": -1.2809480096256958,
+      "p_value": 0.20021192805246724,
+      "n": 292,
+      "mean_diff": -1.5659993566108215
+    },
+    "interpretation": "Negative DM stat => ST-GNN has lower average loss"
+  },
+  "diebold_mariano_cluster_robust": {
+    "stgnn_vs_arima_squared": {
+      "statistic": 1.741265871743492,
+      "p_value": 0.08163698550297127,
+      "n": 292,
+      "n_clusters": 15,
+      "mean_diff": 2.347160698446427
+    },
+    "stgnn_vs_var_squared": {
+      "statistic": -1.3399759981737143,
+      "p_value": 0.18025314829078587,
+      "n": 292,
+      "n_clusters": 15,
+      "mean_diff": -1.5659993566108215
+    },
+    "interpretation": "Cluster-robust by quarter to account for cross-sectional correlation"
+  },
+  "tost_equivalence_test": {
+    "stgnn_vs_arima_squared": {
+      "p_value": 0.932011278788247,
+      "equivalence_rejected": "False",
+      "n": 292,
+      "mean_diff": 2.347160698446427,
+      "margin": 0.3050081812222111,
+      "t1": 1.490939260780504,
+      "t2": 1.9363013661158723,
+      "p1": 0.932011278788247,
+      "p2": 0.026415400793307398
+    },
+    "margin": 0.3050081812222111,
+    "margin_pct_of_arima_rmse": 10.0,
+    "interpretation": "TOST tests equivalence within pre-specified margin; p < 0.05 supports equivalence claim"
+  },
+  "apples_to_apples_comparison": {
+    "all_models_excluding_argentina": {
+      "stgnn_metrics": {
+        "rmse": 3.21975653551221,
+        "mae": 1.2706236942505387,
+        "mape": 21.59188427019803,
+        "n": 292
+      },
+      "arima_metrics": {
+        "rmse": 2.8319024069638434,
+        "mae": 1.1808875260880123,
+        "mape": 21.689600495335736,
+        "n": 292
+      },
+      "var_metrics": {
+        "rmse": 3.454393047976031,
+        "mae": 1.6107914073910525,
+        "mape": 34.969843603311894,
+        "n": 292
+      },
+      "dm_stgnn_vs_arima": {
+        "statistic": 1.7136203134481884,
+        "p_value": 0.0865984803775246,
+        "n": 292,
+        "mean_diff": 2.347160698446427
+      },
+      "dm_stgnn_vs_var": {
+        "statistic": -1.2809480096256958,
+        "p_value": 0.20021192805246724,
+        "n": 292,
+        "mean_diff": -1.5659993566108215
+      }
+    }
+  },
+  "target_rmse_under_4": true,
+  "paired_test_rows": 292
+}

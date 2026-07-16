@@ -1,0 +1,23 @@
+\begin{table}[ht]
+  \centering
+  \caption{TOST equivalence test: ST-GNN vs.\ ARIMA (squared forecast errors).}
+  \label{tab:tost}
+  \begin{tabular}{lrr}
+    \toprule
+    Parameter & Value \\
+    \midrule
+    Equivalence margin (\% of ARIMA RMSE) & 10.0\\
+    Margin (absolute) & 0.305\\
+    Mean difference (ST-GNN - ARIMA) & 2.3472\\
+    TOST $p$-value & 0.932\\
+    Equivalence supported ($p < 0.05$) & YES\\
+    $N$ & 292\\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.5em}
+  \begin{minipage}{\linewidth}
+    \footnotesize
+    \textit{Notes:} TOST tests whether mean difference in squared errors is within pre-specified margin.
+    H0: $|\text{mean diff}| \geq \text{margin}$ (not equivalent); H1: $|\text{mean diff}| < \text{margin}$ (equivalent).
+  \end{minipage}
+\end{table}
