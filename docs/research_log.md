@@ -45,3 +45,15 @@
 - **Cause:** `write_tuning_manifest` created the result root but not the required `tuning/` child directory.
 - **Repair rationale:** Create only the manifest parent directory immediately before its immutable write. No existing manifest, result, source-data artifact, or configuration is changed.
 - **Scientific impact:** The write failed before file creation; no partial tuning manifest exists. The next attempt must rerun the complete locked validation-only sweep from the beginning.
+
+## 2026-07-19 — Validation-only tuning completed
+
+- **Execution commit:** `77938ebfdaa3127d128bb857ee93a667a327a372`.
+- **Tuning run ID:** `tuning-v2-77938ebfdaa3-88a5c7683254-2026-07-18T201541.130780+0000`.
+- **Artifact:** `experiments/results/v2_1/tuning/tuning_manifest.json`; SHA-256 `bad266128befed33c9478269ccd37ff50fe03fe683b9d98a9e089b6a4dcb5b15`.
+- **Coverage:** All 12 locked model families, all three horizons, all eight validation origins per horizon, all 20 neural/graph seeds, and all eight graph variants were evaluated from the predefined one-candidate-per-family registry.
+- **Selection:** The manifest records validation-origin mean-MAE selection with RMSE tie-breaks. Since each family had one pre-specified candidate, selection did not involve discretionary choice.
+- **Validation MAE / RMSE:** persistence 0.8903 / 1.0676; ARIMA 0.8181 / 0.9898; VAR 5.2843 / 6.7975; ETS 0.8899 / 1.0674; dynamic factor 0.9038 / 1.1040; ridge 1.4268 / 1.5660; gradient boosting 0.8874 / 1.0742; MLP 0.8801 / 1.0641; LSTM 0.9552 / 1.1364; TCN 0.9274 / 1.1099; GCN 1.0234 / 1.2153; temporal graph 0.9668 / 1.1686.
+- **Probabilistic calibration:** Per-model Normal residual scales were fit on validation residuals only and recorded in the immutable manifest.
+- **Validation:** The v2.1 contract validator passed after manifest creation. Statsmodels ARIMA start/convergence warnings occurred but were non-fatal and are retained as execution diagnostics.
+- **Scientific impact:** No final-test row was accessed by the tuning code, no final-test prediction was generated, and the locked configuration was not modified.
