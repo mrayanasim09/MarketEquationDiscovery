@@ -123,7 +123,7 @@ def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame,
     else:
         temporal = name == "temporal_graph"
         graph_train = train_features if temporal else train
-        panels = graph_panels(graph_train, panel, countries, qidx, adjacency, variant, np.random.default_rng(seed)) if not temporal else _temporal_graph_panels(graph_train, panel, countries, qidx, adjacency, variant, seed)
+        panels = graph_panels(graph_train, panel, countries, qidx, adjacency, variant, seed) if not temporal else _temporal_graph_panels(graph_train, panel, countries, qidx, adjacency, variant, seed)
         raw = np.concatenate([item[0].reshape(-1, 2) for item in panels])
         scaled, _, scaler = standardize(raw, raw)
         scaled_panels, position = [], 0
@@ -131,7 +131,7 @@ def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame,
             count = x.shape[0] * (x.shape[1] if temporal else 1)
             scaled_panels.append((scaled[position:position + count].reshape(x.shape), graph, target))
             position += count
-        test_panels = graph_panels(test, panel, countries, qidx, adjacency, variant, np.random.default_rng(seed)) if not temporal else _temporal_graph_panels(test, panel, countries, qidx, adjacency, variant, seed)
+        test_panels = graph_panels(test, panel, countries, qidx, adjacency, variant, seed) if not temporal else _temporal_graph_panels(test, panel, countries, qidx, adjacency, variant, seed)
         test_x, test_graph, _ = test_panels[0]
         model = TemporalGraphForecaster(2, cfg["hidden_dim"]) if temporal else GraphConvolutionForecaster(2, cfg["hidden_dim"])
         model = fit_graph_neural(model, scaled_panels, cfg["epochs"], cfg["learning_rate"], temporal)

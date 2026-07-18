@@ -15,3 +15,10 @@
 - **Reason:** The v2.1 protocol requires an executable registry (including ETS, DFM, probabilistic outputs, and origin-level inference) rather than declarative configuration alone.
 - **Validation:** All new Python modules compile. The static v2.1 validator intentionally fails final-test authorization because no immutable validation-only tuning manifest exists.
 - **Scientific impact:** This is a fail-closed result. No tuning, training, test forecast, metric, statistical test, or figure was generated. A real validation-only tuning run remains required before the final benchmark can begin.
+
+## 2026-07-18 — First validation-only tuning attempt retained
+
+- **Commit:** `ca6a433b4bb040c576f908045ca1f1ec74fdcc2b`.
+- **Result:** Stopped before any tuning manifest or forecast artifact was written.
+- **Cause:** The static GCN validation path passed a NumPy random-generator object to the archived graph-panel helper, which requires its integer seed.
+- **Scientific impact:** No test row was accessed, no final-test prediction was generated, and no winner was selected. The repair is limited to passing the already-locked integer seed through unchanged.
