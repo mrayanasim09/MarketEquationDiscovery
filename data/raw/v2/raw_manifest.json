@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "status": "acquired_raw_payloads",
+  "downloads": [
+    {
+      "source_identifier": "eurostat_comext_total_exports_2010_2019_2026_07_16",
+      "source_url": "https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409?freq=M&reporter=AT&reporter=BE&reporter=BG&reporter=HR&reporter=CY&reporter=CZ&reporter=DK&reporter=EE&reporter=FI&reporter=FR&reporter=DE&reporter=GR&reporter=HU&reporter=IE&reporter=IT&reporter=LV&reporter=LT&reporter=LU&reporter=MT&reporter=NL&partner=AT&partner=BE&partner=BG&partner=HR&partner=CY&partner=CZ&partner=DK&partner=EE&partner=FI&partner=FR&partner=DE&partner=GR&partner=HU&partner=IE&partner=IT&partner=LV&partner=LT&partner=LU&partner=MT&partner=NL&product=TOTAL&flow=2&indicators=VALUE_IN_EUROS&sinceTimePeriod=2010-01&untilTimePeriod=2019-12",
+      "retrieved_at": "2026-07-18T13:38:03.123552+00:00",
+      "source_release_date": "2026-07-16",
+      "sha256": "1a83e2cea49a15ea30227ef36974a8028035fbd02989a04440ab0ff3b6630105",
+      "local_file": "data/raw/v2/trade/comext/eurostat_comext_total_exports_2010_2019_2026_07_16.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_comext_total_exports_2026_07_16",
+      "source_url": "https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409?freq=M&reporter=AT&reporter=BE&reporter=BG&reporter=HR&reporter=CY&reporter=CZ&reporter=DK&reporter=EE&reporter=FI&reporter=FR&reporter=DE&reporter=GR&reporter=HU&reporter=IE&reporter=IT&reporter=LV&reporter=LT&reporter=LU&reporter=MT&reporter=NL&partner=AT&partner=BE&partner=BG&partner=HR&partner=CY&partner=CZ&partner=DK&partner=EE&partner=FI&partner=FR&partner=DE&partner=GR&partner=HU&partner=IE&partner=IT&partner=LV&partner=LT&partner=LU&partner=MT&partner=NL&product=TOTAL&flow=2&indicators=VALUE_IN_EUROS&sinceTimePeriod=2020-01&untilTimePeriod=2025-12",
+      "retrieved_at": "2026-07-18T13:26:46.161967+00:00",
+      "source_release_date": "2026-07-16",
+      "sha256": "fb926b49bba71011f96b067670998ed4751981739529f62d1fb11e721d19a844",
+      "local_file": "data/raw/v2/trade/comext/eurostat_comext_total_exports_2026_07_16.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_hicp_midx_cp00_i15_2010_2019_2026_02_06",
+      "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=AT&geo=BE&geo=BG&geo=HR&geo=CY&geo=CZ&geo=DK&geo=EE&geo=FI&geo=FR&geo=DE&geo=GR&geo=HU&geo=IE&geo=IT&geo=LV&geo=LT&geo=LU&geo=MT&geo=NL&geo=PL&geo=PT&geo=RO&geo=SK&geo=SI&geo=ES&geo=SE&unit=I15&coicop=CP00&sinceTimePeriod=2010-01&untilTimePeriod=2019-12",
+      "retrieved_at": "2026-07-18T13:36:09.327867+00:00",
+      "source_release_date": "2026-02-06",
+      "sha256": "875187293540c0a29193a3b2c22e01a9c02e69ca0eb39a79eb5ac22b37b7609a",
+      "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_2010_2019_2026_02_06.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_hicp_midx_cp00_i15_2026_02_06",
+      "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=AT&geo=BE&geo=BG&geo=HR&geo=CY&geo=CZ&geo=DK&geo=EE&geo=FI&geo=FR&geo=DE&geo=GR&geo=HU&geo=IE&geo=IT&geo=LV&geo=LT&geo=LU&geo=MT&geo=NL&geo=PL&geo=PT&geo=RO&geo=SK&geo=SI&geo=ES&geo=SE&unit=I15&coicop=CP00&sinceTimePeriod=2020-01&untilTimePeriod=2025-12",
+      "retrieved_at": "2026-07-18T13:22:23.066990+00:00",
+      "source_release_date": "2026-02-06",
+      "sha256": "23efc3ca0a2cf8441a07e31329471f13a76bc8f0c5694e13d1d3e2310ba91b49",
+      "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_2026_02_06.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_hicp_midx_cp00_i15_el_2010_2019_2026_02_06",
+      "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=EL&unit=I15&coicop=CP00&sinceTimePeriod=2010-01&untilTimePeriod=2019-12",
+      "retrieved_at": "2026-07-18T13:36:10.886482+00:00",
+      "source_release_date": "2026-02-06",
+      "sha256": "b6e4de7a8cbb042118418cd1b6736838f09288952b107c4e1ea47e8afc134535",
+      "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_el_2010_2019_2026_02_06.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_hicp_midx_cp00_i15_el_2026_02_06",
+      "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=EL&unit=I15&coicop=CP00&sinceTimePeriod=2020-01&untilTimePeriod=2025-12",
+      "retrieved_at": "2026-07-18T13:27:52.796702+00:00",
+      "source_release_date": "2026-02-06",
+      "sha256": "d1cce670844228e883bcd02782cbdbb4cea034fb5949c86753c92017b2485e23",
+      "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_el_2026_02_06.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06",
+      "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=AT&geo=BE&geo=BG&geo=HR&geo=CY&geo=CZ&geo=DK&geo=EE&geo=FI&geo=FR&geo=DE&geo=GR&geo=HU&geo=IE&geo=IT&geo=LV&geo=LT&geo=LU&geo=MT&geo=NL&geo=PL&geo=PT&geo=RO&geo=SK&geo=SI&geo=ES&geo=SE&unit=I15&coicop=CP045&sinceTimePeriod=2010-01&untilTimePeriod=2025-12",
+      "retrieved_at": "2026-07-18T13:36:12.596560+00:00",
+      "source_release_date": "2026-02-06",
+      "sha256": "1d86f40d5038395abf7c0a14c9ab6af2ff37b78f4b30f379a76a4e153dd9db65",
+      "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    },
+    {
+      "source_identifier": "eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06",
+      "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=EL&unit=I15&coicop=CP045&sinceTimePeriod=2010-01&untilTimePeriod=2025-12",
+      "retrieved_at": "2026-07-18T13:36:13.606843+00:00",
+      "source_release_date": "2026-02-06",
+      "sha256": "4955fa696ca43d492c2c40ec45210e50bc937f57cba34a8090a01b7974fb72bc",
+      "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06.json",
+      "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice"
+    }
+  ]
+}

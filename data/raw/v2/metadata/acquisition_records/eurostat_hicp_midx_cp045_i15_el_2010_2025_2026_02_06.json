@@ -1,0 +1,20 @@
+{
+  "source_identifier": "eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06",
+  "provider": "Eurostat",
+  "dataset_name": "HICP monthly data index PRC_HICP_MIDX, CP045 electricity gas and other fuels, index 2015=100, Greece",
+  "frequency": "monthly",
+  "coverage_description": "Greece (Eurostat geo EL); CP045 energy component; 2010-01 through 2025-12; unit I15 index 2015=100",
+  "release_lag_description": "Eurostat dissemination API response states UPDATE_DATA=2026-02-06T23:00:00+0100; archive is a current-release snapshot, not a historical-vintage reconstruction.",
+  "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice",
+  "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=EL&unit=I15&coicop=CP045&sinceTimePeriod=2010-01&untilTimePeriod=2025-12",
+  "source_release_date": "2026-02-06",
+  "retrieved_at": "2026-07-18T13:36:13.606843+00:00",
+  "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06.json",
+  "sha256": "4955fa696ca43d492c2c40ec45210e50bc937f57cba34a8090a01b7974fb72bc",
+  "response_metadata": {
+    "http_status": "200",
+    "content_type": "application/json",
+    "etag": "",
+    "last_modified": ""
+  }
+}

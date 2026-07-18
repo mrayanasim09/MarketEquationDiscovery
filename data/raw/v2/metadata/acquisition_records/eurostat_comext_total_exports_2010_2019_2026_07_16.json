@@ -1,0 +1,20 @@
+{
+  "source_identifier": "eurostat_comext_total_exports_2010_2019_2026_07_16",
+  "provider": "Eurostat",
+  "dataset_name": "Comext EU trade since 1988 by HS2-4-6 and CN8 (DS-045409)",
+  "frequency": "monthly",
+  "coverage_description": "20 EU reporters and partners; monthly export flow 2; product TOTAL; VALUE_IN_EUROS; 2010-01 through 2019-12",
+  "release_lag_description": "Eurostat Comext response states UPDATE_DATA=2026-07-16T11:00:00+0200; archive is a current-release snapshot, not a historical-vintage reconstruction.",
+  "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice",
+  "source_url": "https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409?freq=M&reporter=AT&reporter=BE&reporter=BG&reporter=HR&reporter=CY&reporter=CZ&reporter=DK&reporter=EE&reporter=FI&reporter=FR&reporter=DE&reporter=GR&reporter=HU&reporter=IE&reporter=IT&reporter=LV&reporter=LT&reporter=LU&reporter=MT&reporter=NL&partner=AT&partner=BE&partner=BG&partner=HR&partner=CY&partner=CZ&partner=DK&partner=EE&partner=FI&partner=FR&partner=DE&partner=GR&partner=HU&partner=IE&partner=IT&partner=LV&partner=LT&partner=LU&partner=MT&partner=NL&product=TOTAL&flow=2&indicators=VALUE_IN_EUROS&sinceTimePeriod=2010-01&untilTimePeriod=2019-12",
+  "source_release_date": "2026-07-16",
+  "retrieved_at": "2026-07-18T13:38:03.123552+00:00",
+  "local_file": "data/raw/v2/trade/comext/eurostat_comext_total_exports_2010_2019_2026_07_16.json",
+  "sha256": "1a83e2cea49a15ea30227ef36974a8028035fbd02989a04440ab0ff3b6630105",
+  "response_metadata": {
+    "http_status": "200",
+    "content_type": "application/json",
+    "etag": "",
+    "last_modified": ""
+  }
+}

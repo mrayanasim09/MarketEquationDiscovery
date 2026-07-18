@@ -1,0 +1,40 @@
+{
+  "design": "Expanding rolling-origin pseudo-real-time forecasts with fixed reference-period lags.",
+  "macro_lag_quarters": 1,
+  "trade_lag_quarters": 1,
+  "horizons": [
+    1,
+    2,
+    4
+  ],
+  "fixed_split_boundaries": {
+    "train_end": "2014Q4",
+    "validation_end": "2016Q4",
+    "test_start": "2017Q1"
+  },
+  "origin_counts": {
+    "1": {
+      "test": 35,
+      "train": 15,
+      "validation": 8
+    },
+    "2": {
+      "test": 34,
+      "train": 15,
+      "validation": 8
+    },
+    "4": {
+      "test": 32,
+      "train": 15,
+      "validation": 8
+    }
+  },
+  "test_origins_per_horizon": {
+    "1": 35,
+    "2": 34,
+    "4": 32
+  },
+  "country_count": 20,
+  "forecast_sample_rows": 3400,
+  "leakage_rule": "For every row, macro_feature_quarter and trade_graph_quarter are strictly earlier than origin_quarter; target_quarter is strictly later than origin_quarter."
+}

@@ -1,0 +1,31 @@
+{
+  "validated_at": "2026-07-18T15:25:07.236715+00:00",
+  "protocol_version": "2.0",
+  "raw_files": {
+    "data/raw/v2/macro/macro_observations.csv": {
+      "sha256": "db38cbd761231c44e197be2e127facf8400b2640d100b84dc933131a0b24ba60",
+      "rows": 10368
+    },
+    "data/raw/v2/trade/trade_observations.csv": {
+      "sha256": "88447c6717fa23448286fafbef9d09e134892c7ad86e78e07575259b29739056",
+      "rows": 72737
+    },
+    "data/raw/v2/metadata/source_registry.csv": {
+      "sha256": "1652455e2a78209558f24e9391de2d006ed6bb02854b0e4455a312d3e827a672",
+      "rows": 8
+    }
+  },
+  "source_identifiers": [
+    "eurostat_comext_total_exports_2010_2019_2026_07_16",
+    "eurostat_comext_total_exports_2026_07_16",
+    "eurostat_hicp_midx_cp00_i15_2010_2019_2026_02_06",
+    "eurostat_hicp_midx_cp00_i15_2026_02_06",
+    "eurostat_hicp_midx_cp00_i15_el_2010_2019_2026_02_06",
+    "eurostat_hicp_midx_cp00_i15_el_2026_02_06",
+    "eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06",
+    "eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06"
+  ],
+  "manifest_downloads": 8,
+  "raw_only": true,
+  "annual_upsampling_forbidden": true
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V2 raw acquisition manifest",
+  "type": "object",
+  "required": ["schema_version", "status", "downloads"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "status": {"type": "string", "not": {"const": "placeholder_no_data"}},
+    "downloads": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_identifier", "source_url", "retrieved_at", "source_release_date", "sha256", "local_file", "license_note"],
+        "properties": {
+          "source_identifier": {"type": "string"},
+          "source_url": {"type": "string", "format": "uri"},
+          "retrieved_at": {"type": "string", "format": "date-time"},
+          "source_release_date": {"type": "string", "format": "date"},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "local_file": {"type": "string"},
+          "license_note": {"type": "string"}
+        }
+      }
+    }
+  }
+}

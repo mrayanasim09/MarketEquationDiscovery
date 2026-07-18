@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V2 source registry",
+  "type": "object",
+  "required": ["source_identifier", "provider", "dataset_name", "frequency", "coverage_description", "release_lag_description", "license_note"],
+  "properties": {
+    "source_identifier": {"type": "string"},
+    "provider": {"type": "string"},
+    "dataset_name": {"type": "string"},
+    "frequency": {"enum": ["monthly", "quarterly"]},
+    "coverage_description": {"type": "string"},
+    "release_lag_description": {"type": "string"},
+    "license_note": {"type": "string"}
+  }
+}

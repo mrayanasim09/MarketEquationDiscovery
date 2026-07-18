@@ -1,0 +1,16 @@
+{
+  "engine_version": "2.0",
+  "dataset": "data/processed/v2",
+  "result_schema": "v2",
+  "seeds": [42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61],
+  "horizons": [1, 2, 4],
+  "epochs": 30,
+  "sequence_length": 4,
+  "hidden_dim": 16,
+  "learning_rate": 0.01,
+  "training_rule": "At outer forecast origin t, train only horizon-specific samples with target_quarter <= t; refit every neural and graph model from scratch.",
+  "graph_variants": ["directed_trade", "log_trade", "import_dependence", "top_k_incoming", "reversed", "undirected", "degree_preserving_random"],
+  "feature_sets": ["cpi_energy_sequence", "cpi_energy_volatility_trade_exposure"],
+  "models": ["persistence", "arima", "var", "ridge", "gradient_boosting", "bayesian_shrinkage_var", "mlp", "lstm", "tcn", "gcn", "temporal_graph"],
+  "submission_run_required": true
+}

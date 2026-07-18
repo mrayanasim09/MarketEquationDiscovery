@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V2 raw macro observations",
+  "type": "object",
+  "required": ["entity_id", "observation_date", "variable", "value", "unit", "frequency", "source_release_date", "source_identifier", "source_url", "retrieved_at", "observation_status", "missing_reason"],
+  "properties": {
+    "entity_id": {"type": "string", "description": "ISO 3166-1 alpha-3 economy code where available."},
+    "observation_date": {"type": "string", "format": "date"},
+    "variable": {"type": "string"},
+    "value": {"type": "number"},
+    "unit": {"type": "string"},
+    "frequency": {"enum": ["monthly", "quarterly"]},
+    "source_release_date": {"type": "string", "format": "date"},
+    "source_identifier": {"type": "string"},
+    "source_url": {"type": "string", "format": "uri"},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "observation_status": {"const": "observed"},
+    "missing_reason": {"type": "string"}
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "mode": "pre-training",
+  "errors": [],
+  "seed_count": 20,
+  "countries": 20,
+  "sample_rows": 3400,
+  "graph_shape": [
+    64,
+    20,
+    20
+  ]
+}

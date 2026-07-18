@@ -1,0 +1,20 @@
+{
+  "source_identifier": "eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06",
+  "provider": "Eurostat",
+  "dataset_name": "HICP monthly data index PRC_HICP_MIDX, CP045 electricity gas and other fuels, index 2015=100",
+  "frequency": "monthly",
+  "coverage_description": "26 countries; CP045 energy component; 2010-01 through 2025-12; unit I15 index 2015=100",
+  "release_lag_description": "Eurostat dissemination API response states UPDATE_DATA=2026-02-06T23:00:00+0100; archive is a current-release snapshot, not a historical-vintage reconstruction.",
+  "license_note": "Eurostat reuse policy: https://ec.europa.eu/eurostat/en/help/copyright-notice",
+  "source_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_hicp_midx?geo=AT&geo=BE&geo=BG&geo=HR&geo=CY&geo=CZ&geo=DK&geo=EE&geo=FI&geo=FR&geo=DE&geo=GR&geo=HU&geo=IE&geo=IT&geo=LV&geo=LT&geo=LU&geo=MT&geo=NL&geo=PL&geo=PT&geo=RO&geo=SK&geo=SI&geo=ES&geo=SE&unit=I15&coicop=CP045&sinceTimePeriod=2010-01&untilTimePeriod=2025-12",
+  "source_release_date": "2026-02-06",
+  "retrieved_at": "2026-07-18T13:36:12.596560+00:00",
+  "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06.json",
+  "sha256": "1d86f40d5038395abf7c0a14c9ab6af2ff37b78f4b30f379a76a4e153dd9db65",
+  "response_metadata": {
+    "http_status": "200",
+    "content_type": "application/json",
+    "etag": "",
+    "last_modified": ""
+  }
+}

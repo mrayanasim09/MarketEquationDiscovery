@@ -1,0 +1,37 @@
+{
+  "validated_at": "2026-07-18T15:25:07.041129+00:00",
+  "passed": true,
+  "country_count": 20,
+  "feature_rows": 1728,
+  "graph_snapshot_count": 64,
+  "forecast_origin_rows": 170,
+  "forecast_sample_rows": 3400,
+  "origin_counts": {
+    "1": {
+      "test": 35,
+      "train": 15,
+      "validation": 8
+    },
+    "2": {
+      "test": 34,
+      "train": 15,
+      "validation": 8
+    },
+    "4": {
+      "test": 32,
+      "train": 15,
+      "validation": 8
+    }
+  },
+  "leakage_checks": {
+    "macro_features_strictly_lagged": true,
+    "trade_graphs_strictly_lagged": true,
+    "targets_strictly_future": true,
+    "all_graph_references_exist": true,
+    "every_origin_has_complete_country_panel": true
+  },
+  "graph_missingness": {
+    "complete_directed_edges": 24199,
+    "unobserved_nonself_cells": 121
+  }
+}

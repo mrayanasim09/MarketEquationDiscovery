@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V2 raw bilateral trade observations",
+  "type": "object",
+  "required": ["exporter", "importer", "observation_period", "trade_value", "currency_unit", "frequency", "source_release_date", "source_identifier", "source_url", "retrieved_at", "observation_status", "missing_reason"],
+  "properties": {
+    "exporter": {"type": "string", "description": "ISO 3166-1 alpha-3 exporter code where available."},
+    "importer": {"type": "string", "description": "ISO 3166-1 alpha-3 importer code where available."},
+    "observation_period": {"type": "string", "description": "YYYY-MM for monthly or YYYYQn for quarterly reported trade."},
+    "trade_value": {"type": "number", "minimum": 0},
+    "currency_unit": {"type": "string"},
+    "frequency": {"enum": ["monthly", "quarterly"]},
+    "source_release_date": {"type": "string", "format": "date"},
+    "source_identifier": {"type": "string"},
+    "source_url": {"type": "string", "format": "uri"},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "observation_status": {"const": "observed"},
+    "missing_reason": {"type": "string"}
+  }
+}

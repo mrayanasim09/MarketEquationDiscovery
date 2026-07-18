@@ -1,0 +1,171 @@
+{
+  "generated_at": "2026-07-18T13:38:42.696209+00:00",
+  "raw_only": true,
+  "coverage": {
+    "aligned_countries": [
+      "AUT",
+      "BEL",
+      "BGR",
+      "CYP",
+      "CZE",
+      "DEU",
+      "DNK",
+      "EST",
+      "FIN",
+      "FRA",
+      "GRC",
+      "HRV",
+      "HUN",
+      "IRL",
+      "ITA",
+      "LTU",
+      "LUX",
+      "LVA",
+      "MLT",
+      "NLD"
+    ],
+    "aligned_country_count": 20,
+    "macro_country_count": 27,
+    "trade_country_count": 20,
+    "macro_date_range": [
+      "2010-01-01",
+      "2025-12-01"
+    ],
+    "trade_period_range": [
+      "2010-01",
+      "2025-12"
+    ],
+    "monthly_periods": 192,
+    "quarterly_periods_available_after_later_aggregation": 64,
+    "variables": [
+      "HICP_CP00_INDEX",
+      "HICP_CP045_ENERGY_INDEX"
+    ],
+    "macro_observations": 10368,
+    "trade_observations": 72737
+  },
+  "missingness": {
+    "macro_missing_value_rows": 0,
+    "aligned_macro_expected_cells": 7680,
+    "aligned_macro_observed_cells": 7680,
+    "aligned_macro_missing_cells": 0,
+    "aligned_macro_missing_pct": 0.0,
+    "aligned_trade_expected_nonself_cells": 72960,
+    "aligned_trade_observed_nonself_cells": 72737,
+    "aligned_trade_absent_cells": 223,
+    "aligned_trade_absent_pct": 0.3056
+  },
+  "source_quality": {
+    "source_count": 8,
+    "sources": [
+      {
+        "source_identifier": "eurostat_comext_total_exports_2010_2019_2026_07_16",
+        "provider": "Eurostat",
+        "dataset_name": "Comext EU trade since 1988 by HS2-4-6 and CN8 (DS-045409)",
+        "frequency": "monthly",
+        "source_release_date": "2026-07-16",
+        "retrieved_at": "2026-07-18T13:38:03.123552+00:00",
+        "local_file": "data/raw/v2/trade/comext/eurostat_comext_total_exports_2010_2019_2026_07_16.json",
+        "sha256": "1a83e2cea49a15ea30227ef36974a8028035fbd02989a04440ab0ff3b6630105",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_comext_total_exports_2026_07_16",
+        "provider": "Eurostat",
+        "dataset_name": "Comext EU trade since 1988 by HS2-4-6 and CN8 (DS-045409)",
+        "frequency": "monthly",
+        "source_release_date": "2026-07-16",
+        "retrieved_at": "2026-07-18T13:26:46.161967+00:00",
+        "local_file": "data/raw/v2/trade/comext/eurostat_comext_total_exports_2026_07_16.json",
+        "sha256": "fb926b49bba71011f96b067670998ed4751981739529f62d1fb11e721d19a844",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_hicp_midx_cp00_i15_2010_2019_2026_02_06",
+        "provider": "Eurostat",
+        "dataset_name": "HICP monthly data index PRC_HICP_MIDX, all-items CP00, index 2015=100",
+        "frequency": "monthly",
+        "source_release_date": "2026-02-06",
+        "retrieved_at": "2026-07-18T13:36:09.327867+00:00",
+        "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_2010_2019_2026_02_06.json",
+        "sha256": "875187293540c0a29193a3b2c22e01a9c02e69ca0eb39a79eb5ac22b37b7609a",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_hicp_midx_cp00_i15_2026_02_06",
+        "provider": "Eurostat",
+        "dataset_name": "HICP monthly data index PRC_HICP_MIDX, all-items CP00, index 2015=100",
+        "frequency": "monthly",
+        "source_release_date": "2026-02-06",
+        "retrieved_at": "2026-07-18T13:22:23.066990+00:00",
+        "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_2026_02_06.json",
+        "sha256": "23efc3ca0a2cf8441a07e31329471f13a76bc8f0c5694e13d1d3e2310ba91b49",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_hicp_midx_cp00_i15_el_2010_2019_2026_02_06",
+        "provider": "Eurostat",
+        "dataset_name": "HICP monthly data index PRC_HICP_MIDX, all-items CP00, index 2015=100, Greece",
+        "frequency": "monthly",
+        "source_release_date": "2026-02-06",
+        "retrieved_at": "2026-07-18T13:36:10.886482+00:00",
+        "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_el_2010_2019_2026_02_06.json",
+        "sha256": "b6e4de7a8cbb042118418cd1b6736838f09288952b107c4e1ea47e8afc134535",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_hicp_midx_cp00_i15_el_2026_02_06",
+        "provider": "Eurostat",
+        "dataset_name": "HICP monthly data index PRC_HICP_MIDX, all-items CP00, index 2015=100, Greece",
+        "frequency": "monthly",
+        "source_release_date": "2026-02-06",
+        "retrieved_at": "2026-07-18T13:27:52.796702+00:00",
+        "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp00_i15_el_2026_02_06.json",
+        "sha256": "d1cce670844228e883bcd02782cbdbb4cea034fb5949c86753c92017b2485e23",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06",
+        "provider": "Eurostat",
+        "dataset_name": "HICP monthly data index PRC_HICP_MIDX, CP045 electricity gas and other fuels, index 2015=100",
+        "frequency": "monthly",
+        "source_release_date": "2026-02-06",
+        "retrieved_at": "2026-07-18T13:36:12.596560+00:00",
+        "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp045_i15_2010_2025_2026_02_06.json",
+        "sha256": "1d86f40d5038395abf7c0a14c9ab6af2ff37b78f4b30f379a76a4e153dd9db65",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      },
+      {
+        "source_identifier": "eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06",
+        "provider": "Eurostat",
+        "dataset_name": "HICP monthly data index PRC_HICP_MIDX, CP045 electricity gas and other fuels, index 2015=100, Greece",
+        "frequency": "monthly",
+        "source_release_date": "2026-02-06",
+        "retrieved_at": "2026-07-18T13:36:13.606843+00:00",
+        "local_file": "data/raw/v2/macro/official/eurostat_hicp_midx_cp045_i15_el_2010_2025_2026_02_06.json",
+        "sha256": "4955fa696ca43d492c2c40ec45210e50bc937f57cba34a8090a01b7974fb72bc",
+        "vintage_limitation": "Archived current-release snapshot; not a reconstructed historical real-time vintage."
+      }
+    ],
+    "definition_boundary": "Eurostat HICP index series and Eurostat Comext total-goods monthly export values in current euros; no cross-source value merge was performed.",
+    "release_metadata_available": true,
+    "hashes_verified_by_raw_validator": true
+  },
+  "research_quality_checks": {
+    "multiple_inflation_regimes_represented": [
+      "European sovereign-debt and post-crisis period (2010 onward)",
+      "low-inflation period before 2020",
+      "COVID-19 shock",
+      "2021-2022 energy/inflation shock",
+      "post-shock normalization through 2025"
+    ],
+    "minimum_32_test_origins_feasible_in_principle": true,
+    "alignment_complete_for_raw_panel": true,
+    "limitations": [
+      "The panel is regional (20 aligned European economies), not global.",
+      "Source payloads are current-release snapshots and do not establish historical real-time vintages.",
+      "The raw layer contains HICP CP045 (electricity, gas and other fuels); later feature definitions must retain this exact component scope.",
+      "The 64 quarterly periods permit a 32-origin final test only with a comparatively short pre-test training/validation history; the forecasting design must pre-specify the split before transformation."
+    ]
+  }
+}
