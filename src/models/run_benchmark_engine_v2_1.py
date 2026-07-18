@@ -36,7 +36,7 @@ from src.models.run_benchmark_engine_v2 import (
 )
 from src.models.storage_v2_1 import DM_COLUMNS, FORECAST_COLUMNS, METRIC_COLUMNS, RESULTS, append_failure_record, write_parquet_exact
 from src.models.training import eligible_training, quarterly_step_count, seed_everything
-from src.models.tuning.manifest import require_tuning_manifest
+from src.models.tuning.manifest import TUNING_MANIFEST, require_tuning_manifest
 from src.models.validate_v2_1_contract import REQUIRED_MODELS, load_config, validation_report
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
@@ -103,7 +103,7 @@ def _checkpoint(model: torch.nn.Module, directory: Path, name: str) -> None:
     torch.save(model.state_dict(), directory / f"{name}.pt")
 
 
-def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame, test: pd.DataFrame, panel: pd.DataFrame, countries: list[str], qidx: dict[str, int], adjacency: np.ndarray, cfg: dict[str, Any], checkpoint_dir: Path, checkpoint_id: str) -> np.ndarray:
+def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame, test: pd.DataFrame, panel: pd.DataFrame, countries: list[str], qidx: dict[str, int], adjacency: np.ndarray, cfg: dict[str, Any], checkpoint_dir: Path | None, checkpoint_id: str) -> np.ndarray:
     seed_everything(seed)
     train_features = sequence_eligible_rows(train, panel).sort_values(["origin_quarter", "country"])
     y = train_features.target_cpi_yoy.to_numpy(float)
@@ -136,7 +136,8 @@ def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame,
         model = TemporalGraphForecaster(2, cfg["hidden_dim"]) if temporal else GraphConvolutionForecaster(2, cfg["hidden_dim"])
         model = fit_graph_neural(model, scaled_panels, cfg["epochs"], cfg["learning_rate"], temporal)
         prediction = model(torch.tensor((test_x - scaler[0]) / scaler[1], dtype=torch.float32), torch.tensor(test_graph, dtype=torch.float32)).detach().numpy()
-    _checkpoint(model, checkpoint_dir, checkpoint_id)
+    if checkpoint_dir is not None:
+        _checkpoint(model, checkpoint_dir, checkpoint_id)
     return np.asarray(prediction, dtype=float)
 
 
@@ -172,7 +173,7 @@ def _write_manifest(run_id: str, cfg: dict[str, Any], tuning: dict[str, Any]) ->
     existing = json.loads(target.read_text()) if target.exists() else {"engine_version": "2.1", "runs": []}
     if any(item.get("run_id") == run_id for item in existing["runs"]):
         raise RuntimeError("generated run_id already exists")
-    existing["runs"].append({"run_id": run_id, "status": "started", "configuration_sha256": sha256_file(CONFIG_PATH), "tuning_manifest_sha256": sha256_file(RESULTS / "tuning_manifest.json"), "models": cfg["models"], "graph_variants": cfg["graph_variants"], "seeds": cfg["seeds"], "horizons": cfg["horizons"], "started_at": datetime.now(timezone.utc).isoformat(), "python_version": sys.version, "platform": platform.platform(), "tuning_selected_parameters": tuning["selected_parameters"]})
+    existing["runs"].append({"run_id": run_id, "status": "started", "configuration_sha256": sha256_file(CONFIG_PATH), "tuning_manifest_sha256": sha256_file(TUNING_MANIFEST), "models": cfg["models"], "graph_variants": cfg["graph_variants"], "seeds": cfg["seeds"], "horizons": cfg["horizons"], "started_at": datetime.now(timezone.utc).isoformat(), "python_version": sys.version, "platform": platform.platform(), "tuning_selected_parameters": tuning["selected_parameters"]})
     target.write_text(json.dumps(existing, indent=2) + "\n")
 
 

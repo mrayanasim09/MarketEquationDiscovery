@@ -14,6 +14,7 @@ def candidate_registry(config: dict[str, Any]) -> dict[str, list[dict[str, Any]]
     epochs = int(config["epochs"])
     learning_rate = float(config["learning_rate"])
     return {
+        "persistence": [{"method": "last_available_cpi_yoy"}],
         "arima": [{"order": [1, 0, 0]}],
         "var": [{"lags": 1}],
         "ets": [{"trend": None, "seasonal": None, "damped_trend": False}],

@@ -11,7 +11,7 @@ from src.models.provenance import sha256_file
 ROOT = Path(__file__).resolve().parents[3]
 RESULTS = ROOT / "experiments/results/v2_1"
 CONFIG = RESULTS / "configs/benchmark_engine_v2_1.json"
-TUNING_MANIFEST = RESULTS / "tuning_manifest.json"
+TUNING_MANIFEST = RESULTS / "tuning" / "tuning_manifest.json"
 
 
 def require_tuning_manifest() -> dict[str, Any]:
@@ -19,7 +19,7 @@ def require_tuning_manifest() -> dict[str, Any]:
     if not TUNING_MANIFEST.is_file():
         raise FileNotFoundError("v2.1 tuning manifest is required before final-test execution")
     manifest = json.loads(TUNING_MANIFEST.read_text())
-    required = {"status", "configuration_sha256", "selection_split", "candidate_registry", "validation_losses", "selected_parameters", "calibration", "written_at"}
+    required = {"run_id", "git_commit", "configuration_id", "status", "configuration_sha256", "selection_split", "candidate_registry", "validation_losses", "selected_parameters", "calibration", "records", "written_at"}
     missing = sorted(required - set(manifest))
     if missing:
         raise RuntimeError(f"v2.1 tuning manifest lacks required fields: {missing}")
@@ -27,8 +27,8 @@ def require_tuning_manifest() -> dict[str, Any]:
         raise RuntimeError("v2.1 tuning manifest is not a completed validation-only selection")
     if manifest["configuration_sha256"] != sha256_file(CONFIG):
         raise RuntimeError("v2.1 tuning manifest does not match the locked configuration")
-    if not manifest["validation_losses"] or not manifest["selected_parameters"] or not manifest["calibration"]:
-        raise RuntimeError("v2.1 tuning manifest has no validation results, selections, or calibration")
+    if not manifest["validation_losses"] or not manifest["selected_parameters"] or not manifest["calibration"] or not manifest["records"]:
+        raise RuntimeError("v2.1 tuning manifest has no validation results, selections, calibration, or per-model records")
     return manifest
 
 
@@ -36,7 +36,7 @@ def write_tuning_manifest(payload: dict[str, Any]) -> Path:
     """Write once. A completed selection is immutable and cannot be overwritten."""
     if TUNING_MANIFEST.exists():
         raise FileExistsError("refusing to overwrite immutable v2.1 tuning manifest")
-    required = {"candidate_registry", "validation_losses", "selected_parameters", "calibration"}
+    required = {"run_id", "git_commit", "configuration_id", "candidate_registry", "validation_losses", "selected_parameters", "calibration", "records"}
     missing = sorted(required - set(payload))
     if missing:
         raise ValueError(f"tuning payload lacks required fields: {missing}")
