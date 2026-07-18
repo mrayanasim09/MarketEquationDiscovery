@@ -89,9 +89,9 @@
   ],
   "edge_definition": "Directed exporter-to-importer sum of three monthly Comext VALUE_IN_EUROS observations.",
   "weight_files": {
-    "trade_eur": "/Users/rayyan/preprint/ssrn/data/processed/v2/adjacency_directed_trade_eur.npy",
-    "observed_mask": "/Users/rayyan/preprint/ssrn/data/processed/v2/adjacency_directed_observed_mask.npy",
-    "edge_table": "/Users/rayyan/preprint/ssrn/data/processed/v2/quarterly_trade_edges_directed.csv"
+    "trade_eur": "data/processed/v2/adjacency_directed_trade_eur.npy",
+    "observed_mask": "data/processed/v2/adjacency_directed_observed_mask.npy",
+    "edge_table": "data/processed/v2/quarterly_trade_edges_directed.csv"
   },
   "normalization": "None at transformation stage; raw euro and log1p edge weights are retained for later pre-specified model variants.",
   "missing_pairs": "A false observed-mask entry means no complete three-month source observation; it is not a zero-trade imputation.",
