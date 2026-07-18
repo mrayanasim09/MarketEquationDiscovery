@@ -30,3 +30,10 @@
 - **Cause:** Temporal graph panel construction incorrectly required a separate four-quarter history for each element in its existing four-quarter sequence, excluding early valid training windows.
 - **Repair rationale:** Each temporal sequence element must contain its directly observed, release-valid CPI/energy node vector at that element's permitted quarter. Replacing the redundant history request preserves the locked four-quarter sequence and removes no availability lag.
 - **Scientific impact:** No final-test row was accessed, no final-test prediction was generated, and no model selection occurred.
+
+## 2026-07-18 — Third validation-only tuning attempt retained
+
+- **Commit:** `d539402ca44d9e1beab5160166f19cb7101e50ab`.
+- **Result:** The complete locked validation-only sweep exceeded the bounded one-hour execution window and was terminated before its atomic manifest write.
+- **Observed diagnostics:** Statsmodels emitted ARIMA non-stationary-start and maximum-likelihood convergence warnings. These are retained runtime diagnostics; no fallback, hyperparameter, or dataset change was made.
+- **Scientific impact:** The tuner writes its immutable manifest only after the full sweep. Therefore no partial tuning result, winner, calibration parameter, final-test prediction, or test-data-derived artifact exists. A longer-lived, monitored compute allocation is required to finish the exact locked sweep.
