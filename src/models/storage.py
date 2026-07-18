@@ -7,9 +7,10 @@ import pandas as pd
 
 ROOT=Path(__file__).resolve().parents[2]
 RESULTS=ROOT/"experiments/results/v2"
-FORECAST_COLUMNS=["model_name","model_variant","seed","horizon","forecast_origin","country","target_quarter","prediction","actual","split","training_sample_count","earliest_training_quarter","latest_training_quarter","feature_set","graph_type"]
-METRIC_COLUMNS=["model_name","model_variant","seed","horizon","split","metric","value","origin_count","feature_set","graph_type"]
-DM_COLUMNS=["model_name","model_variant","seed","horizon","comparator_name","comparator_variant","dm_stat","p_value","origins","loss_difference"]
+PROVENANCE_COLUMNS=["run_id","git_commit","dataset_version","configuration_id","execution_timestamp"]
+FORECAST_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","graph_variant","seed","horizon","forecast_origin","country","target_quarter","prediction","actual","split","training_sample_count","earliest_training_quarter","latest_training_quarter","feature_set","graph_type"]
+METRIC_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","graph_variant","seed","horizon","split","metric","value","origin_count","feature_set","graph_type"]
+DM_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","seed","horizon","comparator_name","comparator_variant","dm_stat","p_value","origins","loss_difference"]
 
 def path(name:str)->Path: return RESULTS/name
 
@@ -18,6 +19,8 @@ def append_parquet(name:str, frame:pd.DataFrame, columns:list[str], keys:list[st
     if missing: raise ValueError(f"{name} missing schema columns: {sorted(missing)}")
     RESULTS.mkdir(parents=True, exist_ok=True)
     frame=frame[columns].copy()
+    if any(frame[column].isna().any() or frame[column].astype(str).str.strip().eq("").any() for column in PROVENANCE_COLUMNS if column in columns):
+        raise ValueError(f"{name} has missing execution provenance")
     target=path(name)
     if target.exists():
         old=pd.read_parquet(target)

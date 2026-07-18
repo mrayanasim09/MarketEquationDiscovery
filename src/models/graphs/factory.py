@@ -2,6 +2,18 @@
 from __future__ import annotations
 import numpy as np
 
+GRAPH_VARIANTS = (
+    "directed_trade",
+    "log_trade",
+    "import_dependence",
+    "top_k_incoming",
+    "reversed",
+    "undirected",
+    "degree_preserving_random",
+    "identity_no_trade",
+)
+
+
 def row_normalize(a:np.ndarray)->np.ndarray:
     total=a.sum(axis=1,keepdims=True)
     return a/np.where(total>0,total,1.0)

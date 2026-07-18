@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from src.models.storage import DM_COLUMNS, METRIC_COLUMNS, append_parquet
+from src.models.storage import DM_COLUMNS, METRIC_COLUMNS, PROVENANCE_COLUMNS, append_parquet
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments/results/v2"
@@ -73,13 +73,13 @@ def _bh_adjust(pvalues: pd.Series) -> pd.Series:
 
 def score_forecasts(forecasts: pd.DataFrame) -> pd.DataFrame:
     rows = []
-    key = ["model_name", "model_variant", "seed", "horizon", "split", "feature_set", "graph_type"]
+    key = PROVENANCE_COLUMNS + ["model_name", "model_variant", "graph_variant", "seed", "horizon", "split", "feature_set", "graph_type"]
     for values, group in forecasts.groupby(key, dropna=False):
-        model, variant, seed, horizon, split, feature_set, graph_type = cast(tuple[object, object, object, object, object, object, object], values)
+        run_id, git_commit, dataset_version, configuration_id, execution_timestamp, model, variant, graph_variant, seed, horizon, split, feature_set, graph_type = cast(tuple[object, object, object, object, object, object, object, object, object, object, object, object, object], values)
         origin_abs = _origin_losses(group, "absolute")
         origin_sq = _origin_losses(group, "squared")
         # The persistence forecast is used as the available scale for MASE.
-        persistence_rows = cast(pd.DataFrame, forecasts[(forecasts.model_name == "persistence") & (forecasts.seed == "deterministic")])
+        persistence_rows = cast(pd.DataFrame, forecasts[(forecasts.model_name == "persistence") & (forecasts.seed == "deterministic") & (forecasts.run_id == run_id)])
         persistence = group.merge(
             persistence_rows[["horizon", "forecast_origin", "country", "prediction"]],
             on=["horizon", "forecast_origin", "country"], suffixes=("", "_persistence"), how="left",
@@ -90,7 +90,7 @@ def score_forecasts(forecasts: pd.DataFrame) -> pd.DataFrame:
         direction_base = persistence.prediction_persistence
         directional = (np.sign(persistence.prediction - direction_base) == np.sign(persistence.actual - direction_base)).mean()
         lo, hi = _block_bootstrap(origin_abs, np.random.default_rng(20260718))
-        common = {"model_name": model, "model_variant": variant, "seed": seed, "horizon": horizon, "split": split, "origin_count": len(origin_abs), "feature_set": feature_set, "graph_type": graph_type}
+        common = {"run_id": run_id, "git_commit": git_commit, "dataset_version": dataset_version, "configuration_id": configuration_id, "execution_timestamp": execution_timestamp, "model_name": model, "model_variant": variant, "graph_variant": graph_variant, "seed": seed, "horizon": horizon, "split": split, "origin_count": len(origin_abs), "feature_set": feature_set, "graph_type": graph_type}
         rows.extend([
             {**common, "metric": "mae", "value": float(origin_abs.mean())},
             {**common, "metric": "rmse", "value": float(np.sqrt(origin_sq.mean()))},
@@ -105,9 +105,9 @@ def score_forecasts(forecasts: pd.DataFrame) -> pd.DataFrame:
 def dm_tests(forecasts: pd.DataFrame, comparator: str = "ridge") -> pd.DataFrame:
     rows = []
     candidates = forecasts[forecasts.model_name.isin(["gcn", "temporal_graph"])]
-    for values, group in candidates.groupby(["model_name", "model_variant", "seed", "horizon"]):
-        model, variant, seed, horizon = cast(tuple[object, object, object, object], values)
-        base = forecasts[(forecasts.model_name == comparator) & (forecasts.horizon == horizon)]
+    for values, group in candidates.groupby(PROVENANCE_COLUMNS + ["model_name", "model_variant", "seed", "horizon"]):
+        run_id, git_commit, dataset_version, configuration_id, execution_timestamp, model, variant, seed, horizon = cast(tuple[object, object, object, object, object, object, object, object, object], values)
+        base = forecasts[(forecasts.model_name == comparator) & (forecasts.horizon == horizon) & (forecasts.run_id == run_id)]
         if base.empty:
             continue
         # A seeded graph model is compared with the deterministic comparator at identical origins/countries.
@@ -116,7 +116,7 @@ def dm_tests(forecasts: pd.DataFrame, comparator: str = "ridge") -> pd.DataFrame
         loss_base = (joined.actual_base - joined.prediction_base).abs().groupby(joined.forecast_origin).mean()
         difference = (loss_model - loss_base).dropna()
         statistic, pvalue = _dm_hln(difference.to_numpy(), int(cast(int | str, horizon)))
-        rows.append({"model_name": model, "model_variant": variant, "seed": seed, "horizon": horizon, "comparator_name": comparator, "comparator_variant": "macro_trade_exposure", "dm_stat": statistic, "p_value": pvalue, "origins": len(difference), "loss_difference": float(difference.mean())})
+        rows.append({"run_id": run_id, "git_commit": git_commit, "dataset_version": dataset_version, "configuration_id": configuration_id, "execution_timestamp": execution_timestamp, "model_name": model, "model_variant": variant, "seed": seed, "horizon": horizon, "comparator_name": comparator, "comparator_variant": "macro_trade_exposure", "dm_stat": statistic, "p_value": pvalue, "origins": len(difference), "loss_difference": float(difference.mean())})
     result = cast(pd.DataFrame, pd.DataFrame(rows, columns=DM_COLUMNS))
     if not result.empty:
         result["p_value_bh"] = _bh_adjust(result.p_value)
@@ -126,7 +126,7 @@ def dm_tests(forecasts: pd.DataFrame, comparator: str = "ridge") -> pd.DataFrame
 def seed_summary(metrics: pd.DataFrame) -> pd.DataFrame:
     """Aggregate seed-level estimates; deterministic models remain explicitly singleton rows."""
     base = metrics[metrics.metric.isin(["mae", "rmse", "mase", "directional_accuracy"])]
-    grouped = base.groupby(["model_name", "model_variant", "horizon", "metric"], dropna=False).value
+    grouped = base.groupby(["run_id", "model_name", "model_variant", "horizon", "metric"], dropna=False).value
     summary = grouped.agg(["mean", "std", "count"]).reset_index()
     summary["ci95_low"] = summary["mean"] - 1.96 * summary["std"].fillna(0) / np.sqrt(summary["count"])
     summary["ci95_high"] = summary["mean"] + 1.96 * summary["std"].fillna(0) / np.sqrt(summary["count"])
@@ -142,11 +142,11 @@ def main() -> int:
         raise SystemExit("Refusing to score without --execute; run only after all locked forecasts have been stored.")
     forecasts = pd.read_parquet(RESULTS / "forecasts.parquet")
     metrics = score_forecasts(forecasts)
-    append_parquet("metrics.parquet", metrics, METRIC_COLUMNS, ["model_name", "model_variant", "seed", "horizon", "split", "metric"])
+    append_parquet("metrics.parquet", metrics, METRIC_COLUMNS, ["run_id", "model_name", "model_variant", "seed", "horizon", "split", "metric"])
     dm = dm_tests(forecasts, args.comparator)
     if not dm.empty:
         # p_value_bh is retained in the analysis companion table; canonical DM rows preserve the locked schema.
-        append_parquet("dm_tests.parquet", cast(pd.DataFrame, dm.loc[:, DM_COLUMNS]), DM_COLUMNS, ["model_name", "model_variant", "seed", "horizon", "comparator_name"])
+        append_parquet("dm_tests.parquet", cast(pd.DataFrame, dm.loc[:, DM_COLUMNS]), DM_COLUMNS, ["run_id", "model_name", "model_variant", "seed", "horizon", "comparator_name"])
         dm.to_parquet(RESULTS / "dm_tests_adjusted.parquet", index=False)
     seed_summary(metrics).to_parquet(RESULTS / "metrics_seed_summary.parquet", index=False)
     print("V2 post-run scoring completed with seed-level metrics and HAC/HLN DM tests.")

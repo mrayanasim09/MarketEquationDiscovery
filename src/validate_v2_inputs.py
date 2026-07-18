@@ -16,7 +16,7 @@ from typing import Any
 
 import pandas as pd
 
-from src.config import DATA_RAW, ROOT, load_protocol
+from src.config import DATA_RAW, ROOT
 
 V2_RAW = DATA_RAW / "v2"
 MACRO_DIR = V2_RAW / "macro"
@@ -33,6 +33,7 @@ SCHEMA_FILES = [
 ]
 ACQUISITION_MANIFEST_FILE = V2_RAW / "raw_manifest.json"
 VALIDATION_MANIFEST_FILE = V2_RAW / "validation_manifest.json"
+V2_PROCESSED = ROOT / "data" / "processed" / "v2"
 
 MACRO_COLUMNS = [
     "entity_id", "observation_date", "variable", "value", "unit", "frequency",
@@ -212,6 +213,95 @@ def validate_registry(registry: pd.DataFrame) -> list[str]:
     return errors
 
 
+def validate_processed_model_compatibility() -> list[str]:
+    """Validate persisted model inputs without changing raw or processed artifacts."""
+    errors: list[str] = []
+    required = {
+        "countries": V2_PROCESSED / "countries.json",
+        "quarters": V2_PROCESSED / "quarters.json",
+        "feature_panel": V2_PROCESSED / "quarterly_feature_panel.csv",
+        "forecast_samples": V2_PROCESSED / "forecast_samples.csv",
+        "graph_manifest": V2_PROCESSED / "graph_manifest.json",
+        "adjacency": V2_PROCESSED / "adjacency_directed_trade_eur.npy",
+        "observed_mask": V2_PROCESSED / "adjacency_directed_observed_mask.npy",
+    }
+    missing = [str(path.relative_to(ROOT)) for path in required.values() if not path.is_file()]
+    if missing:
+        return [f"processed/model compatibility inputs are missing: {missing}"]
+
+    import numpy as np
+
+    try:
+        countries = json.loads(required["countries"].read_text())
+        quarters = json.loads(required["quarters"].read_text())
+        graph_manifest = json.loads(required["graph_manifest"].read_text())
+        panel = pd.read_csv(required["feature_panel"])
+        samples = pd.read_csv(required["forecast_samples"])
+        adjacency = np.load(required["adjacency"])
+        observed_mask = np.load(required["observed_mask"])
+    except (OSError, ValueError, json.JSONDecodeError, pd.errors.ParserError) as exc:
+        return [f"processed/model compatibility inputs cannot be read: {exc}"]
+
+    required_sample_columns = {
+        "country", "origin_quarter", "horizon_quarters", "target_quarter",
+        "macro_feature_quarter", "trade_graph_quarter", "cpi_yoy_input",
+        "energy_cpi_yoy_input", "target_cpi_yoy", "split",
+    }
+    required_panel_columns = {"entity_id", "quarter", "cpi_yoy", "energy_cpi_yoy"}
+    missing_sample_columns = sorted(required_sample_columns - set(samples.columns))
+    missing_panel_columns = sorted(required_panel_columns - set(panel.columns))
+    if missing_sample_columns:
+        errors.append(f"forecast_samples.csv missing required model-input columns: {missing_sample_columns}")
+    if missing_panel_columns:
+        errors.append(f"quarterly_feature_panel.csv missing required feature columns: {missing_panel_columns}")
+    if errors:
+        return errors
+
+    if not isinstance(countries, list) or len(countries) != len(set(countries)):
+        errors.append("countries.json must contain unique registered entities")
+    if not isinstance(quarters, list) or len(quarters) != len(set(quarters)):
+        errors.append("quarters.json must contain unique registered quarter labels")
+    if graph_manifest.get("countries") != countries or graph_manifest.get("quarters") != quarters:
+        errors.append("graph_manifest node or temporal registration differs from countries.json/quarters.json")
+    expected_shape = (len(quarters), len(countries), len(countries))
+    if adjacency.shape != expected_shape or observed_mask.shape != expected_shape:
+        errors.append(f"graph tensors must have shape {expected_shape}; found {adjacency.shape} and {observed_mask.shape}")
+
+    if samples.duplicated(["country", "origin_quarter", "horizon_quarters"]).any():
+        errors.append("forecast_samples.csv contains duplicate country-origin-horizon records")
+    if set(samples["country"]) != set(countries) or not set(panel["entity_id"]).issubset(set(countries)):
+        errors.append("feature or forecast entities do not match the registered graph node set")
+    if samples[["cpi_yoy_input", "energy_cpi_yoy_input", "target_cpi_yoy"]].isna().any().any():
+        errors.append("forecast_samples.csv has missing model inputs or targets")
+
+    parsed = samples.copy()
+    for column in ("origin_quarter", "target_quarter", "macro_feature_quarter", "trade_graph_quarter"):
+        parsed[column] = pd.PeriodIndex(parsed[column], freq="Q")
+    if (parsed["macro_feature_quarter"] >= parsed["origin_quarter"]).any() or (parsed["trade_graph_quarter"] >= parsed["origin_quarter"]).any():
+        errors.append("processed samples contain same-origin or future macro/graph inputs")
+    if (parsed["target_quarter"] <= parsed["origin_quarter"]).any():
+        errors.append("processed samples contain non-future forecast targets")
+    if not set(samples["trade_graph_quarter"]).issubset(set(quarters)):
+        errors.append("forecast samples reference graph quarters absent from persisted snapshots")
+
+    # LSTM/TCN and temporal-graph test inputs require four published quarterly values and snapshots.
+    panel_index = panel.set_index(["entity_id", "quarter"])[["cpi_yoy", "energy_cpi_yoy"]]
+    for row in parsed.loc[parsed["split"].eq("test")].itertuples(index=False):
+        macro_history = pd.period_range(end=row.macro_feature_quarter, periods=4, freq="Q")
+        graph_history = pd.period_range(end=row.trade_graph_quarter, periods=4, freq="Q")
+        if any((row.country, str(period)) not in panel_index.index for period in macro_history):
+            errors.append("test sequence input lacks a four-quarter feature history")
+            break
+        values = panel_index.loc[[(row.country, str(period)) for period in macro_history]]
+        if values.isna().any().any():
+            errors.append("test sequence input contains missing CPI or energy values")
+            break
+        if any(str(period) not in quarters for period in graph_history):
+            errors.append("test temporal graph input lacks a required lagged graph snapshot")
+            break
+    return errors
+
+
 def load_manifest(errors: list[str]) -> dict[str, Any] | None:
     try:
         manifest = json.loads(ACQUISITION_MANIFEST_FILE.read_text())
@@ -245,7 +335,6 @@ def load_manifest(errors: list[str]) -> dict[str, Any] | None:
 
 
 def main() -> int:
-    protocol = load_protocol("v2")
     errors = validate_directories_and_files()
     if errors:
         print("V2 RAW INPUT VALIDATION FAILED")
@@ -274,6 +363,8 @@ def main() -> int:
         if missing_manifest:
             errors.append(f"observations have no matching raw_manifest.json download: {missing_manifest}")
 
+    errors.extend(validate_processed_model_compatibility())
+
     if errors:
         print("V2 RAW INPUT VALIDATION FAILED")
         print("\n".join(f"- {error}" for error in errors))
@@ -282,7 +373,7 @@ def main() -> int:
     assert macro is not None and trade is not None and registry is not None and manifest is not None
     validation_manifest = {
         "validated_at": datetime.now(timezone.utc).isoformat(),
-        "protocol_version": protocol["protocol_version"],
+        "protocol_version": "v2",
         "raw_files": {
             str(MACRO_FILE.relative_to(ROOT)): {"sha256": sha256(MACRO_FILE), "rows": len(macro)},
             str(TRADE_FILE.relative_to(ROOT)): {"sha256": sha256(TRADE_FILE), "rows": len(trade)},
@@ -291,7 +382,7 @@ def main() -> int:
         "source_identifiers": sorted(set(macro["source_identifier"]) | set(trade["source_identifier"])),
         "manifest_downloads": len(manifest["downloads"]),
         "raw_only": True,
-        "annual_upsampling_forbidden": protocol["information_set"]["annual_upsampling_forbidden"],
+        "annual_upsampling_forbidden": True,
     }
     VALIDATION_MANIFEST_FILE.write_text(json.dumps(validation_manifest, indent=2) + "\n")
     print(

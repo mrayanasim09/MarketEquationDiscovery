@@ -11,7 +11,7 @@ import platform
 import sys
 from pathlib import Path
 from typing import cast
-from uuid import uuid4
+
 
 import numpy as np
 import pandas as pd
@@ -22,13 +22,14 @@ from torch import nn
 
 from src.models.baselines import BayesianShrinkageVAR, gradient_boosting_regressor
 from src.models.features import feature_sequence, volatility
-from src.models.graphs.factory import build as build_graph
+from src.models.graphs.factory import GRAPH_VARIANTS as GRAPH_FACTORY_VARIANTS, build as build_graph
 from src.models.neural import (
     GraphConvolutionForecaster,
     SequenceLSTM,
     TemporalConvNet,
     TemporalGraphForecaster,
 )
+from src.models.provenance import build_execution_provenance
 from src.models.storage import FORECAST_COLUMNS, append_parquet, write_run_manifest
 from src.models.training import eligible_training, seed_everything, training_metadata
 from src.transform.common import V2_PROCESSED, require_validated_raw
@@ -37,10 +38,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments/results/v2"
 CONFIG_PATH = RESULTS / "configs/benchmark_engine.json"
 NEURAL_MODELS = {"mlp", "lstm", "tcn", "gcn", "temporal_graph"}
-GRAPH_VARIANTS = [
-    "directed_trade", "log_trade", "import_dependence", "top_k_incoming",
-    "reversed", "undirected", "degree_preserving_random", "identity_no_trade",
-]
+GRAPH_VARIANTS = GRAPH_FACTORY_VARIANTS
 
 
 class MLP(nn.Module):
@@ -184,10 +182,11 @@ def fit_graph_neural(model: nn.Module, panels: list[tuple[np.ndarray, np.ndarray
     return model.eval()
 
 
-def forecast_rows(name: str, variant: str, seed: int | str, horizon: int, test: pd.DataFrame, predictions: np.ndarray, train: pd.DataFrame, feature_set: str, graph_type: str) -> pd.DataFrame:
+def forecast_rows(provenance: dict[str, str], name: str, variant: str, seed: int | str, horizon: int, test: pd.DataFrame, predictions: np.ndarray, train: pd.DataFrame, feature_set: str, graph_type: str) -> pd.DataFrame:
     meta = training_metadata(train)
     frame = pd.DataFrame({
-        "model_name": name, "model_variant": variant, "seed": str(seed), "horizon": horizon,
+        **provenance,
+        "model_name": name, "model_variant": variant, "graph_variant": graph_type, "seed": str(seed), "horizon": horizon,
         "forecast_origin": test.origin_quarter.astype(str), "country": test.country,
         "target_quarter": test.target_quarter.astype(str), "prediction": np.asarray(predictions, dtype=float),
         "actual": test.target_cpi_yoy.to_numpy(dtype=float), "split": test.split,
@@ -203,7 +202,7 @@ def checkpoint(model: nn.Module, run_id: str) -> None:
     torch.save(model.state_dict(), target)
 
 
-def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries: list[str], qidx: dict[str, int], adjacency: np.ndarray, horizon: int, origin: pd.Period, selected_models: set[str]) -> None:
+def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries: list[str], qidx: dict[str, int], adjacency: np.ndarray, horizon: int, origin: pd.Period, selected_models: set[str], provenance: dict[str, str]) -> None:
     test = cast(pd.DataFrame, samples[(samples.horizon_quarters == horizon) & (samples.origin_quarter == origin) & (samples.split == "test")]).sort_values("country")
     train = eligible_training(samples, horizon, origin).sort_values(["origin_quarter", "country"])
     # Four-quarter feature models exclude only early labels without four published input quarters.
@@ -214,12 +213,12 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
     outputs: list[pd.DataFrame] = []
 
     if "persistence" in selected_models:
-        outputs.append(forecast_rows("persistence", "last_cpi_yoy", "deterministic", horizon, test, test.cpi_yoy_input, train, "cpi_only", "none"))
+        outputs.append(forecast_rows(provenance, "persistence", "last_cpi_yoy", "deterministic", horizon, test, test.cpi_yoy_input, train, "cpi_only", "none"))
     if "ridge" in selected_models:
-        outputs.append(forecast_rows("ridge", "macro_trade_exposure", "deterministic", horizon, test, ridge_predict(x_train, y, x_test), train_features, "cpi_energy_volatility_trade_exposure", "none"))
+        outputs.append(forecast_rows(provenance, "ridge", "macro_trade_exposure", "deterministic", horizon, test, ridge_predict(x_train, y, x_test), train_features, "cpi_energy_volatility_trade_exposure", "none"))
     if "gradient_boosting" in selected_models:
         model = gradient_boosting_regressor().fit(x_train, y)
-        outputs.append(forecast_rows("gradient_boosting", "hist_gradient_boosting", "deterministic", horizon, test, model.predict(x_test), train_features, "cpi_energy_volatility_trade_exposure", "none"))
+        outputs.append(forecast_rows(provenance, "gradient_boosting", "hist_gradient_boosting", "deterministic", horizon, test, model.predict(x_test), train_features, "cpi_energy_volatility_trade_exposure", "none"))
 
     end = test.macro_feature_quarter.iloc[0]
     matrix = history_matrix(panel, countries, end)
@@ -230,13 +229,13 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
         except Exception:
             ordinary_var = test.cpi_yoy_input.to_numpy(dtype=float)
         if "var" in selected_models:
-            outputs.append(forecast_rows("var", "panel_var_lag1", "deterministic", horizon, test, ordinary_var, train, "cpi_history", "none"))
+            outputs.append(forecast_rows(provenance, "var", "panel_var_lag1", "deterministic", horizon, test, ordinary_var, train, "cpi_history", "none"))
         if "bayesian_shrinkage_var" in selected_models:
             try:
                 bvar = BayesianShrinkageVAR(lags=1, prior_precision=1.0).fit(matrix).forecast(steps)[-1]
             except Exception:
                 bvar = test.cpi_yoy_input.to_numpy(dtype=float)
-            outputs.append(forecast_rows("bayesian_shrinkage_var", "ridge_prior_lag1", "deterministic", horizon, test, bvar, train, "cpi_history", "none"))
+            outputs.append(forecast_rows(provenance, "bayesian_shrinkage_var", "ridge_prior_lag1", "deterministic", horizon, test, bvar, train, "cpi_history", "none"))
     if "arima" in selected_models:
         arima_predictions: list[float] = []
         for row in test.to_dict("records"):
@@ -248,7 +247,7 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
                 arima_predictions.append(float(ARIMA(values, order=(1, 0, 0)).fit().forecast(steps)[-1]))
             except Exception:
                 arima_predictions.append(float(row["cpi_yoy_input"]))
-        outputs.append(forecast_rows("arima", "country_arima_1_0_0", "deterministic", horizon, test, np.asarray(arima_predictions), train, "cpi_history", "none"))
+        outputs.append(forecast_rows(provenance, "arima", "country_arima_1_0_0", "deterministic", horizon, test, np.asarray(arima_predictions), train, "cpi_history", "none"))
 
     seq_train, seq_test = sequence_features(train_features, panel), sequence_features(test, panel)
     for seed in cfg["seeds"]:
@@ -258,9 +257,9 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
             x_scaled, z_scaled, _ = standardize(x_train, x_test)
             mlp = fit_neural(MLP(x_train.shape[1], cfg["hidden_dim"]), x_scaled, y, cfg["epochs"], cfg["learning_rate"])
             pred = mlp(torch.tensor(z_scaled, dtype=torch.float32)).detach().numpy()
-            run_id = f"mlp_h{horizon}_{origin}_s{seed}_{uuid4().hex[:8]}"
-            checkpoint(mlp, run_id)
-            outputs.append(forecast_rows("mlp", "macro_trade_exposure", seed, horizon, test, pred, train_features, "cpi_energy_volatility_trade_exposure", "none"))
+            checkpoint_id = f"mlp_h{horizon}_{origin}_s{seed}"
+            checkpoint(mlp, f"{provenance['run_id']}__{checkpoint_id}")
+            outputs.append(forecast_rows(provenance, "mlp", "macro_trade_exposure", seed, horizon, test, pred, train_features, "cpi_energy_volatility_trade_exposure", "none"))
         for name, cls in (("lstm", SequenceLSTM), ("tcn", TemporalConvNet)):
             if name not in selected_models:
                 continue
@@ -268,9 +267,9 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
             scaled_train, scaled_test, _ = standardize(flat_train, flat_test)
             net = fit_neural(cls(2, cfg["hidden_dim"]), scaled_train.reshape(seq_train.shape), y, cfg["epochs"], cfg["learning_rate"])
             pred = net(torch.tensor(scaled_test.reshape(seq_test.shape), dtype=torch.float32)).detach().numpy()
-            run_id = f"{name}_h{horizon}_{origin}_s{seed}_{uuid4().hex[:8]}"
-            checkpoint(net, run_id)
-            outputs.append(forecast_rows(name, "cpi_energy_history_k4", seed, horizon, test, pred, train_features, "cpi_energy_sequence", "none"))
+            checkpoint_id = f"{name}_h{horizon}_{origin}_s{seed}"
+            checkpoint(net, f"{provenance['run_id']}__{checkpoint_id}")
+            outputs.append(forecast_rows(provenance, name, "cpi_energy_history_k4", seed, horizon, test, pred, train_features, "cpi_energy_sequence", "none"))
         for variant in GRAPH_VARIANTS:
             for name, temporal in (("gcn", False), ("temporal_graph", True)):
                 if name not in selected_models:
@@ -292,18 +291,12 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
                 network = TemporalGraphForecaster(2, cfg["hidden_dim"]) if temporal else GraphConvolutionForecaster(2, cfg["hidden_dim"])
                 network = fit_graph_neural(network, scaled_panels, cfg["epochs"], cfg["learning_rate"], temporal)
                 pred = network(torch.tensor(test_scaled, dtype=torch.float32), torch.tensor(test_a, dtype=torch.float32)).detach().numpy()
-                run_id = f"{name}_{variant}_h{horizon}_{origin}_s{seed}_{uuid4().hex[:8]}"
-                checkpoint(network, run_id)
-                outputs.append(forecast_rows(name, variant, seed, horizon, test, pred, graph_train, "cpi_energy_sequence" if temporal else "cpi_energy_input", variant))
-        write_run_manifest({
-            "run_id": f"origin_h{horizon}_{origin}_s{seed}_{uuid4().hex[:8]}", "seed_state": seed_everything(seed),
-            "horizon": horizon, "forecast_origin": str(origin), "epochs": cfg["epochs"], "optimizer": {"name":"Adam","learning_rate":cfg["learning_rate"]},
-            "sequence_length": cfg["sequence_length"], "hidden_dim": cfg["hidden_dim"], "training": training_metadata(train),
-            "feature_sets": cfg["feature_sets"], "graph_variants": GRAPH_VARIANTS,
-            "python": sys.version, "platform": platform.platform(), "torch": torch.__version__, "numpy": np.__version__,
-        })
+                checkpoint_id = f"{name}_{variant}_h{horizon}_{origin}_s{seed}"
+                checkpoint(network, f"{provenance['run_id']}__{checkpoint_id}")
+                outputs.append(forecast_rows(provenance, name, variant, seed, horizon, test, pred, graph_train, "cpi_energy_sequence" if temporal else "cpi_energy_input", variant))
+
     for frame in outputs:
-        append_parquet("forecasts.parquet", frame, FORECAST_COLUMNS, ["model_name", "model_variant", "seed", "horizon", "forecast_origin", "country"])
+        append_parquet("forecasts.parquet", frame, FORECAST_COLUMNS, ["run_id", "model_name", "model_variant", "seed", "horizon", "forecast_origin", "country"])
 
 
 def main() -> int:
@@ -315,6 +308,23 @@ def main() -> int:
         raise SystemExit("Refusing to train: pass --execute only after the benchmark-engine validation gate passes.")
     require_validated_raw()
     cfg, samples, panel, countries, qidx, adjacency = load_inputs()
+    if tuple(cfg["graph_variants"]) != tuple(GRAPH_VARIANTS):
+        raise RuntimeError("locked configuration graph_variants do not match the graph factory registry")
+    provenance = build_execution_provenance(CONFIG_PATH)
+    write_run_manifest({
+        **provenance,
+        "engine_version": cfg["engine_version"],
+        "models": cfg["models"],
+        "graph_variants": list(GRAPH_VARIANTS),
+        "seeds": cfg["seeds"],
+        "epochs": cfg["epochs"],
+        "sequence_length": cfg["sequence_length"],
+        "learning_rate": cfg["learning_rate"],
+        "python": sys.version,
+        "platform": platform.platform(),
+        "torch": torch.__version__,
+        "numpy": np.__version__,
+    })
     selected = set(args.models or cfg["models"])
     unknown = selected - set(cfg["models"])
     if unknown:
@@ -323,7 +333,7 @@ def main() -> int:
     for horizon in cfg["horizons"]:
         origins = sorted(samples[(samples.horizon_quarters == horizon) & (samples.split == "test")].origin_quarter.unique())
         for origin in origins:
-            run_origin(cfg, samples, panel, countries, qidx, adjacency, horizon, origin, selected)
+            run_origin(cfg, samples, panel, countries, qidx, adjacency, horizon, origin, selected, provenance)
     print("V2 benchmark engine run completed; calculate results only with the post-run evaluation module.")
     return 0
 
