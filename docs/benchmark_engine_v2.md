@@ -156,6 +156,16 @@ Benjamini--Hochberg adjusted p-values are written to the companion adjusted DM
 table. Deterministic baselines remain explicitly `seed=deterministic`; they are
 not replicated to create artificial seed variation.
 
+## Failed-run retention policy
+
+`experiments/results/v2/run_manifest.json` is append-only. A run manifest written
+before a fail-closed execution error is preserved as an immutable failed-run
+record and is never overwritten or deleted by a retry. A subsequent authorized
+execution appends a new, distinct `run_id`; it must not reuse the failed run's
+identifier or attach forecasts to it. The failed run
+`v2-4450a858851c-3bb63b1b4018-2026-07-18T154406.982550+0000` produced no
+forecasts or checkpoints and remains retained locally as that record.
+
 ## Known limitations
 
 - Data are revised official releases rather than real-time vintage snapshots.

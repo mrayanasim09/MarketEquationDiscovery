@@ -31,7 +31,7 @@ from src.models.neural import (
 )
 from src.models.provenance import build_execution_provenance
 from src.models.storage import FORECAST_COLUMNS, append_parquet, write_run_manifest
-from src.models.training import eligible_training, seed_everything, training_metadata
+from src.models.training import eligible_training, quarterly_step_count, seed_everything, training_metadata
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -222,7 +222,7 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
 
     end = test.macro_feature_quarter.iloc[0]
     matrix = history_matrix(panel, countries, end)
-    steps = int(test.target_quarter.iloc[0] - end)
+    steps = quarterly_step_count(end, test.target_quarter.iloc[0])
     if "var" in selected_models or "bayesian_shrinkage_var" in selected_models:
         try:
             ordinary_var = VAR(matrix).fit(maxlags=1, trend="c").forecast(matrix[-1:], steps)[-1]

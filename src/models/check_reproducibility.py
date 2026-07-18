@@ -38,7 +38,6 @@ FORBIDDEN_RESULT_FILES = [
     RESULTS / "dm_tests.parquet",
     RESULTS / "dm_tests_adjusted.parquet",
     RESULTS / "metrics_seed_summary.parquet",
-    RESULTS / "run_manifest.json",
 ]
 
 
@@ -83,6 +82,16 @@ def main() -> int:
         existing_results.append(str(checkpoint_dir.relative_to(ROOT)))
     if existing_results:
         errors.append(f"benchmark outputs already exist: {existing_results}")
+    manifest_path = RESULTS / "run_manifest.json"
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text())
+            runs = manifest.get("runs") if isinstance(manifest, dict) else None
+            run_ids = [run.get("run_id") for run in runs if isinstance(run, dict)] if isinstance(runs, list) else []
+            if not isinstance(runs, list) or not run_ids or len(run_ids) != len(set(run_ids)):
+                errors.append("failed-run manifest is malformed or has duplicate run_id values")
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"failed-run manifest cannot be read: {exc}")
 
     artifacts = {str(path.relative_to(ROOT)): sha256_file(path) for path in SCIENTIFIC_ARTIFACTS if path.is_file()}
     missing_artifacts = [str(path.relative_to(ROOT)) for path in SCIENTIFIC_ARTIFACTS if not path.is_file()]

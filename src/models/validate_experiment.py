@@ -12,6 +12,7 @@ import pandas as pd
 from src.models.graphs.factory import GRAPH_VARIANTS
 from src.models.provenance import git_commit, required_provenance_fields, sha256_file
 from src.models.storage import FORECAST_COLUMNS
+from src.models.training import quarterly_step_count
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +37,25 @@ def _git_errors() -> list[str]:
     except (OSError, subprocess.CalledProcessError) as exc:
         return [f"Git commit provenance is unavailable: {exc}"]
     return []
+
+
+def _quarter_horizon_errors(samples: pd.DataFrame) -> list[str]:
+    """Regression guard for pandas-compatible quarterly Period arithmetic."""
+    origin = pd.Period(str(samples["origin_quarter"].iloc[0]), freq="Q")
+    probe = pd.PeriodIndex([origin, origin + 1, origin + 4], freq="Q")
+    if quarterly_step_count(probe[0], probe[1]) != 1 or quarterly_step_count(probe[0], probe[2]) != 4:
+        return ["quarterly PeriodIndex arithmetic does not return expected integer step counts"]
+    parsed = samples.copy()
+    for column in ("origin_quarter", "target_quarter", "macro_feature_quarter"):
+        parsed[column] = pd.PeriodIndex(parsed[column], freq="Q")
+    target_steps = parsed["target_quarter"].map(lambda value: value.ordinal) - parsed["origin_quarter"].map(lambda value: value.ordinal)
+    input_steps = parsed["target_quarter"].map(lambda value: value.ordinal) - parsed["macro_feature_quarter"].map(lambda value: value.ordinal)
+    errors: list[str] = []
+    if not target_steps.eq(parsed["horizon_quarters"]).all():
+        errors.append("forecast target quarters do not match their locked horizons")
+    if not input_steps.eq(parsed["horizon_quarters"] + 1).all():
+        errors.append("permitted macro-input-to-target steps must equal horizon plus the locked one-quarter availability lag")
+    return errors
 
 
 def _sequence_errors(samples: pd.DataFrame) -> list[str]:
@@ -90,6 +110,7 @@ def main() -> int:
         errors.append("sample graph quarter missing from snapshots")
     if adjacency.shape != (len(quarters), len(countries), len(countries)):
         errors.append("graph tensor shape mismatches node/quarter contract")
+    errors.extend(_quarter_horizon_errors(samples))
     errors.extend(_sequence_errors(samples))
 
     forecast_path = RESULTS / "forecasts.parquet"
