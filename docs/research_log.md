@@ -37,3 +37,11 @@
 - **Result:** The complete locked validation-only sweep exceeded the bounded one-hour execution window and was terminated before its atomic manifest write.
 - **Observed diagnostics:** Statsmodels emitted ARIMA non-stationary-start and maximum-likelihood convergence warnings. These are retained runtime diagnostics; no fallback, hyperparameter, or dataset change was made.
 - **Scientific impact:** The tuner writes its immutable manifest only after the full sweep. Therefore no partial tuning result, winner, calibration parameter, final-test prediction, or test-data-derived artifact exists. A longer-lived, monitored compute allocation is required to finish the exact locked sweep.
+
+## 2026-07-19 — Fourth validation-only tuning attempt retained
+
+- **Commit:** `67ca7a2698c47aefd36b35381ffecab8d52a3645`.
+- **Result:** The complete sweep reached its final manifest-write step but stopped because the new `experiments/results/v2_1/tuning/` parent directory had not been created.
+- **Cause:** `write_tuning_manifest` created the result root but not the required `tuning/` child directory.
+- **Repair rationale:** Create only the manifest parent directory immediately before its immutable write. No existing manifest, result, source-data artifact, or configuration is changed.
+- **Scientific impact:** The write failed before file creation; no partial tuning manifest exists. The next attempt must rerun the complete locked validation-only sweep from the beginning.

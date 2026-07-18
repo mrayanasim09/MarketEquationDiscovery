@@ -40,7 +40,7 @@ def write_tuning_manifest(payload: dict[str, Any]) -> Path:
     missing = sorted(required - set(payload))
     if missing:
         raise ValueError(f"tuning payload lacks required fields: {missing}")
-    RESULTS.mkdir(parents=True, exist_ok=True)
+    TUNING_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     record = {
         **payload,
         "status": "completed",
