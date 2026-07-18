@@ -15,6 +15,7 @@ from src.models.provenance import RUN_MANIFEST_REQUIRED_FIELDS, git_commit, requ
 from src.models.run_benchmark_engine_v2 import RUNNER_OUTPUTS, build_run_manifest_payload
 from src.models.storage import DM_COLUMNS, FORECAST_COLUMNS, METRIC_COLUMNS
 from src.models.training import quarterly_step_count
+from src.models.validate_v2_1_contract import validation_report as v2_1_validation_report
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,7 +30,7 @@ def _git_errors() -> list[str]:
             return ["canonical workspace is not inside a Git work tree"]
         git_commit()
         changed = subprocess.run(
-            ["git", "-C", str(ROOT), "diff", "--name-only", "HEAD", "--", "src", "data/raw/v2", "data/processed/v2", "experiments/results/v2/configs", "docs", "requirements.txt"],
+            ["git", "-C", str(ROOT), "diff", "--name-only", "HEAD", "--", "src", "data/raw/v2", "data/processed/v2", "experiments/results/v2/configs", "experiments/results/v2_1/configs", "docs", "requirements.txt"],
             check=True,
             capture_output=True,
             text=True,
@@ -152,12 +153,15 @@ def main() -> int:
         elif len([run.get("run_id") for run in runs if isinstance(run, dict)]) != len({run.get("run_id") for run in runs if isinstance(run, dict)}):
             errors.append("run_manifest.json contains non-unique run_id values")
 
+    v2_1_contract = v2_1_validation_report()
+    errors.extend(f"v2.1 contract: {error}" for error in v2_1_contract["errors"])
     report = {
         "passed": not errors,
         "mode": "post-run" if forecast_path.exists() else "pre-training",
+        "v2_1_contract": v2_1_contract,
         "validated_at": datetime.now(timezone.utc).isoformat(),
         "git_commit": git_commit() if not _git_errors() else None,
-        "configuration_id": f"sha256:{sha256_file(CONFIG)}",
+        "v2_configuration_id": f"sha256:{sha256_file(CONFIG)}",
         "required_forecast_schema": FORECAST_COLUMNS,
         "errors": errors,
         "seed_count": len(cfg["seeds"]),
@@ -165,8 +169,9 @@ def main() -> int:
         "sample_rows": len(samples),
         "graph_shape": list(adjacency.shape),
     }
-    (RESULTS / "metadata").mkdir(parents=True, exist_ok=True)
-    (RESULTS / "metadata/validation.json").write_text(json.dumps(report, indent=2) + "\n")
+    v2_1_metadata = ROOT / "experiments/results/v2_1/metadata"
+    v2_1_metadata.mkdir(parents=True, exist_ok=True)
+    (v2_1_metadata / "validation.json").write_text(json.dumps(report, indent=2) + "\n")
     if errors:
         print("V2 BENCHMARK ENGINE VALIDATION FAILED")
         print("\n".join(f"- {error}" for error in errors))

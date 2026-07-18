@@ -1,0 +1,54 @@
+{
+  "configuration_id": "v2.1-journal-prospective-20260718",
+  "engine_version": "2.1",
+  "protocol_document": "docs/research_protocol_v2_1.md",
+  "dataset": "data/processed/v2",
+  "result_namespace": "experiments/results/v2_1",
+  "seeds": [42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61],
+  "horizons": [1, 2, 4],
+  "epochs": 30,
+  "sequence_length": 4,
+  "hidden_dim": 16,
+  "learning_rate": 0.01,
+  "training_rule": "At outer forecast origin t, fit only horizon-specific samples with target_quarter <= t; no final-test observation may be used for tuning, calibration, selection, or fitting.",
+  "split_rule": {
+    "training_origins": ["2011Q2", "2014Q4"],
+    "validation_origins": ["2015Q1", "2016Q4"],
+    "test_origins": ["2017Q1", "2025Q3"],
+    "selection_split": "validation",
+    "test_set_tuning_forbidden": true
+  },
+  "models": ["persistence", "arima", "var", "ets", "dynamic_factor", "ridge", "gradient_boosting", "mlp", "lstm", "tcn", "gcn", "temporal_graph"],
+  "graph_models": ["gcn", "temporal_graph"],
+  "graph_variants": ["directed_trade", "log_trade", "import_dependence", "top_k_incoming", "reversed", "undirected", "degree_preserving_random", "identity_no_trade"],
+  "feature_sets": ["cpi_energy_sequence", "cpi_energy_volatility_trade_exposure"],
+  "metrics": {
+    "deterministic": ["rmse", "mae", "smape"],
+    "probabilistic": ["crps", "interval_coverage_80", "interval_width_80", "interval_coverage_95", "interval_width_95"],
+    "origin_aggregation": "mean across countries within forecast origin",
+    "smape_zero_denominator": "omit_and_report_count"
+  },
+  "probabilistic_forecasts": {
+    "required": true,
+    "calibration_split": "training_and_validation_only",
+    "nominal_coverages": [0.8, 0.95]
+  },
+  "statistical_testing": {
+    "primary_loss": "absolute_error",
+    "secondary_losses": ["squared_error", "smape"],
+    "unit": "forecast_origin",
+    "comparators": ["arima", "ets", "dynamic_factor", "ridge", "gradient_boosting", "lstm", "tcn"],
+    "dm_variant": "harvey_leybourne_newbold_bartlett_hac",
+    "hac_max_lag": "horizon_minus_one",
+    "bootstrap": {"method": "moving_block", "block_length": 4, "draws": 2000, "confidence_level": 0.95},
+    "multiplicity": {"method": "benjamini_hochberg", "family": "all_primary_graph_comparator_horizon_tests", "q": 0.05}
+  },
+  "execution_integrity": {
+    "allow_partial_registry": false,
+    "transactional_staging": true,
+    "publish_only_after_completeness_validation": true,
+    "preserve_failed_runs": true,
+    "overwrite_existing_manifests": false
+  },
+  "submission_run_required": true
+}

@@ -1,10 +1,12 @@
-# Inflation Forecasting with Spatio-Temporal Graph Neural Networks
+# Legacy Replication Record: Inflation Forecasting with Spatio-Temporal Graph Neural Networks
 
-This repository contains the replication code and data for the paper "Inflation Forecasting with Spatio-Temporal Graph Neural Networks" (SSRN, 2026).
+> **Legacy / not for submission.** This archived replication package corresponds to the superseded v1 study. Its annual CEPII BACI flows were expanded to quarters and annual World Bank controls were repeated within quarters. It must not be used to support claims about dynamic quarterly trade networks. The submission-grade rebuild is governed by the parent project's v2 protocol and IJF rebuild plan.
+
+This package is retained only to reproduce the prior v1 study.
 
 ## Overview
 
-We forecast quarterly CPI inflation for 23 major economies using a spatio-temporal graph neural network (ST-GNN) built on dynamic CEPII bilateral trade networks. The model combines graph convolutional networks (GCN) with LSTM sequence modeling and a persistence skip connection.
+The prior v1 exercise forecast quarterly CPI inflation for 23 major economies using an ST-GNN and CEPII bilateral trade data. Although its code is retained for reproducibility, its graph construction is not valid dynamic-quarterly evidence and no result or interpretation here is submission-eligible.
 
 ## Key Features
 
@@ -14,7 +16,7 @@ We forecast quarterly CPI inflation for 23 major economies using a spatio-tempor
 - **Explainability**: Integrated Gradients on trade edge weights
 - **Robust statistical testing**: Cluster-robust Diebold-Mariano tests and TOST equivalence tests
 
-## Revisions (July 2026)
+## Archived v1 revisions (July 2026)
 
 This version addresses reviewer concerns with the following updates:
 
@@ -81,7 +83,7 @@ cd paper
 ./build.sh
 ```
 
-## Results
+## Archived v1 results (not for submission)
 
 - **Baseline metrics**: `results/baselines/metrics.json`
 - **ST-GNN evaluation**: `results/evaluation/evaluation_report.json`

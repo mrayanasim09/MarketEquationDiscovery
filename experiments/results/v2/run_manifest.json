@@ -1,0 +1,162 @@
+{
+  "engine_version": "2.0",
+  "runs": [
+    {
+      "run_id": "v2-4450a858851c-3bb63b1b4018-2026-07-18T154406.982550+0000",
+      "git_commit": "4450a858851c0a166aa8bc50baa462c52be4d607",
+      "dataset_version": "forecast_samples_sha256:40af80c02a3338ef988b511e8cb4df68ad5715b259f92812f7d128c8aa79f227",
+      "configuration_id": "sha256:3bb63b1b4018aeb3f3765bbb07aba9d930bff0eb9f548b6686c40594e6a6c337",
+      "execution_timestamp": "2026-07-18T15:44:06.982550+00:00",
+      "engine_version": "2.0",
+      "models": [
+        "persistence",
+        "arima",
+        "var",
+        "ridge",
+        "gradient_boosting",
+        "bayesian_shrinkage_var",
+        "mlp",
+        "lstm",
+        "tcn",
+        "gcn",
+        "temporal_graph"
+      ],
+      "graph_variants": [
+        "directed_trade",
+        "log_trade",
+        "import_dependence",
+        "top_k_incoming",
+        "reversed",
+        "undirected",
+        "degree_preserving_random",
+        "identity_no_trade"
+      ],
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61
+      ],
+      "epochs": 30,
+      "sequence_length": 4,
+      "learning_rate": 0.01,
+      "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+      "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+      "torch": "2.13.0",
+      "numpy": "2.5.1",
+      "written_at": "2026-07-18T15:44:07.014433+00:00"
+    },
+    {
+      "run_id": "v2-09ebac44d096-3bb63b1b4018-2026-07-18T160130.457012+0000",
+      "git_commit": "09ebac44d096fb5ab0ed0bae9150e14ece7db1be",
+      "dataset_version": "forecast_samples_sha256:40af80c02a3338ef988b511e8cb4df68ad5715b259f92812f7d128c8aa79f227",
+      "configuration_id": "sha256:3bb63b1b4018aeb3f3765bbb07aba9d930bff0eb9f548b6686c40594e6a6c337",
+      "execution_timestamp": "2026-07-18T16:01:30.457012+00:00",
+      "engine_version": "2.0",
+      "hardware_environment": {
+        "machine": "arm64",
+        "processor": "arm",
+        "cuda_available": false,
+        "cuda_device_count": 0
+      },
+      "python_version": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+      "dependency_versions": {
+        "numpy": "2.5.1",
+        "pandas": "3.0.3",
+        "scipy": "1.18.0",
+        "statsmodels": "0.14.6",
+        "scikit-learn": "1.9.0",
+        "pyarrow": "25.0.0",
+        "torch": "2.13.0"
+      },
+      "models": [
+        "persistence",
+        "arima",
+        "var",
+        "ridge",
+        "gradient_boosting",
+        "bayesian_shrinkage_var",
+        "mlp",
+        "lstm",
+        "tcn",
+        "gcn",
+        "temporal_graph"
+      ],
+      "graph_variants": [
+        "directed_trade",
+        "log_trade",
+        "import_dependence",
+        "top_k_incoming",
+        "reversed",
+        "undirected",
+        "degree_preserving_random",
+        "identity_no_trade"
+      ],
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61
+      ],
+      "epochs": 30,
+      "forecast_horizon": [
+        1,
+        2,
+        4
+      ],
+      "train_period": {
+        "origin_start": "2011Q2",
+        "origin_end": "2014Q4",
+        "target_start": "2011Q3",
+        "target_end": "2015Q4"
+      },
+      "validation_period": {
+        "origin_start": "2015Q1",
+        "origin_end": "2016Q4",
+        "target_start": "2015Q2",
+        "target_end": "2017Q4"
+      },
+      "test_period": {
+        "origin_start": "2017Q1",
+        "origin_end": "2025Q3",
+        "target_start": "2017Q2",
+        "target_end": "2025Q4"
+      },
+      "sequence_length": 4,
+      "learning_rate": 0.01,
+      "written_at": "2026-07-18T16:01:30.479212+00:00"
+    }
+  ]
+}

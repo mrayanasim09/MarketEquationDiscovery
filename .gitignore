@@ -1,2 +1,9 @@
-# Generated pre-training report; source/configuration provenance is committed separately.
+# Generated pre-training reports; source/configuration provenance is committed separately.
 /experiments/results/v2/metadata/validation.json
+/experiments/results/v2_1/metadata/
+/experiments/results/v2_1/staging/
+/experiments/results/v2_1/failed_transactions.jsonl
+/experiments/results/v2_1/forecasts.parquet
+/experiments/results/v2_1/metrics.parquet
+/experiments/results/v2_1/dm_tests.parquet
+/experiments/results/v2_1/checkpoints/

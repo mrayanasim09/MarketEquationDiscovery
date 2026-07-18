@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import shutil
 import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -31,6 +32,7 @@ from src.models.neural import (
     TemporalGraphForecaster,
 )
 from src.models.provenance import RUN_MANIFEST_REQUIRED_FIELDS, build_execution_provenance
+from src.models import storage
 from src.models.storage import FORECAST_COLUMNS, append_parquet, write_run_manifest
 from src.models.training import eligible_training, quarterly_step_count, seed_everything, training_metadata
 from src.transform.common import V2_PROCESSED, require_validated_raw
@@ -41,6 +43,10 @@ CONFIG_PATH = RESULTS / "configs/benchmark_engine.json"
 NEURAL_MODELS = {"mlp", "lstm", "tcn", "gcn", "temporal_graph"}
 GRAPH_VARIANTS = GRAPH_FACTORY_VARIANTS
 RUNNER_OUTPUTS = ("run_manifest.json", "forecasts.parquet")
+LOCKED_MODEL_REGISTRY = (
+    "persistence", "arima", "var", "ridge", "gradient_boosting",
+    "bayesian_shrinkage_var", "mlp", "lstm", "tcn", "gcn", "temporal_graph",
+)
 
 
 class MLP(nn.Module):
@@ -353,10 +359,38 @@ def run_origin(cfg: dict, samples: pd.DataFrame, panel: pd.DataFrame, countries:
         append_parquet("forecasts.parquet", frame, FORECAST_COLUMNS, ["run_id", "model_name", "model_variant", "seed", "horizon", "forecast_origin", "country"])
 
 
+def _record_failed_transaction(live_results: Path, run_id: str, transaction: Path, exc: BaseException) -> None:
+    """Append failure evidence without mutating an immutable run manifest."""
+    record = {
+        "run_id": run_id,
+        "status": "failed",
+        "transaction_directory": str(transaction.relative_to(ROOT)),
+        "exception_type": type(exc).__name__,
+        "exception_message": str(exc),
+    }
+    target = live_results / "failed_transactions.jsonl"
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
+
+
+def _publish_transaction(live_results: Path, transaction: Path) -> None:
+    """Atomically promote a complete staged forecast store without overwriting evidence."""
+    forecast = transaction / "forecasts.parquet"
+    checkpoints = transaction / "checkpoints"
+    if not forecast.is_file() or not checkpoints.is_dir() or not any(checkpoints.iterdir()):
+        raise RuntimeError("refusing to publish an incomplete benchmark transaction")
+    for name in ("forecasts.parquet", "checkpoints"):
+        if (live_results / name).exists():
+            raise RuntimeError(f"refusing to overwrite existing canonical output: {name}")
+    shutil.move(str(forecast), str(live_results / "forecasts.parquet"))
+    shutil.move(str(checkpoints), str(live_results / "checkpoints"))
+    transaction.rmdir()
+
+
 def main() -> int:
+    global RESULTS
     parser = argparse.ArgumentParser(description="Run the isolated v2 benchmark engine.")
     parser.add_argument("--execute", action="store_true", help="Required safeguard before any model fitting occurs.")
-    parser.add_argument("--models", nargs="*", help="Optional subset of locked model names for a documented dry-run.")
     args = parser.parse_args()
     if not args.execute:
         raise SystemExit("Refusing to train: pass --execute only after the benchmark-engine validation gate passes.")
@@ -364,17 +398,36 @@ def main() -> int:
     cfg, samples, panel, countries, qidx, adjacency = load_inputs()
     if tuple(cfg["graph_variants"]) != tuple(GRAPH_VARIANTS):
         raise RuntimeError("locked configuration graph_variants do not match the graph factory registry")
+
+    # A submission transaction has exactly the configured model, graph, seed, and horizon registries.
+    if tuple(cfg["models"]) != LOCKED_MODEL_REGISTRY:
+        raise RuntimeError("locked configuration model registry does not match the submission registry")
+    selected = set(LOCKED_MODEL_REGISTRY)
     provenance = build_execution_provenance(CONFIG_PATH)
+    live_results = RESULTS
+    transaction = live_results / "staging" / provenance["run_id"]
+    if transaction.exists():
+        raise RuntimeError(f"transaction directory already exists: {transaction}")
+    live_results.mkdir(parents=True, exist_ok=True)
+    # The run record is immutable and intentionally precedes fitting. A failure is recorded separately.
     write_run_manifest(build_run_manifest_payload(cfg, samples, provenance))
-    selected = set(args.models or cfg["models"])
-    unknown = selected - set(cfg["models"])
-    if unknown:
-        raise ValueError(f"unknown model(s): {sorted(unknown)}")
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    for horizon in cfg["horizons"]:
-        origins = sorted(samples[(samples.horizon_quarters == horizon) & (samples.split == "test")].origin_quarter.unique())
-        for origin in origins:
-            run_origin(cfg, samples, panel, countries, qidx, adjacency, horizon, origin, selected, provenance)
+
+    original_results, original_storage_results = RESULTS, storage.RESULTS
+    RESULTS = transaction
+    storage.RESULTS = transaction
+    transaction.mkdir(parents=True, exist_ok=False)
+    try:
+        for horizon in cfg["horizons"]:
+            origins = sorted(samples[(samples.horizon_quarters == horizon) & (samples.split == "test")].origin_quarter.unique())
+            for origin in origins:
+                run_origin(cfg, samples, panel, countries, qidx, adjacency, horizon, origin, selected, provenance)
+        _publish_transaction(live_results, transaction)
+    except BaseException as exc:
+        _record_failed_transaction(live_results, provenance["run_id"], transaction, exc)
+        raise
+    finally:
+        RESULTS = original_results
+        storage.RESULTS = original_storage_results
     print("V2 benchmark engine run completed; calculate results only with the post-run evaluation module.")
     return 0
 

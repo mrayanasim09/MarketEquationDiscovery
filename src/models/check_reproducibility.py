@@ -20,6 +20,7 @@ BENCHMARK_PATHS = [
     "data/raw/v2",
     "data/processed/v2",
     "experiments/results/v2/configs",
+    "experiments/results/v2_1/configs",
     "docs",
     "requirements.txt",
 ]
@@ -77,11 +78,11 @@ def main() -> int:
         errors.append("forecast schema lacks graph_variant")
 
     existing_results = [str(path.relative_to(ROOT)) for path in FORBIDDEN_RESULT_FILES if path.exists()]
-    checkpoint_dir = RESULTS / "checkpoints"
-    if checkpoint_dir.is_dir() and any(checkpoint_dir.iterdir()):
-        existing_results.append(str(checkpoint_dir.relative_to(ROOT)))
+    # Checkpoints and run manifests may represent retained failed transactions.
+    # They are not publication-ready benchmark outputs; only canonical scored
+    # result stores block a fresh transaction.
     if existing_results:
-        errors.append(f"benchmark outputs already exist: {existing_results}")
+        errors.append(f"canonical benchmark outputs already exist: {existing_results}")
     manifest_path = RESULTS / "run_manifest.json"
     if manifest_path.exists():
         try:
@@ -90,6 +91,11 @@ def main() -> int:
             run_ids = [run.get("run_id") for run in runs if isinstance(run, dict)] if isinstance(runs, list) else []
             if not isinstance(runs, list) or not run_ids or len(run_ids) != len(set(run_ids)):
                 errors.append("failed-run manifest is malformed or has duplicate run_id values")
+            checkpoint_dir = RESULTS / "checkpoints"
+            if checkpoint_dir.is_dir():
+                orphaned = [path.name for path in checkpoint_dir.iterdir() if path.is_file() and not any(path.name.startswith(f"{run_id}__") for run_id in run_ids)]
+                if orphaned:
+                    errors.append(f"retained checkpoints do not map to a manifest run_id: {orphaned}")
         except (OSError, json.JSONDecodeError) as exc:
             errors.append(f"failed-run manifest cannot be read: {exc}")
 
