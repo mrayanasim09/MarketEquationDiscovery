@@ -9,9 +9,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.models.evaluate_benchmark_engine_v2 import EVALUATOR_OUTPUTS
 from src.models.graphs.factory import GRAPH_VARIANTS
-from src.models.provenance import git_commit, required_provenance_fields, sha256_file
-from src.models.storage import FORECAST_COLUMNS
+from src.models.provenance import RUN_MANIFEST_REQUIRED_FIELDS, git_commit, required_provenance_fields, sha256_file
+from src.models.run_benchmark_engine_v2 import RUNNER_OUTPUTS, build_run_manifest_payload
+from src.models.storage import DM_COLUMNS, FORECAST_COLUMNS, METRIC_COLUMNS
 from src.models.training import quarterly_step_count
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
@@ -112,6 +114,19 @@ def main() -> int:
         errors.append("graph tensor shape mismatches node/quarter contract")
     errors.extend(_quarter_horizon_errors(samples))
     errors.extend(_sequence_errors(samples))
+    contract_provenance = {field: "contract-check" for field in required_provenance_fields()}
+    manifest_contract = build_run_manifest_payload(cfg, samples, contract_provenance)
+    missing_manifest_fields = sorted(set(RUN_MANIFEST_REQUIRED_FIELDS) - set(manifest_contract))
+    if missing_manifest_fields:
+        errors.append(f"runner manifest contract lacks fields: {missing_manifest_fields}")
+    if RUNNER_OUTPUTS != ("run_manifest.json", "forecasts.parquet"):
+        errors.append("runner output contract must be run_manifest.json and forecasts.parquet")
+    if EVALUATOR_OUTPUTS != ("metrics.parquet", "dm_tests.parquet"):
+        errors.append("evaluator output contract must be metrics.parquet and dm_tests.parquet")
+    for label, columns in (("forecast", FORECAST_COLUMNS), ("metric", METRIC_COLUMNS), ("DM", DM_COLUMNS)):
+        missing = sorted(set(required_provenance_fields()) - set(columns))
+        if missing:
+            errors.append(f"{label} result schema lacks provenance fields: {missing}")
 
     forecast_path = RESULTS / "forecasts.parquet"
     manifest_path = RESULTS / "run_manifest.json"

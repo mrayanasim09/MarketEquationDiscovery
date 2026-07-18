@@ -5,7 +5,6 @@ locked 20-seed forecast store and must be invoked only after post-run validation
 """
 from __future__ import annotations
 
-import argparse
 import math
 from pathlib import Path
 from typing import cast
@@ -18,6 +17,7 @@ from src.models.storage import DM_COLUMNS, METRIC_COLUMNS, PROVENANCE_COLUMNS, a
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments/results/v2"
+EVALUATOR_OUTPUTS = ("metrics.parquet", "dm_tests.parquet")
 
 
 def _origin_losses(frame: pd.DataFrame, loss: str) -> pd.Series:
@@ -134,16 +134,13 @@ def seed_summary(metrics: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--execute", action="store_true", help="Required: writes post-run metric and DM output.")
-    parser.add_argument("--comparator", default="ridge")
-    args = parser.parse_args()
-    if not args.execute:
-        raise SystemExit("Refusing to score without --execute; run only after all locked forecasts have been stored.")
-    forecasts = pd.read_parquet(RESULTS / "forecasts.parquet")
+    forecast_path = RESULTS / "forecasts.parquet"
+    if not forecast_path.is_file():
+        raise SystemExit("Refusing to score: forecasts.parquet does not exist; evaluator never trains models.")
+    forecasts = pd.read_parquet(forecast_path)
     metrics = score_forecasts(forecasts)
     append_parquet("metrics.parquet", metrics, METRIC_COLUMNS, ["run_id", "model_name", "model_variant", "seed", "horizon", "split", "metric"])
-    dm = dm_tests(forecasts, args.comparator)
+    dm = dm_tests(forecasts)
     if not dm.empty:
         # p_value_bh is retained in the analysis companion table; canonical DM rows preserve the locked schema.
         append_parquet("dm_tests.parquet", cast(pd.DataFrame, dm.loc[:, DM_COLUMNS]), DM_COLUMNS, ["run_id", "model_name", "model_variant", "seed", "horizon", "comparator_name"])

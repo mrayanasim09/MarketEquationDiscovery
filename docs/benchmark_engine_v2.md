@@ -30,9 +30,10 @@ Each forecast has `model_name`, `model_variant`, `seed`, `horizon`,
 The storage layer rejects duplicate forecast keys; a previous seed can never be
 silently overwritten.
 
-Every run record contains Python, NumPy, and Torch seed values, model and
-optimizer settings, epochs, sequence length, horizon, forecast-origin cutoff,
-feature and graph choices, training extent, and runtime versions.
+Every run record is immutable after creation and contains its run ID, Git commit,
+dataset and configuration identifiers, timestamp, hardware environment, Python
+and dependency versions, model and graph registries, seeds, epochs, all locked
+forecast horizons, and train/validation/test origin and target periods.
 
 ## Origin-safe training protocol
 
@@ -144,8 +145,8 @@ also rejects duplicate result keys and incomplete neural seed coverage.
 Only after all configured forecasts exist, run:
 
 ```bash
-.venv/bin/python -m src.models.validate_experiment
-.venv/bin/python -m src.models.evaluate_benchmark_engine_v2 --execute
+python -m src.models.validate_experiment
+python -m src.models.evaluate_benchmark_engine_v2
 ```
 
 The evaluator groups losses by forecast origin before block bootstrapping, thus

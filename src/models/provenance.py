@@ -8,6 +8,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+RUN_MANIFEST_REQUIRED_FIELDS = [
+    "run_id", "git_commit", "dataset_version", "configuration_id", "execution_timestamp",
+    "hardware_environment", "python_version", "dependency_versions", "models",
+    "graph_variants", "seeds", "epochs", "forecast_horizon", "train_period",
+    "validation_period", "test_period",
+]
 
 
 def sha256_file(path: Path) -> str:

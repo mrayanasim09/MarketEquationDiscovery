@@ -9,6 +9,7 @@ import argparse
 import json
 import platform
 import sys
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import cast
 
@@ -29,7 +30,7 @@ from src.models.neural import (
     TemporalConvNet,
     TemporalGraphForecaster,
 )
-from src.models.provenance import build_execution_provenance
+from src.models.provenance import RUN_MANIFEST_REQUIRED_FIELDS, build_execution_provenance
 from src.models.storage import FORECAST_COLUMNS, append_parquet, write_run_manifest
 from src.models.training import eligible_training, quarterly_step_count, seed_everything, training_metadata
 from src.transform.common import V2_PROCESSED, require_validated_raw
@@ -39,6 +40,7 @@ RESULTS = ROOT / "experiments/results/v2"
 CONFIG_PATH = RESULTS / "configs/benchmark_engine.json"
 NEURAL_MODELS = {"mlp", "lstm", "tcn", "gcn", "temporal_graph"}
 GRAPH_VARIANTS = GRAPH_FACTORY_VARIANTS
+RUNNER_OUTPUTS = ("run_manifest.json", "forecasts.parquet")
 
 
 class MLP(nn.Module):
@@ -65,6 +67,58 @@ def ridge_predict(x: np.ndarray, y: np.ndarray, z: np.ndarray, penalty: float = 
     x_scaled, z_scaled, _ = standardize(x, z)
     coef = np.linalg.solve(x_scaled.T @ x_scaled + penalty * np.eye(x.shape[1]), x_scaled.T @ y)
     return z_scaled @ coef
+
+
+def dependency_versions() -> dict[str, str]:
+    packages = ("numpy", "pandas", "scipy", "statsmodels", "scikit-learn", "pyarrow", "torch")
+    values: dict[str, str] = {}
+    for package in packages:
+        try:
+            values[package] = version(package)
+        except PackageNotFoundError:
+            values[package] = "not-installed"
+    return values
+
+
+def split_period(samples: pd.DataFrame, split: str) -> dict[str, str]:
+    subset = samples[samples["split"].eq(split)]
+    if subset.empty:
+        raise ValueError(f"locked split has no {split} origins")
+    return {
+        "origin_start": str(subset["origin_quarter"].min()),
+        "origin_end": str(subset["origin_quarter"].max()),
+        "target_start": str(subset["target_quarter"].min()),
+        "target_end": str(subset["target_quarter"].max()),
+    }
+
+
+def build_run_manifest_payload(cfg: dict, samples: pd.DataFrame, provenance: dict[str, str]) -> dict:
+    payload = {
+        **provenance,
+        "engine_version": cfg["engine_version"],
+        "hardware_environment": {
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "cuda_available": torch.cuda.is_available(),
+            "cuda_device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+        },
+        "python_version": sys.version,
+        "dependency_versions": dependency_versions(),
+        "models": cfg["models"],
+        "graph_variants": list(GRAPH_VARIANTS),
+        "seeds": cfg["seeds"],
+        "epochs": cfg["epochs"],
+        "forecast_horizon": cfg["horizons"],
+        "train_period": split_period(samples, "train"),
+        "validation_period": split_period(samples, "validation"),
+        "test_period": split_period(samples, "test"),
+        "sequence_length": cfg["sequence_length"],
+        "learning_rate": cfg["learning_rate"],
+    }
+    missing = [field for field in RUN_MANIFEST_REQUIRED_FIELDS if field not in payload]
+    if missing:
+        raise RuntimeError(f"execution manifest contract is incomplete: {missing}")
+    return payload
 
 
 def load_inputs() -> tuple[dict, pd.DataFrame, pd.DataFrame, list[str], dict[str, int], np.ndarray]:
@@ -311,20 +365,7 @@ def main() -> int:
     if tuple(cfg["graph_variants"]) != tuple(GRAPH_VARIANTS):
         raise RuntimeError("locked configuration graph_variants do not match the graph factory registry")
     provenance = build_execution_provenance(CONFIG_PATH)
-    write_run_manifest({
-        **provenance,
-        "engine_version": cfg["engine_version"],
-        "models": cfg["models"],
-        "graph_variants": list(GRAPH_VARIANTS),
-        "seeds": cfg["seeds"],
-        "epochs": cfg["epochs"],
-        "sequence_length": cfg["sequence_length"],
-        "learning_rate": cfg["learning_rate"],
-        "python": sys.version,
-        "platform": platform.platform(),
-        "torch": torch.__version__,
-        "numpy": np.__version__,
-    })
+    write_run_manifest(build_run_manifest_payload(cfg, samples, provenance))
     selected = set(args.models or cfg["models"])
     unknown = selected - set(cfg["models"])
     if unknown:
