@@ -8,3 +8,10 @@
 - **Known scientific gaps:** the v2 contract omits ETS and dynamic-factor baselines, probabilistic forecasts and their scoring/coverage criteria, sMAPE, a fully pre-specified comparator family, a correct multiplicity rule, and an auditable validation-only tuning record.
 - **Reason for v2.1:** a fresh prospective protocol is required before any final test forecasts. It leaves the raw/processed data hashes, v2 configuration, failed manifests, checkpoints, and prior commits unchanged. V2.1 is a new configuration identity and result namespace; it does not reinterpret or repair v2 results.
 - **Validation planned:** Python compilation, the read-only reproducibility gate, and the v2.1-aware experiment validator only. No model fitting, benchmark execution, forecasts, metrics, or figures are authorized in this amendment.
+
+## 2026-07-18 — v2.1 engine implementation
+
+- **Change:** Added isolated v2.1 runner, transactional storage, journal metric/inference implementation, and validation-only tuning package.
+- **Reason:** The v2.1 protocol requires an executable registry (including ETS, DFM, probabilistic outputs, and origin-level inference) rather than declarative configuration alone.
+- **Validation:** All new Python modules compile. The static v2.1 validator intentionally fails final-test authorization because no immutable validation-only tuning manifest exists.
+- **Scientific impact:** This is a fail-closed result. No tuning, training, test forecast, metric, statistical test, or figure was generated. A real validation-only tuning run remains required before the final benchmark can begin.

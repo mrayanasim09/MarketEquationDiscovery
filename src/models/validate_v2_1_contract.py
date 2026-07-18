@@ -98,6 +98,39 @@ def contract_errors(cfg: dict[str, Any]) -> list[str]:
     return errors
 
 
+def execution_errors(cfg: dict[str, Any]) -> list[str]:
+    """Verify that the documented contract has an executable implementation.
+
+    The tuning manifest is intentionally a hard gate: creating an empty manifest
+    is not sufficient, and the validator will not create or mutate one.
+    """
+    errors: list[str] = []
+    try:
+        from src.models.evaluate_benchmark_engine_v2_1 import dm_tests, score_forecasts
+        from src.models.run_benchmark_engine_v2_1 import RUNNER_OUTPUTS, SUPPORTED_MODELS
+        from src.models.storage_v2_1 import FORECAST_COLUMNS, METRIC_COLUMNS
+        from src.models.tuning.manifest import require_tuning_manifest
+    except ImportError as exc:
+        return [f"v2.1 execution implementation cannot be imported: {exc}"]
+    if set(SUPPORTED_MODELS) != set(cfg["models"]):
+        errors.append("v2.1 runner does not support every configured model")
+    required_forecast = {"mean", "lower_80", "upper_80", "lower_95", "upper_95", "actual"}
+    if not required_forecast.issubset(FORECAST_COLUMNS):
+        errors.append("v2.1 forecast schema lacks required probabilistic outputs")
+    required_metric_names = set(cfg["metrics"]["deterministic"]) | set(cfg["metrics"]["probabilistic"])
+    if not {"score_forecasts", "dm_tests"}.issubset({score_forecasts.__name__, dm_tests.__name__}):
+        errors.append("v2.1 journal metric or statistical-test implementation is unavailable")
+    if not {"forecasts.parquet", "metrics.parquet", "dm_tests.parquet", "checkpoints", "environment_manifest.json"}.issubset(RUNNER_OUTPUTS):
+        errors.append("v2.1 runner output contract is incomplete")
+    if required_metric_names != REQUIRED_DETERMINISTIC_METRICS | REQUIRED_PROBABILISTIC_METRICS:
+        errors.append("v2.1 configured metric registry is not journal-complete")
+    try:
+        require_tuning_manifest()
+    except (FileNotFoundError, RuntimeError, KeyError, json.JSONDecodeError) as exc:
+        errors.append(f"v2.1 tuning isolation gate failed: {exc}")
+    return errors
+
+
 def protocol_errors(cfg: dict[str, Any]) -> list[str]:
     if not PROTOCOL.is_file():
         return ["v2.1 protocol document is missing"]
@@ -110,7 +143,7 @@ def protocol_errors(cfg: dict[str, Any]) -> list[str]:
 
 def validation_report() -> dict[str, Any]:
     cfg = load_config()
-    errors = contract_errors(cfg) + protocol_errors(cfg)
+    errors = contract_errors(cfg) + protocol_errors(cfg) + execution_errors(cfg)
     return {
         "passed": not errors,
         "engine_version": cfg.get("engine_version"),
