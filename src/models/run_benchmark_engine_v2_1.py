@@ -149,7 +149,11 @@ def _temporal_graph_panels(rows: pd.DataFrame, panel: pd.DataFrame, countries: l
         graph_periods = pd.period_range(end=group.trade_graph_quarter.iloc[0], periods=4, freq="Q")
         if any(str(item) not in qidx for item in graph_periods):
             raise ValueError("temporal graph history lacks a persisted snapshot")
-        x = np.stack([np.stack([sequence_features(pd.DataFrame([{"country": country, "macro_feature_quarter": item}]), panel)[0][-1] for country in countries]) for item in periods])
+        lookup = panel.set_index(["entity_id", "period"])[["cpi_yoy", "energy_cpi_yoy"]]
+        keys = [(country, item) for item in periods for country in countries]
+        if not set(keys).issubset(lookup.index) or lookup.loc[keys].isna().any().any():
+            raise ValueError("temporal graph input lacks permitted node observations")
+        x = lookup.loc[keys].to_numpy(float).reshape(len(periods), len(countries), 2)
         graph = np.stack([build_graph(adjacency[qidx[str(item)]], variant, np.random.default_rng(seed + qidx[str(item)])) for item in graph_periods])
         result.append((x, graph, group.target_cpi_yoy.to_numpy(float)))
     return result

@@ -22,3 +22,11 @@
 - **Result:** Stopped before any tuning manifest or forecast artifact was written.
 - **Cause:** The static GCN validation path passed a NumPy random-generator object to the archived graph-panel helper, which requires its integer seed.
 - **Scientific impact:** No test row was accessed, no final-test prediction was generated, and no winner was selected. The repair is limited to passing the already-locked integer seed through unchanged.
+
+## 2026-07-18 — Second validation-only tuning attempt retained
+
+- **Commit:** `46bd4586757a836cef72225eb35c60af8165bf40`.
+- **Result:** Stopped before any tuning manifest or forecast artifact was written.
+- **Cause:** Temporal graph panel construction incorrectly required a separate four-quarter history for each element in its existing four-quarter sequence, excluding early valid training windows.
+- **Repair rationale:** Each temporal sequence element must contain its directly observed, release-valid CPI/energy node vector at that element's permitted quarter. Replacing the redundant history request preserves the locked four-quarter sequence and removes no availability lag.
+- **Scientific impact:** No final-test row was accessed, no final-test prediction was generated, and no model selection occurred.
