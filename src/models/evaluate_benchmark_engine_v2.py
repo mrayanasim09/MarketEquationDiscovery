@@ -116,7 +116,7 @@ def dm_tests(forecasts: pd.DataFrame, comparator: str = "ridge") -> pd.DataFrame
         loss_base = (joined.actual_base - joined.prediction_base).abs().groupby(joined.forecast_origin).mean()
         difference = (loss_model - loss_base).dropna()
         statistic, pvalue = _dm_hln(difference.to_numpy(), int(cast(int | str, horizon)))
-        rows.append({"run_id": run_id, "git_commit": git_commit, "dataset_version": dataset_version, "configuration_id": configuration_id, "execution_timestamp": execution_timestamp, "model_name": model, "model_variant": variant, "seed": seed, "horizon": horizon, "comparator_name": comparator, "comparator_variant": "macro_trade_exposure", "dm_stat": statistic, "p_value": pvalue, "origins": len(difference), "loss_difference": float(difference.mean())})
+        rows.append({"run_id": run_id, "git_commit": git_commit, "dataset_version": dataset_version, "configuration_id": configuration_id, "execution_timestamp": execution_timestamp, "model_name": model, "model_variant": variant, "graph_variant": variant, "seed": seed, "horizon": horizon, "comparator_name": comparator, "comparator_variant": "macro_trade_exposure", "dm_stat": statistic, "p_value": pvalue, "origins": len(difference), "loss_difference": float(difference.mean())})
     result = cast(pd.DataFrame, pd.DataFrame(rows, columns=DM_COLUMNS))
     if not result.empty:
         result["p_value_bh"] = _bh_adjust(result.p_value)

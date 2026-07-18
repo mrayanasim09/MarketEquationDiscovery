@@ -10,7 +10,7 @@ RESULTS=ROOT/"experiments/results/v2"
 PROVENANCE_COLUMNS=["run_id","git_commit","dataset_version","configuration_id","execution_timestamp"]
 FORECAST_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","graph_variant","seed","horizon","forecast_origin","country","target_quarter","prediction","actual","split","training_sample_count","earliest_training_quarter","latest_training_quarter","feature_set","graph_type"]
 METRIC_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","graph_variant","seed","horizon","split","metric","value","origin_count","feature_set","graph_type"]
-DM_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","seed","horizon","comparator_name","comparator_variant","dm_stat","p_value","origins","loss_difference"]
+DM_COLUMNS=PROVENANCE_COLUMNS+["model_name","model_variant","graph_variant","seed","horizon","comparator_name","comparator_variant","dm_stat","p_value","origins","loss_difference"]
 
 def path(name:str)->Path: return RESULTS/name
 
