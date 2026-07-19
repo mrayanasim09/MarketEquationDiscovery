@@ -7,3 +7,8 @@
 /experiments/results/v2_1/metrics.parquet
 /experiments/results/v2_1/dm_tests.parquet
 /experiments/results/v2_1/checkpoints/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
