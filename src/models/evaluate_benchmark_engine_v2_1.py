@@ -52,8 +52,8 @@ def score_forecasts(forecasts: pd.DataFrame) -> pd.DataFrame:
             "mae": float(_origin_mean(group, abs_loss).mean()),
             "smape": float(_origin_mean(group, smape).mean()),
             "crps": float(_origin_mean(group, crps).mean()),
-            "coverage_80": float(_origin_mean(group, coverage80).mean()),
-            "coverage_95": float(_origin_mean(group, coverage95).mean()),
+            "interval_coverage_80": float(_origin_mean(group, coverage80).mean()),
+            "interval_coverage_95": float(_origin_mean(group, coverage95).mean()),
             "interval_width_80": float(_origin_mean(group, width80).mean()),
             "interval_width_95": float(_origin_mean(group, width95).mean()),
         }

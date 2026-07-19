@@ -153,3 +153,19 @@ def validation_report() -> dict[str, Any]:
         "protocol_sha256": sha256_file(PROTOCOL) if PROTOCOL.is_file() else None,
         "errors": errors,
     }
+
+
+def main() -> int:
+    report = validation_report()
+    if report["passed"]:
+        print("V2.1 CONTRACT VALIDATION PASSED")
+        print(f"configuration_id={report['configuration_id']}")
+        print(f"configuration_sha256={report['configuration_sha256']}")
+        return 0
+    print("V2.1 CONTRACT VALIDATION FAILED")
+    print("\n".join(f"- {error}" for error in report["errors"]))
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
