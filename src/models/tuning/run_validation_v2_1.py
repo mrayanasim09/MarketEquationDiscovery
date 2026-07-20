@@ -15,8 +15,16 @@ import pandas as pd
 
 from src.models.baselines import gradient_boosting_regressor
 from src.models.provenance import build_execution_provenance, git_commit
-from src.models.run_benchmark_engine_v2 import sequence_eligible_rows, standardize, tabular_features
-from src.models.run_benchmark_engine_v2_1 import _classical_predictions, _load_inputs, _neural_predictions
+from src.models.run_benchmark_engine_v2 import (
+    sequence_eligible_rows,
+    standardize,
+    tabular_features,
+)
+from src.models.run_benchmark_engine_v2_1 import (
+    _classical_predictions,
+    _load_inputs,
+    _neural_predictions,
+)
 from src.models.training import eligible_training
 from src.models.tuning.candidates import candidate_registry
 from src.models.tuning.manifest import CONFIG, TUNING_MANIFEST, write_tuning_manifest

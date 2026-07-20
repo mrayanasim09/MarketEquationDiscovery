@@ -1,7 +1,9 @@
 """Origin-safe feature and sequence construction; never writes processed data."""
 from __future__ import annotations
+
 import numpy as np
 import pandas as pd
+
 
 def feature_sequence(panel:pd.DataFrame,country:str,end_quarter:pd.Period,k:int=4)->np.ndarray:
     subset=panel[(panel.entity_id==country)&(panel.period<=end_quarter)].sort_values("period").tail(k)

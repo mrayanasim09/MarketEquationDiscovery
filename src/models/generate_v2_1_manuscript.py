@@ -1,13 +1,14 @@
 """Generate Tables 1-6 (.tex and .csv) and plots under experiments/results/v2_1/manuscript/."""
 from __future__ import annotations
 
-import sys
 import json
+import sys
 from pathlib import Path
-import pandas as pd
 
 # Use Agg backend for matplotlib to prevent GUI errors in headless environment
 import matplotlib
+import pandas as pd
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -16,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT))
 
 from src.models.storage_v2_1 import RESULTS  # noqa: E402
+
 
 def to_latex_table(df: pd.DataFrame, path: Path) -> None:
     latex = df.to_latex(index=False, float_format="%.4f")
@@ -89,26 +91,26 @@ def main() -> int:
     print("Generating Table 3: Main forecasting results...")
     # Aggregated metrics over seeds
     metrics_summary = metrics.groupby(["model", "graph_variant", "horizon", "metric"])["value"].mean().reset_index()
-    
+
     # Pivot metrics to wide format
     metrics_wide = metrics_summary.pivot(index=["model", "graph_variant"], columns=["horizon", "metric"], values="value").reset_index()
-    
+
     # Flatten columns hierarchy
     columns_flat = ["Model", "Graph Variant"]
     for horizon in [1, 2, 4]:
         for metric in ["rmse", "mae", "smape"]:
             columns_flat.append(f"H{horizon}_{metric.upper()}")
-            
+
     # Reindex columns to have them in specific order
     cols_to_extract = []
     for horizon in [1, 2, 4]:
         for metric in ["rmse", "mae", "smape"]:
             cols_to_extract.append((horizon, metric))
-            
+
     table_3 = pd.DataFrame(metrics_wide[["model", "graph_variant"]].values, columns=["Model", "Graph Variant"])
     for i, col in enumerate(cols_to_extract):
         table_3[columns_flat[i+2]] = metrics_wide[col].values
-        
+
     table_3.to_csv(manuscript_dir / "table_3_main_results.csv", index=False)
     to_latex_table(table_3, manuscript_dir / "table_3_main_results.tex")
 
@@ -122,11 +124,11 @@ def main() -> int:
         for metric in ["crps", "interval_coverage_80", "interval_width_80", "interval_coverage_95", "interval_width_95"]:
             prob_cols_to_extract.append((horizon, metric))
             prob_columns_flat.append(f"H{horizon}_{metric.upper()}")
-            
+
     table_4 = pd.DataFrame(metrics_wide[["model", "graph_variant"]].values, columns=["Model", "Graph Variant"])
     for i, col in enumerate(prob_cols_to_extract):
         table_4[prob_columns_flat[i+2]] = metrics_wide[col].values
-        
+
     table_4.to_csv(manuscript_dir / "table_4_probabilistic_results.csv", index=False)
     to_latex_table(table_4, manuscript_dir / "table_4_probabilistic_results.tex")
 
@@ -138,7 +140,7 @@ def main() -> int:
     dm_summary = dm_tests.groupby(["model", "graph_variant", "horizon", "comparator", "loss"])[
         ["dm_stat", "p_value", "p_value_bh", "loss_difference", "ci_low", "ci_high", "origin_count"]
     ].mean().reset_index()
-    
+
     table_5 = dm_summary.rename(columns={
         "model": "Model",
         "graph_variant": "Graph Variant",
@@ -163,21 +165,21 @@ def main() -> int:
     # Filter for graph models and aggregate over seeds and models
     graph_metrics = metrics[metrics.model.isin(["gcn", "temporal_graph"])]
     ablation = graph_metrics.groupby(["graph_variant", "horizon", "metric"])["value"].mean().reset_index()
-    
+
     # Pivot to wide format
     ablation_wide = ablation.pivot(index="graph_variant", columns=["horizon", "metric"], values="value").reset_index()
-    
+
     ablation_cols = ["Graph Variant"]
     ablation_extract = []
     for horizon in [1, 2, 4]:
         for metric in ["rmse", "mae", "crps"]:
             ablation_extract.append((horizon, metric))
             ablation_cols.append(f"H{horizon}_{metric.upper()}")
-            
+
     table_6 = pd.DataFrame(ablation_wide["graph_variant"].values, columns=["Graph Variant"])
     for i, col in enumerate(ablation_extract):
         table_6[ablation_cols[i+1]] = ablation_wide[col].values
-        
+
     table_6.to_csv(manuscript_dir / "table_6_ablation_studies.csv", index=False)
     to_latex_table(table_6, manuscript_dir / "table_6_ablation_studies.tex")
 
@@ -190,25 +192,25 @@ def main() -> int:
     # Plot forecast vs actual for FRA and DEU at H1 for a specific seed
     plt.figure(figsize=(12, 6))
     sns.set_theme(style="whitegrid")
-    
+
     seed_42_df = forecasts[(forecasts.seed == "42") & (forecasts.horizon == 1) & (forecasts.country.isin(["FRA", "DEU"]))]
     if not seed_42_df.empty:
         # Get best graph model (e.g. temporal_graph with directed_trade) and arima baseline
         graph_f = seed_42_df[(seed_42_df.model == "temporal_graph") & (seed_42_df.graph_variant == "directed_trade")]
         arima_f = seed_42_df[(seed_42_df.model == "arima")]
-        
+
         # Sort values by target_quarter
         graph_f = graph_f.sort_values("target_quarter")
         arima_f = arima_f.sort_values("target_quarter")
-        
+
         # Plot for FRA
         fra_graph = graph_f[graph_f.country == "FRA"]
         fra_arima = arima_f[arima_f.country == "FRA"]
-        
+
         plt.plot(fra_graph.target_quarter, fra_graph.actual, label="Actual FRA", color="black", linewidth=2)
         plt.plot(fra_graph.target_quarter, fra_graph["mean"], label="Temporal Graph (directed_trade) FRA", color="blue", linestyle="--")
         plt.plot(fra_arima.target_quarter, fra_arima["mean"], label="ARIMA FRA", color="red", linestyle=":")
-        
+
         plt.title("H1 Forecast Comparison (France) - Seed 42", fontsize=14)
         plt.xlabel("Quarter", fontsize=12)
         plt.ylabel("CPI YoY Inflation (%)", fontsize=12)
@@ -223,7 +225,7 @@ def main() -> int:
     plt.figure(figsize=(12, 6))
     forecasts_err = forecasts.copy()
     forecasts_err["error"] = forecasts_err.actual - forecasts_err["mean"]
-    
+
     # Take a sample or seed-averaged error per model
     sns.boxplot(data=forecasts_err, x="model", y="error", palette="Set2")
     plt.title("Forecast Error Distribution by Model", fontsize=14)
@@ -240,11 +242,11 @@ def main() -> int:
     # Collect coverages
     cov_80 = metrics[metrics.metric == "interval_coverage_80"]["value"].mean()
     cov_95 = metrics[metrics.metric == "interval_coverage_95"]["value"].mean()
-    
+
     plt.plot([0, 1], [0, 1], color="gray", linestyle="--", label="Perfect Calibration")
     plt.scatter([0.80, 0.95], [cov_80, cov_95], color="red", s=100, zorder=5)
     plt.plot([0.80, 0.95], [cov_80, cov_95], color="red", linestyle="-", label="Empirical Coverage")
-    
+
     plt.xlim(0.7, 1.0)
     plt.ylim(0.7, 1.0)
     plt.title("Calibration Reliability Diagram", fontsize=14)

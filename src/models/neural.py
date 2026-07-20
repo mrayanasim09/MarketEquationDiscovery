@@ -1,7 +1,9 @@
 """Proper sequence models for the reconstructed v2 benchmark engine."""
 from __future__ import annotations
+
 import torch
 from torch import nn
+
 
 class SequenceLSTM(nn.Module):
     """Consumes [batch, k, features] histories ending at the allowed t-1 quarter."""

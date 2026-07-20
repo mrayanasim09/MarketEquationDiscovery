@@ -3,12 +3,37 @@ message: "If you use this software, please cite it as below."
 authors:
   - family-names: "Asim"
     given-names: "Rayyan"
-    # orcid: "https://orcid.org/xxxx-xxxx-xxxx-xxxx"  # Add ORCID before submission
+    orcid: "https://orcid.org/0009-0005-7280-730X"
 title: "Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies"
+version: "2.1.0"
 date-released: 2026-07-20
+doi: "10.2139/ssrn.7009041"
 url: "https://github.com/mrayanasim09/MarketEquationDiscovery"
+repository-code: "https://github.com/mrayanasim09/MarketEquationDiscovery"
+license: MIT
 keywords:
   - inflation forecasting
   - graph neural networks
   - trade networks
   - macroeconomic forecasting
+  - Diebold-Mariano test
+  - expanding window evaluation
+  - European economies
+  - spatio-temporal forecasting
+abstract: >
+  This study forecasts quarterly CPI inflation (year-over-year) for 20 European
+  economies using Graph Neural Networks built on dynamic quarterly trade networks.
+  A prospective expanding-window benchmark (2017Q1–2025Q3) evaluates 12 models
+  across 8 graph adjacency specifications and 3 forecast horizons using
+  38,380 model fits and 781,740 forecast rows.
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Asim"
+      given-names: "Rayyan"
+      orcid: "https://orcid.org/0009-0005-7280-730X"
+  title: "Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies"
+  journal: "SSRN Electronic Journal"
+  year: 2026
+  doi: "10.2139/ssrn.7009041"
+  url: "https://doi.org/10.2139/ssrn.7009041"

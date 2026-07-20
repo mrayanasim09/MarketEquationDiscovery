@@ -1,5 +1,6 @@
 """Graph variants computed solely from the persisted quarterly trade snapshots."""
 from __future__ import annotations
+
 import numpy as np
 
 GRAPH_VARIANTS = (

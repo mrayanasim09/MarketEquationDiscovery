@@ -1,6 +1,8 @@
 """Additional non-graph baselines for the reconstructed engine."""
 from __future__ import annotations
+
 import numpy as np
+
 
 class BayesianShrinkageVAR:
     """Conjugate ridge/shrinkage VAR approximation; not silently labeled ordinary VAR."""

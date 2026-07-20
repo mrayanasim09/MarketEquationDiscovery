@@ -1,9 +1,12 @@
 """Strict rolling-origin eligibility and reproducibility metadata."""
 from __future__ import annotations
+
 import random
+
 import numpy as np
 import pandas as pd
 import torch
+
 
 def seed_everything(seed:int)->dict:
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)

@@ -14,7 +14,6 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import cast
 
-
 import numpy as np
 import pandas as pd
 import torch
@@ -22,19 +21,28 @@ from statsmodels.tsa.api import VAR
 from statsmodels.tsa.arima.model import ARIMA
 from torch import nn
 
+from src.models import storage
 from src.models.baselines import BayesianShrinkageVAR, gradient_boosting_regressor
 from src.models.features import feature_sequence, volatility
-from src.models.graphs.factory import GRAPH_VARIANTS as GRAPH_FACTORY_VARIANTS, build as build_graph
+from src.models.graphs.factory import GRAPH_VARIANTS as GRAPH_FACTORY_VARIANTS
+from src.models.graphs.factory import build as build_graph
 from src.models.neural import (
     GraphConvolutionForecaster,
     SequenceLSTM,
     TemporalConvNet,
     TemporalGraphForecaster,
 )
-from src.models.provenance import RUN_MANIFEST_REQUIRED_FIELDS, build_execution_provenance
-from src.models import storage
+from src.models.provenance import (
+    RUN_MANIFEST_REQUIRED_FIELDS,
+    build_execution_provenance,
+)
 from src.models.storage import FORECAST_COLUMNS, append_parquet, write_run_manifest
-from src.models.training import eligible_training, quarterly_step_count, seed_everything, training_metadata
+from src.models.training import (
+    eligible_training,
+    quarterly_step_count,
+    seed_everything,
+    training_metadata,
+)
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
 ROOT = Path(__file__).resolve().parents[2]

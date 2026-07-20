@@ -1,135 +1,245 @@
 # Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies
 
-![Python](https://img.shields.io/badge/Python-3.14-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Under%20Review-orange)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
+[![DOI](https://img.shields.io/badge/DOI-10.2139%2Fssrn.7009041-blue)](https://doi.org/10.2139/ssrn.7009041)
+[![ORCID](https://img.shields.io/badge/ORCID-0009--0005--7280--730X-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0005-7280-730X)
+
+**Rayyan Asim** — Independent Researcher  
+[mrayanasim09@gmail.com](mailto:mrayanasim09@gmail.com) · [SSRN Preprint](https://doi.org/10.2139/ssrn.7009041)
+
+---
 
 ## Abstract
-This repository contains the codebase and data processing pipelines for the research paper "Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies." The study investigates the efficacy of Graph Neural Networks (GNNs) in forecasting quarterly Consumer Price Index (CPI) inflation (Year-over-Year) across 20 European economies. By modeling economies as nodes and dynamic bilateral trade relationships as edges, we evaluate whether explicitly embedding cross-border trade linkages improves predictive accuracy over traditional univariate, multivariate, and non-graph deep learning baselines.
 
-## Research Question and Motivation
-Inflation is traditionally modeled as a domestic phenomenon influenced by monetary policy and local macroeconomic indicators. However, in highly integrated regions like Europe, inflation can propagate across borders through trade networks. This research asks: **Does explicitly modeling the dynamic, directed trade relationships between countries using Spatio-Temporal Graph Neural Networks improve inflation forecasting accuracy compared to state-of-the-art non-graph methods?**
+This paper investigates whether explicitly modelling dynamic, directed bilateral trade relationships using Spatio-Temporal Graph Neural Networks (ST-GNNs) improves quarterly CPI inflation (YoY) forecasts for 20 European economies. A prospective expanding-window benchmark spanning 2017Q1–2025Q3 evaluates 12 models across 8 graph adjacency specifications and 3 forecast horizons (h = 1, 2, 4 quarters). The benchmark comprises 38,380 model fits and 781,740 forecast rows, evaluated with RMSE, MAE, sMAPE, CRPS, and 80%/95% prediction interval metrics. Statistical significance is assessed using Harvey-Leybourne-Newbold corrected Diebold-Mariano tests with Bartlett HAC variance, moving-block bootstrap confidence intervals (block = 4, draws = 2,000), and Benjamini-Hochberg FDR correction (q = 0.05).
 
-## Methodology Summary
-The benchmark incorporates:
-- **Target Variable**: Quarterly CPI inflation (YoY).
-- **Timeframes**: Training (2011Q2-2014Q4), Validation (2015Q1-2016Q4), and an Expanding-window Prospective Test (2017Q1-2025Q3).
-- **Horizons**: 1, 2, and 4 quarters ahead ($h=1, 2, 4$).
-- **Scale**: 38,380 model fits generating 781,740 forecast rows.
-- **Evaluation**: Root Mean Squared Error (RMSE) and Mean Absolute Error (MAE), rigorously tested across 20 random seeds (42-61) for all neural architectures to ensure statistical robustness.
+**Key finding:** No graph model achieves statistically significant superiority over non-graph baselines across all 20 initialization seeds after FDR correction. The `temporal_graph` model with an `identity_no_trade` adjacency (effectively ablating cross-country information) ranks first at h = 2 and h = 4, suggesting that temporal dynamics dominate any trade-network signal at the quarterly horizon.
 
-## Key Results
-Our comprehensive evaluation reveals that while spatio-temporal graph models demonstrate competitive performance, simpler graph topologies often outperform complex, dense trade networks. Notably, the `temporal_graph` model paired with an `identity_no_trade` graph (effectively isolating domestic temporal dynamics) achieved top rankings at $h=2$ and $h=4$. Statistical testing indicates that no single graph formulation consistently achieved significant superiority across all 20 initialization seeds when compared to strong non-graph baselines.
+---
 
-| Horizon | Top Performing Model | Top Graph Structure |
-|---------|----------------------|---------------------|
-| $h=1$ | Ensemble / Baseline | N/A |
-| $h=2$ | temporal_graph | identity_no_trade |
-| $h=4$ | temporal_graph | identity_no_trade |
+## Research Question
+
+> Does explicitly embedding dynamic, directed trade-network structure into a deep learning forecaster improve quarterly CPI inflation predictions for European economies, relative to univariate, multivariate, and non-graph neural network baselines?
+
+---
 
 ## Repository Structure
-```text
-repository/
-├── data/                  # Raw and processed datasets
-│   ├── raw/               # Eurostat and IMF/World Bank data
-│   └── processed/         # Cleaned features and adjacency matrices
-├── models/                # Model implementations
-│   ├── baselines/         # ARIMA, VAR, Persistence
-│   ├── machine_learning/  # Ridge, Gradient Boosting, MLP
-│   └── graph_neural/      # GCN, Temporal Graph models
-├── scripts/               # Execution scripts
-│   ├── validate.py        # Data validation
-│   ├── benchmark.py       # Main training and evaluation loop
-│   ├── analyze.py         # Results aggregation and significance testing
-│   ├── report.py          # Tables and figures generation
-│   └── manuscript.py      # Final LaTeX manuscript compilation
-├── environment.yml        # Conda environment definition
-├── requirements.txt       # Pip dependencies
-├── CITATION.cff           # Citation metadata
-├── LICENSE                # MIT License
-└── README.md              # This file
+
 ```
+repository/
+├── .github/workflows/ci.yml     # GitHub Actions: contract validation + lint + compile
+├── docs/                        # Technical documentation (10 guides)
+├── experiments/
+│   └── results/v2_1/
+│       ├── configs/             # Locked benchmark configuration (SHA-256 verified)
+│       ├── tuning/              # Validation-only tuning manifest
+│       ├── metadata/            # Output hash registry + environment manifest
+│       ├── manuscript/          # Tables (TeX + CSV) and figures generated by scripts
+│       ├── analysis/            # Aggregated rankings and significance summary CSVs
+│       ├── run_manifest.json    # Full execution provenance record
+│       └── FINAL_EXPERIMENT_REPORT.md
+├── paper/                       # LaTeX manuscript source
+│   ├── main.tex
+│   ├── appendix.tex
+│   ├── references.bib
+│   └── figures/
+├── src/
+│   ├── acquisition/             # Data download (Eurostat Comext, IMF, World Bank)
+│   ├── ingestion/               # Parsing and normalisation
+│   ├── transform/               # Feature engineering, graph construction, train/val/test splits
+│   └── models/
+│       ├── graphs/              # 8 adjacency matrix factory variants
+│       ├── tuning/              # Validation-only hyperparameter tuning (isolated)
+│       ├── run_benchmark_engine_v2_1.py   # Main benchmark orchestrator
+│       ├── evaluate_benchmark_engine_v2_1.py  # Metrics + DM tests
+│       ├── storage_v2_1.py                # Schema enforcement + transactional writes
+│       ├── validate_v2_1_contract.py      # Pre-run protocol gate
+│       ├── validate_v2_1_results.py       # Post-run completeness + hash gate
+│       ├── analyze_v2_1_results.py        # Rankings and significance summaries
+│       ├── generate_v2_1_manuscript.py    # LaTeX tables and figures
+│       └── generate_v2_1_report.py        # Final experiment report
+├── CHANGELOG.md
+├── CITATION.cff
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── ROADMAP.md
+├── SECURITY.md
+├── environment.yml              # Conda environment spec
+├── reproduce.sh                 # End-to-end reproduction script (Unix/macOS)
+├── reproduce.ps1                # End-to-end reproduction script (Windows)
+└── requirements.txt
+```
+
+---
 
 ## Installation
 
-### Option 1: Virtual Environment (Pip)
+### Option A — pip (recommended)
+
 ```bash
-python3.14 -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/mrayanasim09/MarketEquationDiscovery
+cd MarketEquationDiscovery
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Option 2: Conda
+### Option B — Conda
+
 ```bash
 conda env create -f environment.yml
 conda activate inflation-gnn
 ```
 
-## Quick Start / Reproduction
-The pipeline is designed to be executed sequentially. Run the following commands from the repository root:
+---
 
-1. **Validate Data**:
-   ```bash
-   python scripts/validate.py
-   ```
-2. **Run Benchmarks**:
-   ```bash
-   python scripts/benchmark.py
-   ```
-3. **Analyze Results**:
-   ```bash
-   python scripts/analyze.py
-   ```
-4. **Generate Report/Figures**:
-   ```bash
-   python scripts/report.py
-   ```
-5. **Compile Manuscript**:
-   ```bash
-   python scripts/manuscript.py
-   ```
+## Reproducing the Benchmark
 
-## Dataset Description
-- **Macroeconomic Data**: Quarterly indicators including CPI, GDP growth, and interest rates sourced from IMF International Financial Statistics (IFS) and the World Bank.
-- **Trade Data**: Quarterly bilateral import/export volumes sourced from Eurostat (Comext), used to construct dynamic weighted adjacency matrices representing the evolving European trade network.
+The benchmark outputs (`forecasts.parquet`, `metrics.parquet`, `dm_tests.parquet`) are stored separately (large files). All 5 SHA-256 hashes are registered in `experiments/results/v2_1/metadata/output_hashes.json`.
 
-## Models Evaluated
+### Validate the locked contract (< 5 seconds)
 
-| Category | Models |
-|----------|--------|
-| **Naïve & Statistical** | `persistence`, `ARIMA`, `VAR`, `ETS`, `dynamic_factor` |
-| **Machine Learning** | `ridge`, `gradient_boosting` |
-| **Deep Learning (Non-Graph)** | `MLP`, `LSTM`, `TCN` |
-| **Graph Neural Networks** | `GCN`, `temporal_graph` |
+```bash
+python -m src.models.validate_v2_1_contract
+```
 
-## Graph Variants (Adjacency Matrix Formulations)
+### Verify existing output hashes (< 30 seconds)
+
+```bash
+python -m src.models.validate_v2_1_results
+```
+
+### Run analysis + manuscript from frozen outputs (< 5 minutes)
+
+```bash
+python -m src.models.analyze_v2_1_results
+python -m src.models.generate_v2_1_manuscript
+python -m src.models.generate_v2_1_report
+```
+
+### Full end-to-end re-execution (~12 h on Apple Silicon)
+
+```bash
+# Unix/macOS
+./reproduce.sh
+
+# Windows PowerShell
+.\reproduce.ps1
+```
+
+> **Expected wall time:** ~12 hours on Apple Silicon M-series; longer on other hardware.  
+> **Hardware:** CPU execution (no GPU required). 16 GB RAM recommended.
+
+---
+
+## Benchmark Design
+
+| Property | Value |
+|---|---|
+| Target variable | Quarterly CPI inflation, YoY (%) |
+| Countries | 20 European economies (AUT, BEL, BGR, CYP, CZE, DEU, ESP, EST, FIN, FRA, GBR, GRC, HUN, IRL, ITA, LTU, LVA, NLD, POL, PRT) |
+| Training window | 2011Q2 – 2014Q4 |
+| Validation window | 2015Q1 – 2016Q4 |
+| Prospective test | 2017Q1 – 2025Q3 (expanding-window, no look-ahead) |
+| Forecast horizons | h = 1, 2, 4 quarters ahead |
+| Neural seeds | 20 (seeds 42 – 61) |
+| Total model fits | 38,380 |
+| Total forecast rows | 781,740 |
+
+---
+
+## Models
+
+| Category | Model |
+|---|---|
+| Naïve / statistical | `persistence`, `ARIMA`, `VAR`, `ETS`, `dynamic_factor` |
+| Machine learning | `ridge`, `gradient_boosting` |
+| Deep learning (non-graph) | `MLP`, `LSTM`, `TCN` |
+| Graph neural networks | `GCN`, `temporal_graph` |
+
+---
+
+## Graph Adjacency Variants
 
 | Variant | Description |
-|---------|-------------|
-| `directed_trade` | Standard directed trade volumes. |
-| `log_trade` | Log-transformed trade volumes to handle scale disparities. |
-| `import_dependence` | Trade normalized by the importing country's total imports. |
-| `top_k_incoming` | Filtered matrix retaining only the top-k trading partners. |
-| `reversed` | Transposed trade network (exports vs imports). |
-| `undirected` | Symmetrized trade relationships. |
-| `degree_preserving_random` | Null model: randomized edges preserving node degrees. |
-| `identity_no_trade` | Identity matrix; eliminates cross-country information flow. |
+|---|---|
+| `directed_trade` | Raw directed quarterly bilateral trade volumes |
+| `log_trade` | Log-transformed trade volumes |
+| `import_dependence` | Trade normalised by importer's total imports |
+| `top_k_incoming` | Retain only top-k trade partners per country |
+| `reversed` | Transposed network (export → import direction) |
+| `undirected` | Symmetrised trade relationships |
+| `degree_preserving_random` | Null model: random edges preserving degree sequence |
+| `identity_no_trade` | Identity matrix — ablates all cross-country signal |
+
+---
+
+## Evaluation Metrics
+
+| Metric | Type |
+|---|---|
+| RMSE | Point — primary |
+| MAE | Point — primary |
+| sMAPE | Point — scale-free |
+| CRPS | Probabilistic — sharpness + calibration |
+| Coverage 80% / 95% | Probabilistic — calibration |
+| Width 80% / 95% | Probabilistic — sharpness |
+
+Statistical testing: Harvey-Leybourne-Newbold DM test · Bartlett HAC · Moving-block bootstrap CI (block=4, draws=2000) · Benjamini-Hochberg FDR (q=0.05)
+
+---
+
+## Data Sources
+
+| Source | Data |
+|---|---|
+| [Eurostat Comext](https://ec.europa.eu/eurostat/web/international-trade-in-goods/data/database) | Quarterly bilateral trade flows |
+| [IMF IFS](https://data.imf.org/?sk=4c514d48-b6ba-49ed-8ab9-52b0c1a0179b) | CPI, interest rates, exchange rates |
+| [World Bank](https://databank.worldbank.org/) | GDP growth, energy prices |
+
+All data are from public sources; no proprietary datasets were used.
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [docs/OVERVIEW.md](docs/OVERVIEW.md) | Project overview and motivation |
+| [docs/BENCHMARK_PROTOCOL.md](docs/BENCHMARK_PROTOCOL.md) | Full benchmark protocol specification |
+| [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) | Step-by-step reproduction guide |
+| [docs/RESULTS_GUIDE.md](docs/RESULTS_GUIDE.md) | Interpreting parquet output schemas |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Code architecture and data pipeline |
+| [docs/DATA_DESCRIPTION.md](docs/DATA_DESCRIPTION.md) | Dataset documentation |
+| [docs/GRAPH_MODELS.md](docs/GRAPH_MODELS.md) | GCN and temporal-graph architecture details |
+| [docs/STATISTICAL_TESTS.md](docs/STATISTICAL_TESTS.md) | Statistical testing methodology |
+| [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | Known limitations and scope |
+| [docs/FAQ.md](docs/FAQ.md) | Frequently asked questions |
+
+---
 
 ## Citation
-If you use this code or data in your research, please cite our work:
 
 ```bibtex
 @article{asim2026predicting,
-  title={Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies},
-  author={Asim, Rayyan},
-  journal={SSRN Preprint},
-  year={2026},
-  url={https://github.com/mrayanasim09/MarketEquationDiscovery}
+  title   = {Predicting Inflation Contagion: A Spatio-Temporal Graph Neural
+             Network Approach to Trade-Linked Economies},
+  author  = {Asim, Rayyan},
+  journal = {SSRN Electronic Journal},
+  year    = {2026},
+  doi     = {10.2139/ssrn.7009041},
+  url     = {https://doi.org/10.2139/ssrn.7009041}
 }
 ```
 
+---
+
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgements
-We acknowledge the data provision by Eurostat, the IMF, and the World Bank, which made this empirical analysis possible.
+
+Data provided by Eurostat, the International Monetary Fund, and the World Bank. No external funding was received for this research.

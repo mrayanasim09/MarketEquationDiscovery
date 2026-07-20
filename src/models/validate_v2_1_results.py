@@ -1,10 +1,11 @@
 """Post-execution validation and hash registry for completed v2.1 benchmark outputs."""
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import sys
 from pathlib import Path
+
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]

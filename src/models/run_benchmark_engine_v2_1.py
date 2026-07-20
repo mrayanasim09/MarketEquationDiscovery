@@ -28,17 +28,42 @@ from statsmodels.tsa.statespace.dynamic_factor import DynamicFactor
 
 from src.models.baselines import gradient_boosting_regressor
 from src.models.evaluate_benchmark_engine_v2_1 import dm_tests, score_forecasts
-from src.models.graphs.factory import GRAPH_VARIANTS, build as build_graph
-from src.models.neural import GraphConvolutionForecaster, SequenceLSTM, TemporalConvNet, TemporalGraphForecaster
+from src.models.graphs.factory import GRAPH_VARIANTS
+from src.models.graphs.factory import build as build_graph
+from src.models.neural import (
+    GraphConvolutionForecaster,
+    SequenceLSTM,
+    TemporalConvNet,
+    TemporalGraphForecaster,
+)
 from src.models.provenance import build_execution_provenance, sha256_file
 from src.models.run_benchmark_engine_v2 import (
-    MLP, fit_graph_neural, fit_neural, graph_panels, history_matrix, quarter,
-    sequence_eligible_rows, sequence_features, standardize, tabular_features,
+    MLP,
+    fit_graph_neural,
+    fit_neural,
+    graph_panels,
+    history_matrix,
+    quarter,
+    sequence_eligible_rows,
+    sequence_features,
+    standardize,
+    tabular_features,
 )
-from src.models.storage_v2_1 import DM_COLUMNS, FORECAST_COLUMNS, METRIC_COLUMNS, RESULTS, append_failure_record, write_parquet_exact
+from src.models.storage_v2_1 import (
+    DM_COLUMNS,
+    FORECAST_COLUMNS,
+    METRIC_COLUMNS,
+    RESULTS,
+    append_failure_record,
+    write_parquet_exact,
+)
 from src.models.training import eligible_training, quarterly_step_count, seed_everything
 from src.models.tuning.manifest import TUNING_MANIFEST, require_tuning_manifest
-from src.models.validate_v2_1_contract import REQUIRED_MODELS, load_config, validation_report
+from src.models.validate_v2_1_contract import (
+    REQUIRED_MODELS,
+    load_config,
+    validation_report,
+)
 from src.transform.common import V2_PROCESSED, require_validated_raw
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -243,7 +268,7 @@ def main() -> int:
                 train_features = sequence_eligible_rows(train, panel).sort_values(["origin_quarter", "country"])
                 x_train = tabular_features(train_features, panel, countries, qidx, adjacency)
                 x_test = tabular_features(test, panel, countries, qidx, adjacency)
-                
+
                 # ridge
                 model = "ridge"
                 _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})

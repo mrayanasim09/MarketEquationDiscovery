@@ -1,20 +1,22 @@
 """Collect results and generate FINAL_EXPERIMENT_REPORT.md for v2.1 benchmark."""
 from __future__ import annotations
 
-import sys
 import json
-from pathlib import Path
-import pandas as pd
+import sys
 from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT))
 
 from src.models.storage_v2_1 import RESULTS
 
+
 def main() -> int:
     print("Starting scientific report generation...")
-    
+
     # Paths to metadata
     env_path = RESULTS / "metadata" / "pre_execution_environment.json"
     audit_path = RESULTS / "metadata" / "pre_execution_audit.json"
@@ -38,7 +40,7 @@ def main() -> int:
     # Calculate run duration from log
     log_content = log_path.read_text()
     log_lines = log_content.strip().split("\n")
-    
+
     start_time_str = ""
     end_time_str = ""
     for line in log_lines:
@@ -48,7 +50,7 @@ def main() -> int:
         if '"event": "run_completed"' in line or '"event": "run_failed"' in line:
             end_event = json.loads(line)
             end_time_str = end_event.get("timestamp")
-            
+
     if not end_time_str and log_lines:
         # Fallback to last line if not complete
         try:
@@ -85,7 +87,7 @@ def main() -> int:
     report_lines.append(f"**Generated:** {datetime.utcnow().isoformat()}Z")
     report_lines.append(f"**Experiment Run ID:** `{hashes.get('run_id')}`")
     report_lines.append("")
-    
+
     report_lines.append("## 1. Provenance and Integrity Registry")
     report_lines.append("")
     report_lines.append("| Component | Identifier / Hash |")
@@ -137,7 +139,7 @@ def main() -> int:
     report_lines.append("")
     report_lines.append("Below are the top 5 models ranked by Mean Absolute Error (MAE) at each horizon (averaged over seeds and graph variants if applicable):")
     report_lines.append("")
-    
+
     # Filter rankings for MAE and get top 5 per horizon
     mae_ranks = rankings[rankings.metric == "mae"].sort_values(["horizon", "mean"])
     for horizon, group in mae_ranks.groupby("horizon"):
@@ -153,10 +155,10 @@ def main() -> int:
     report_lines.append("")
     report_lines.append("A trade-network graph model shows superiority only if: loss differential < 0, moving-block bootstrap CI excludes 0, and Benjamini-Hochberg FDR corrected p-value < 0.05.")
     report_lines.append("")
-    
+
     # Find all tests where all seeds are significant
     fully_sig_tests = sig[sig.fraction_seeds_significant == 1.0]
-    
+
     if fully_sig_tests.empty:
         report_lines.append("> [!NOTE]")
         report_lines.append("> No graph model outperformed its comparator with statistical significance across all 20 seeds.")
@@ -220,7 +222,7 @@ def main() -> int:
     report_path = RESULTS / "FINAL_EXPERIMENT_REPORT.md"
     report_path.write_text("\n".join(report_lines))
     print(f"Final scientific audit report written to {report_path}")
-    
+
     return 0
 
 if __name__ == "__main__":
