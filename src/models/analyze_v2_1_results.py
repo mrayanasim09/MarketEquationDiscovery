@@ -10,7 +10,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT))
 
-from src.models.storage_v2_1 import RESULTS
+from src.models.storage_v2_1 import RESULTS  # noqa: E402
 
 
 def main() -> int:
