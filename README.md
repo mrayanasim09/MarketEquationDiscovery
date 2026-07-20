@@ -3,10 +3,8 @@
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
 [![DOI](https://img.shields.io/badge/DOI-10.2139%2Fssrn.7009041-blue)](https://doi.org/10.2139/ssrn.7009041)
-[![ORCID](https://img.shields.io/badge/ORCID-0009--0005--7280--730X-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0005-7280-730X)
 
-**Rayyan Asim** — Independent Researcher  
-[mrayanasim09@gmail.com](mailto:mrayanasim09@gmail.com) · [Working Paper / Preprint](https://doi.org/10.2139/ssrn.7009041)
+**Anonymized Author(s)** · [Working Paper / Preprint](https://doi.org/10.2139/ssrn.7009041)
 
 ---
 
@@ -226,7 +224,7 @@ All data are from public sources; no proprietary datasets were used.
 @article{asim2026predicting,
   title   = {Predicting Inflation Contagion: A Spatio-Temporal Graph Neural
              Network Approach to Trade-Linked Economies},
-  author  = {Asim, Rayyan},
+  author  = {Anonymized, Author},
   journal = {Preprint / Working Paper},
   year    = {2026},
   doi     = {10.2139/ssrn.7009041},

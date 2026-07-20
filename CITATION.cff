@@ -1,9 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-  - family-names: "Asim"
-    given-names: "Rayyan"
-    orcid: "https://orcid.org/0009-0005-7280-730X"
+  - family-names: "Anonymized"
+    given-names: "Author(s)"
 title: "Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies"
 version: "2.1.0"
 date-released: 2026-07-20
@@ -29,9 +28,8 @@ abstract: >
 preferred-citation:
   type: article
   authors:
-    - family-names: "Asim"
-      given-names: "Rayyan"
-      orcid: "https://orcid.org/0009-0005-7280-730X"
+    - family-names: "Anonymized"
+      given-names: "Author(s)"
   title: "Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies"
   journal: "Preprint / Working Paper"
   year: 2026
