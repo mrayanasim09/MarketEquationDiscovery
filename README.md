@@ -6,7 +6,7 @@
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0005--7280--730X-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0005-7280-730X)
 
 **Rayyan Asim** — Independent Researcher  
-[mrayanasim09@gmail.com](mailto:mrayanasim09@gmail.com) · [SSRN Preprint](https://doi.org/10.2139/ssrn.7009041)
+[mrayanasim09@gmail.com](mailto:mrayanasim09@gmail.com) · [Working Paper / Preprint](https://doi.org/10.2139/ssrn.7009041)
 
 ---
 
@@ -227,7 +227,7 @@ All data are from public sources; no proprietary datasets were used.
   title   = {Predicting Inflation Contagion: A Spatio-Temporal Graph Neural
              Network Approach to Trade-Linked Economies},
   author  = {Asim, Rayyan},
-  journal = {SSRN Electronic Journal},
+  journal = {Preprint / Working Paper},
   year    = {2026},
   doi     = {10.2139/ssrn.7009041},
   url     = {https://doi.org/10.2139/ssrn.7009041}
