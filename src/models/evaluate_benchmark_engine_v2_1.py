@@ -1,4 +1,15 @@
-"""Journal metrics and origin-level inference for completed v2.1 forecast transactions."""
+"""Journal metrics and origin-level inference for completed v2.1 forecast transactions.
+
+This module implements the pre-registered evaluation protocol for the v2.1
+prospective benchmark, including:
+
+- Deterministic scoring (RMSE, MAE, sMAPE) with origin-level aggregation
+- Probabilistic scoring (CRPS, interval coverage and width at 80%/95%)
+- Diebold-Mariano tests with Harvey-Leybourne-Newbold finite-sample
+  correction and Bartlett HAC kernel
+- Moving-block bootstrap confidence intervals
+- Benjamini-Hochberg FDR correction for multiplicity
+"""
 from __future__ import annotations
 
 import math
@@ -12,6 +23,7 @@ from src.models.storage_v2_1 import DM_COLUMNS, METRIC_COLUMNS, PROVENANCE
 
 
 def _smape(actual: np.ndarray, mean: np.ndarray) -> np.ndarray:
+    """Symmetric Mean Absolute Percentage Error, omitting zero-denominator pairs."""
     denominator = np.abs(actual) + np.abs(mean)
     values = np.full(len(actual), np.nan)
     valid = denominator > 0
@@ -28,10 +40,16 @@ def _normal_crps(actual: np.ndarray, mean: np.ndarray, scale: np.ndarray) -> np.
 
 
 def _origin_mean(frame: pd.DataFrame, values: np.ndarray) -> pd.Series:
+    """Compute the cross-country mean of *values* within each forecast origin."""
     return pd.Series(values, index=frame.index).groupby(frame["forecast_origin"]).mean().sort_index()
 
 
 def score_forecasts(forecasts: pd.DataFrame) -> pd.DataFrame:
+    """Score a completed forecast table against the v2.1 metric registry.
+
+    Returns a long-format DataFrame with one row per (model, variant, seed,
+    horizon, metric) combination, conforming to METRIC_COLUMNS.
+    """
     rows: list[dict[str, Any]] = []
     keys = PROVENANCE + ["model", "graph_variant", "seed", "horizon"]
     for values, group in forecasts.groupby(keys, dropna=False):
@@ -62,6 +80,11 @@ def score_forecasts(forecasts: pd.DataFrame) -> pd.DataFrame:
 
 
 def _dm_hln(difference: np.ndarray, horizon: int) -> tuple[float, float]:
+    """Diebold-Mariano test with Harvey-Leybourne-Newbold correction.
+
+    Uses a Bartlett kernel with bandwidth equal to ``horizon - 1`` for
+    HAC variance estimation. Returns (statistic, two-sided p-value).
+    """
     n, lag = len(difference), min(horizon - 1, len(difference) - 1)
     if n < 3:
         return float("nan"), float("nan")
@@ -79,6 +102,11 @@ def _dm_hln(difference: np.ndarray, horizon: int) -> tuple[float, float]:
 
 
 def _moving_block_ci(values: np.ndarray, block: int, draws: int, rng: np.random.Generator) -> tuple[float, float]:
+    """Moving-block bootstrap 95% confidence interval for the mean of *values*.
+
+    Resamples contiguous blocks of length *block* with replacement and
+    returns the (2.5th, 97.5th) percentiles of the bootstrap distribution.
+    """
     n = len(values)
     if n < 2:
         return float("nan"), float("nan")
@@ -90,7 +118,8 @@ def _moving_block_ci(values: np.ndarray, block: int, draws: int, rng: np.random.
             start = int(rng.integers(0, n - block + 1))
             sample.extend(values[start:start + block])
         means[draw] = np.mean(sample[:n])
-    return tuple(float(value) for value in np.quantile(means, [0.025, 0.975]))
+    low, high = np.quantile(means, [0.025, 0.975])
+    return float(low), float(high)
 
 
 def _bh_monotone(pvalues: pd.Series) -> pd.Series:
@@ -106,6 +135,13 @@ def _bh_monotone(pvalues: pd.Series) -> pd.Series:
 
 
 def dm_tests(forecasts: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
+    """Run pairwise Diebold-Mariano tests for all graph models vs. comparators.
+
+    Each graph model × variant × seed × horizon is tested against every
+    pre-specified comparator. Seeded comparators (LSTM, TCN) are matched
+    by seed to ensure a valid one-to-one merge. Results include HLN-corrected
+    DM statistics, moving-block bootstrap CIs, and BH-adjusted p-values.
+    """
     rows: list[dict[str, Any]] = []
     comparators = set(config["statistical_testing"]["comparators"])
     graph_models = set(config["graph_models"])
@@ -117,6 +153,8 @@ def dm_tests(forecasts: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
             base = forecasts[(forecasts.run_id == provenance["run_id"]) & (forecasts.model == comparator) & (forecasts.horizon == provenance["horizon"])]
             if base.empty:
                 raise RuntimeError(f"missing pre-specified comparator {comparator}")
+            if comparator in {"lstm", "tcn"}:
+                base = base[base.seed == str(provenance["seed"])]
             joined = graph.merge(base, on=["country", "forecast_origin", "target_quarter", "horizon"], suffixes=("_graph", "_base"), validate="one_to_one")
             graph_loss = _origin_mean(joined.rename(columns={"forecast_origin": "forecast_origin"}), np.abs(joined.actual_graph - joined.mean_graph))
             base_loss = _origin_mean(joined.rename(columns={"forecast_origin": "forecast_origin"}), np.abs(joined.actual_base - joined.mean_base))

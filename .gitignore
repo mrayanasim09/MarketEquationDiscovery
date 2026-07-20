@@ -1,14 +1,95 @@
-# Generated pre-training reports; source/configuration provenance is committed separately.
-/experiments/results/v2/metadata/validation.json
-/experiments/results/v2_1/metadata/
-/experiments/results/v2_1/staging/
-/experiments/results/v2_1/failed_transactions.jsonl
-/experiments/results/v2_1/forecasts.parquet
-/experiments/results/v2_1/metrics.parquet
-/experiments/results/v2_1/dm_tests.parquet
-/experiments/results/v2_1/checkpoints/
-
-# Python bytecode
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 *.pyo
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.spyderproject
+.spyproject
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+tmp/
+temp/
+*.log
+
+# Data (raw and processed data are large; only gitkeep markers are committed)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Legacy v1 results directory
+results/
+
+# -----------------------------------------------------------------------
+# Experiment outputs: large binary/log artefacts are excluded; metadata,
+# configs, tuning manifests, manuscript tables/figures, and reports ARE
+# tracked so the repository is fully self-contained and reproducible.
+# -----------------------------------------------------------------------
+
+# Large binary forecast/metric outputs (reproduce from scripts)
+experiments/results/v2_1/forecasts.parquet
+experiments/results/v2_1/metrics.parquet
+experiments/results/v2_1/dm_tests.parquet
+
+# Transient execution artefacts
+experiments/results/v2_1/staging/
+experiments/results/v2_1/checkpoints/
+experiments/results/v2_1/execution_log.txt
+experiments/results/v2_1/failed_transactions.jsonl
+
+# v2 pre-release run artefacts (archived; binary checkpoints excluded)
+experiments/results/v2/checkpoints/
+experiments/results/v2/metadata/validation.json
+
+# Everything else in experiments/ is tracked:
+#   configs/, tuning/, metadata/output_hashes.json,
+#   metadata/pre_execution_audit.json, metadata/pre_execution_environment.json,
+#   manuscript/ (tables + figures), analysis/ CSVs, run_manifest.json,
+#   environment_manifest.json, FINAL_EXPERIMENT_REPORT.md

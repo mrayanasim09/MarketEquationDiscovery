@@ -168,6 +168,7 @@ def _provenance(cfg: dict[str, Any]) -> dict[str, str]:
 
 def _log_event(log_path: Path, event: dict[str, Any]) -> None:
     payload = {"timestamp": datetime.now(timezone.utc).isoformat(), **event}
+    print(json.dumps(payload, sort_keys=True), flush=True)
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
@@ -232,27 +233,59 @@ def main() -> int:
                 train = eligible_training(samples, horizon, origin).sort_values(["origin_quarter", "country"])
                 for model in ("persistence", "arima", "var", "ets", "dynamic_factor"):
                     _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
-                    point = _classical_predictions(model, test, panel, countries, horizon)
-                    _append_rows(rows, provenance, model, "none", "deterministic", horizon, test, point, tuning)
+                    try:
+                        point = _classical_predictions(model, test, panel, countries, horizon)
+                        _append_rows(rows, provenance, model, "none", "deterministic", horizon, test, point, tuning)
+                        _log_event(log_path, {"event": "model_completed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
+                    except Exception as exc:
+                        _log_event(log_path, {"event": "model_failed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin), "error": str(exc)})
+                        raise
                 train_features = sequence_eligible_rows(train, panel).sort_values(["origin_quarter", "country"])
                 x_train = tabular_features(train_features, panel, countries, qidx, adjacency)
                 x_test = tabular_features(test, panel, countries, qidx, adjacency)
-                for model in ("ridge", "gradient_boosting"):
-                    _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
-                ridge = np.linalg.solve(standardize(x_train, x_test)[0].T @ standardize(x_train, x_test)[0] + np.eye(x_train.shape[1]), standardize(x_train, x_test)[0].T @ train_features.target_cpi_yoy.to_numpy(float))
-                _append_rows(rows, provenance, "ridge", "none", "deterministic", horizon, test, standardize(x_train, x_test)[1] @ ridge, tuning)
-                boost = gradient_boosting_regressor().fit(x_train, train_features.target_cpi_yoy.to_numpy(float))
-                _append_rows(rows, provenance, "gradient_boosting", "none", "deterministic", horizon, test, boost.predict(x_test), tuning)
+                
+                # ridge
+                model = "ridge"
+                _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
+                try:
+                    ridge = np.linalg.solve(standardize(x_train, x_test)[0].T @ standardize(x_train, x_test)[0] + np.eye(x_train.shape[1]), standardize(x_train, x_test)[0].T @ train_features.target_cpi_yoy.to_numpy(float))
+                    _append_rows(rows, provenance, "ridge", "none", "deterministic", horizon, test, standardize(x_train, x_test)[1] @ ridge, tuning)
+                    _log_event(log_path, {"event": "model_completed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
+                except Exception as exc:
+                    _log_event(log_path, {"event": "model_failed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin), "error": str(exc)})
+                    raise
+
+                # gradient_boosting
+                model = "gradient_boosting"
+                _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
+                try:
+                    boost = gradient_boosting_regressor().fit(x_train, train_features.target_cpi_yoy.to_numpy(float))
+                    _append_rows(rows, provenance, "gradient_boosting", "none", "deterministic", horizon, test, boost.predict(x_test), tuning)
+                    _log_event(log_path, {"event": "model_completed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
+                except Exception as exc:
+                    _log_event(log_path, {"event": "model_failed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin), "error": str(exc)})
+                    raise
+
                 for seed in cfg["seeds"]:
                     for model in ("mlp", "lstm", "tcn"):
                         _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": seed, "forecast_origin": str(origin)})
-                        point = _neural_predictions(model, "none", seed, train, test, panel, countries, qidx, adjacency, cfg, transaction / "checkpoints", f"{model}_h{horizon}_{origin}_s{seed}")
-                        _append_rows(rows, provenance, model, "none", str(seed), horizon, test, point, tuning)
+                        try:
+                            point = _neural_predictions(model, "none", seed, train, test, panel, countries, qidx, adjacency, cfg, transaction / "checkpoints", f"{model}_h{horizon}_{origin}_s{seed}")
+                            _append_rows(rows, provenance, model, "none", str(seed), horizon, test, point, tuning)
+                            _log_event(log_path, {"event": "model_completed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": seed, "forecast_origin": str(origin)})
+                        except Exception as exc:
+                            _log_event(log_path, {"event": "model_failed", "model": model, "horizon": horizon, "graph_variant": "none", "seed": seed, "forecast_origin": str(origin), "error": str(exc)})
+                            raise
                     for variant in cfg["graph_variants"]:
                         for model in ("gcn", "temporal_graph"):
                             _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": variant, "seed": seed, "forecast_origin": str(origin)})
-                            point = _neural_predictions(model, variant, seed, train, test, panel, countries, qidx, adjacency, cfg, transaction / "checkpoints", f"{model}_{variant}_h{horizon}_{origin}_s{seed}")
-                            _append_rows(rows, provenance, model, variant, str(seed), horizon, test, point, tuning)
+                            try:
+                                point = _neural_predictions(model, variant, seed, train, test, panel, countries, qidx, adjacency, cfg, transaction / "checkpoints", f"{model}_{variant}_h{horizon}_{origin}_s{seed}")
+                                _append_rows(rows, provenance, model, variant, str(seed), horizon, test, point, tuning)
+                                _log_event(log_path, {"event": "model_completed", "model": model, "horizon": horizon, "graph_variant": variant, "seed": seed, "forecast_origin": str(origin)})
+                            except Exception as exc:
+                                _log_event(log_path, {"event": "model_failed", "model": model, "horizon": horizon, "graph_variant": variant, "seed": seed, "forecast_origin": str(origin), "error": str(exc)})
+                                raise
         forecasts = pd.DataFrame(rows, columns=FORECAST_COLUMNS)
         _assert_complete(forecasts, cfg, samples)
         write_parquet_exact(transaction / "forecasts.parquet", forecasts, FORECAST_COLUMNS, ["run_id", "country", "forecast_origin", "horizon", "model", "graph_variant", "seed"])

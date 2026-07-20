@@ -1,0 +1,81 @@
+name: Validation Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  contract-validation:
+    name: V2.1 Contract & Results Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate V2.1 contract
+        run: python -m src.models.validate_v2_1_contract
+
+  lint:
+    name: Code Quality (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff
+        run: ruff check src/models/ --select=E,F,W,I --ignore=E501
+
+  py-compile:
+    name: Syntax Check (py_compile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile all v2.1 modules
+        run: |
+          python -m py_compile \
+            src/models/evaluate_benchmark_engine_v2_1.py \
+            src/models/storage_v2_1.py \
+            src/models/validate_v2_1_contract.py \
+            src/models/validate_v2_1_results.py \
+            src/models/run_benchmark_engine_v2_1.py \
+            src/models/analyze_v2_1_results.py \
+            src/models/generate_v2_1_manuscript.py \
+            src/models/generate_v2_1_report.py
+          echo "All modules compiled successfully."

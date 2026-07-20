@@ -1,4 +1,10 @@
-"""v2.1 transactional result schemas; isolated from archived v2 storage."""
+"""v2.1 transactional result schemas; isolated from archived v2 storage.
+
+Defines the canonical column layouts for forecast, metric, and
+Diebold-Mariano test parquet files. All writers enforce schema
+completeness, key uniqueness, and provenance non-nullity before
+writing to disk.
+"""
 from __future__ import annotations
 
 import json
@@ -22,6 +28,11 @@ DM_COLUMNS = PROVENANCE + [
 
 
 def write_parquet_exact(path: Path, frame: pd.DataFrame, columns: list[str], keys: list[str]) -> None:
+    """Write *frame* to *path* as parquet, enforcing schema and key constraints.
+
+    Raises ``ValueError`` if required columns are missing, transaction keys
+    contain duplicates, or provenance fields contain null values.
+    """
     missing = sorted(set(columns) - set(frame.columns))
     if missing:
         raise ValueError(f"{path.name} lacks required columns: {missing}")
@@ -35,6 +46,7 @@ def write_parquet_exact(path: Path, frame: pd.DataFrame, columns: list[str], key
 
 
 def append_failure_record(record: dict[str, Any]) -> None:
+    """Append a JSON failure record to the failed transactions log."""
     RESULTS.mkdir(parents=True, exist_ok=True)
     with (RESULTS / "failed_transactions.jsonl").open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, sort_keys=True) + "\n")

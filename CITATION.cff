@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Asim"
+    given-names: "Rayyan"
+    # orcid: "https://orcid.org/xxxx-xxxx-xxxx-xxxx"  # Add ORCID before submission
+title: "Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked Economies"
+date-released: 2026-07-20
+url: "https://github.com/mrayanasim09/MarketEquationDiscovery"
+keywords:
+  - inflation forecasting
+  - graph neural networks
+  - trade networks
+  - macroeconomic forecasting

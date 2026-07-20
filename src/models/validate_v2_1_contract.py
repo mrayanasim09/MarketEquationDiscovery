@@ -108,7 +108,7 @@ def execution_errors(cfg: dict[str, Any]) -> list[str]:
     try:
         from src.models.evaluate_benchmark_engine_v2_1 import dm_tests, score_forecasts
         from src.models.run_benchmark_engine_v2_1 import RUNNER_OUTPUTS, SUPPORTED_MODELS
-        from src.models.storage_v2_1 import FORECAST_COLUMNS, METRIC_COLUMNS
+        from src.models.storage_v2_1 import FORECAST_COLUMNS
         from src.models.tuning.manifest import require_tuning_manifest
     except ImportError as exc:
         return [f"v2.1 execution implementation cannot be imported: {exc}"]
