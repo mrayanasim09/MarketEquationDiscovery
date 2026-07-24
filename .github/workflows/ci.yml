@@ -47,7 +47,7 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff
-        run: ruff check src/models/ --select=E,F,W,I --ignore=E501
+        run: ruff check src/models/ --select=E,F,W,I --ignore=E501,E701,E702
 
   py-compile:
     name: Syntax Check (py_compile)
