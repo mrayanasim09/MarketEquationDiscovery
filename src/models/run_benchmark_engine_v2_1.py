@@ -99,7 +99,16 @@ def _classical_predictions(name: str, test: pd.DataFrame, panel: pd.DataFrame, c
         return test.cpi_yoy_input.to_numpy(float)
     if name == "var":
         try:
-            return VAR(matrix).fit(maxlags=1, trend="c").forecast(matrix[-1:], steps)[-1]
+            var_mod = VAR(matrix)
+            maxlags = min(2, len(matrix) - 2)
+            p = 1
+            if maxlags > 1:
+                try:
+                    sel = var_mod.select_order(maxlags=maxlags).selected_orders.get("aic", 1)
+                    if sel and sel > 0: p = int(sel)
+                except Exception:
+                    p = 1
+            return var_mod.fit(maxlags=p, trend="c").forecast(matrix[-1:], steps)[-1]
         except Exception:
             return test.cpi_yoy_input.to_numpy(float)
     if name == "dynamic_factor":
@@ -113,7 +122,17 @@ def _classical_predictions(name: str, test: pd.DataFrame, panel: pd.DataFrame, c
         values = panel[(panel.entity_id == row["country"]) & (panel.period <= row["macro_feature_quarter"])].sort_values("period").cpi_yoy.dropna().to_numpy(float)
         try:
             if name == "arima":
-                prediction = ARIMA(values, order=(1, 0, 0)).fit().forecast(steps)[-1]
+                best_aic = float("inf")
+                best_pred = row["cpi_yoy_input"]
+                for p in (1, 2, 3, 4):
+                    try:
+                        fitted = ARIMA(values, order=(p, 0, 0)).fit()
+                        if fitted.aic < best_aic:
+                            best_aic = fitted.aic
+                            best_pred = float(fitted.forecast(steps)[-1])
+                    except Exception:
+                        continue
+                prediction = best_pred
             elif name == "ets":
                 prediction = ETSModel(values, error="add", trend=None, seasonal=None).fit(disp=False).forecast(steps)[-1]
             else:

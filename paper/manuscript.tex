@@ -460,25 +460,21 @@ true capacity; this is discussed further in Section 6.4.
 
 \subsection{4.3 GNN Architecture}\label{gnn-architecture}
 
-\textbf{Graph Convolutional Network (GCN)} follows Kipf and Welling
-(2017):
+\textbf{Graph Convolutional Network (GCN)} applies a spatial graph convolution operator over node features:
 
-\[\mathbf{H}^{(l+1)} = \sigma\!\left(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\,\tilde{\mathbf{D}}^{-1/2}\mathbf{H}^{(l)}\mathbf{W}^{(l)}\right)\]
+\[\mathbf{H} = \mathrm{ReLU}\!\left(\tilde{\mathbf{A}}\mathbf{X}\mathbf{W}_{\text{node}}\right)\]
 
-where \(\tilde{\mathbf{A}} = \mathbf{A} + \mathbf{I}\) is the
-self-looped adjacency, \(\tilde{\mathbf{D}}\) its degree matrix, and
-\(\mathbf{W}^{(l)}\) are learnable weight matrices. Two graph
-convolutional layers are applied, followed by a linear readout over node
-embeddings.
+where \(\tilde{\mathbf{A}}\) is the row-normalised spatial adjacency matrix, \(\mathbf{X} \in \mathbb{R}^{N \times F}\) represents input node features for \(N\) countries, and \(\mathbf{W}_{\text{node}} \in \mathbb{R}^{F \times d}\) is a learnable weight matrix mapping features to hidden dimension \(d\). A linear readout layer \(\mathbf{W}_{\text{head}} \in \mathbb{R}^{d \times 1}\) maps the node embeddings to individual country forecasts: \(\hat{\mathbf{y}} = \mathbf{H}\mathbf{W}_{\text{head}}\).
 
-\textbf{Temporal Graph} extends GCN with a temporal self-attention
-module applied over the sequence of per-origin node embeddings:
+\textbf{Temporal Graph} combines the spatial GCN message-passing operator with a Recurrent LSTM temporal encoder. For each time step \(t' \in \{t-K, \dots, t-1\}\) in the lookback window of length \(K\), spatial node representations are computed:
 
-\[\mathbf{z}_i = \sum_{t'} \alpha_{t,t'}\,\mathbf{h}_i^{(t')}\]
+\[\mathbf{h}_i^{(t')} = \mathrm{ReLU}\!\left(\sum_{j=1}^N \tilde{A}_{ij}^{(t')}\,\mathbf{x}_j^{(t')}\mathbf{W}_{\text{node}}\right)\]
 
-where
-\(\alpha_{t,t'} = \mathrm{softmax}(\mathbf{q}_t \cdot \mathbf{k}_{t'} / \sqrt{d})\).
-A linear layer maps the attended embedding to the final scalar forecast.
+The temporal sequence of spatial embeddings \(\{\mathbf{h}_i^{(t-K)}, \dots, \mathbf{h}_i^{(t-1)}\}\) is fed into a Long Short-Term Memory (LSTM) network:
+
+\[\mathbf{z}_i = \mathrm{LSTM}\!\left(\{\mathbf{h}_i^{(t')}\}_{t'=t-K}^{t-1}\right)\]
+
+The final hidden state \(\mathbf{z}_i \in \mathbb{R}^d\) is passed to a linear readout layer to produce the forecast: \(\hat{y}_{i, t+h} = \mathbf{W}_{\text{head}}\mathbf{z}_i\).
 
 \subsection{4.4 Statistical Testing
 Framework}\label{statistical-testing-framework}
@@ -798,16 +794,7 @@ families perform best when the trade graph is replaced by an identity
 matrix across all horizons and both MAE and CRPS metrics. This pattern
 has two interpretations that are not mutually exclusive:
 
-\textbf{Architectural regularisation.} The GCN and temporal attention
-mechanisms provide implicit regularisation or representational capacity
-advantages relative to simpler neural baselines, independent of
-cross-country propagation. The attention mechanism, in particular, may
-be learning temporal smoothing that acts similarly to exponential
-smoothing without requiring graph information. Prior theoretical work
-supports this possibility: Kawamoto et al.~(2018) show that GCN-style
-aggregation can achieve competitive performance independently of the
-actual graph topology, and this has been observed empirically in
-non-economic settings (Zugner et al., 2020).
+\textbf{Architectural regularisation.} The GCN spatial pooling and temporal sequence aggregation mechanisms provide implicit regularisation or representational capacity advantages relative to simpler neural baselines, independent of cross-country propagation. The sequence recurrence mechanism, in particular, may be learning temporal smoothing that acts similarly to exponential smoothing without requiring graph information. Prior theoretical work supports this possibility: Kawamoto et al.~(2018) show that GCN-style aggregation can achieve competitive performance independently of the actual graph topology, and this has been observed empirically in non-economic settings (Zugner et al., 2020).
 
 \textbf{Noisy or irrelevant edges.} Quarterly bilateral export flows, as
 available from Eurostat Comext, may be too coarse and too slowly varying

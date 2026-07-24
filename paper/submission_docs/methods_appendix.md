@@ -2,7 +2,7 @@ Methods Appendix
 
 Model architectures
 - ST-GNN: graph convolution layers (GCN) followed by LSTM; input window: 4 quarters; output: country-level incremental CPI change.
-- Baselines: ARIMA(1,0,0), VAR(1), ETS, ridge regression, gradient boosting (sklearn HistGradientBoosting), MLP, TCN.
+- Baselines: ARIMA (AIC-selected p in 1..4), VAR (AIC-selected p in 1..2), ETS, ridge regression, gradient boosting (sklearn HistGradientBoosting), MLP, TCN.
 
 Training
 - Optimizer: Adam, learning rate 0.01, weight decay (L2) as reported in config.
@@ -24,7 +24,7 @@ Methods Appendix
 
 Model specifications
 - ST-GNN architecture: graph convolution layers followed by an LSTM over a 4-quarter input window. Hidden dim = 16, epochs = 30.
-- Baselines: ARIMA(1,0,0), VAR(1), ETS, Ridge regression, Gradient boosting (scikit-learn), MLP (2-layer), TCN.
+- Baselines: ARIMA (AIC-selected p in 1..4), VAR (AIC-selected p in 1..2), ETS, Ridge regression, Gradient boosting (scikit-learn), MLP (2-layer), TCN.
 
 Evaluation protocol
 - Rolling expanding-window refit with origins from 2016Q1 to 2024Q1.

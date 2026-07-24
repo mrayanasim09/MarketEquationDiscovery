@@ -164,5 +164,5 @@ def dm_tests(forecasts: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
             rows.append({**provenance, "comparator": comparator, "loss": "absolute_error", "dm_stat": statistic, "p_value": pvalue, "p_value_bh": float("nan"), "loss_difference": float(np.mean(difference)), "ci_low": ci_low, "ci_high": ci_high, "origin_count": len(difference)})
     result = pd.DataFrame(rows, columns=DM_COLUMNS)
     if not result.empty:
-        result["p_value_bh"] = _bh_monotone(result.p_value)
+        result["p_value_bh"] = result.groupby(["model", "graph_variant", "horizon"])["p_value"].transform(_bh_monotone)
     return result
