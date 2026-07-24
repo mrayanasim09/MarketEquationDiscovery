@@ -1,10 +1,8 @@
 ---
 title: "Do Trade Networks Help Forecast Inflation? A Benchmark Refutation Using Spatio-Temporal Graph Neural Networks"
 author:
-  - name: Rayyan Asim
-    affiliation: Independent Researcher
-    email: mrayanasim09@gmail.com
-    orcid: 0000-0003-2461-5638
+  - name: Anonymized Author(s)
+    affiliation: Anonymized Institution
 date: "2026-07-24"
 abstract: |
   This study presents a negative benchmark and ablation study evaluating whether trade-network topology provides measurable forecasting gains for quarterly CPI inflation (year-over-year) across 20 European economies from 2017Q1 to 2025Q3. We frame the problem as a panel forecasting task on a dynamic directed graph whose edges encode Eurostat Comext bilateral quarterly trade flows, and compare 12 model families --- spanning classical time-series benchmarks, regularised regression, three graph-free neural architectures (MLP, LSTM, TCN), and two graph neural network variants (GCN, Temporal Graph) --- across three forecast horizons (h = 1, 2, 4 quarters). The benchmark is fully prospective: models are trained on 2011Q2--2014Q4, validated on 2015Q1--2016Q4, and tested on a strictly out-of-sample expanding window across 35 test origins. Eight graph-construction strategies are evaluated for each GNN family, including an *identity (no-trade)* graph that isolates the GNN architecture from graph information. Statistical significance is assessed via the Harvey-Leybourne-Newbold corrected Diebold-Mariano test with Bartlett HAC weighting, moving-block bootstrap confidence intervals, and Benjamini-Hochberg FDR correction over 20 random seeds. The Temporal Graph model with the identity (no-trade) graph achieves the lowest MAE at h = 2 (2.358 pp) and h = 4 (2.840 pp); GCN with identity graph ranks first at h = 1 (1.707 pp). Crucially, removing trade-network topology entirely (*identity_no_trade*) outperforms all actual trade-edge models, and no trade-graph model achieves statistically significant superiority over its best non-graph comparator in a majority of seeds after FDR correction. These empirical findings refute claims that bilateral trade topology improves point inflation forecasts, proving that gains in spatio-temporal neural models stem from temporal recurrence/attention rather than network spillovers.
