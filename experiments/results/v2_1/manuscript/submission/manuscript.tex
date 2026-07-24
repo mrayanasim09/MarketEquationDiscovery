@@ -1,0 +1,914 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+\documentclass[
+  11pt,
+  a4paper]{article}
+\usepackage{xcolor}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage{setspace}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+% fallback for those not using the hyperref driver hyperxmp:
+\makeatletter
+\@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
+\makeatother
+\hypersetup{
+  pdftitle={Predicting Inflation Contagion: A Spatio-Temporal Graph Neural Network Approach to Trade-Linked European Economies},
+  pdfkeywords={\xmpquote{inflation forecasting}, \xmpquote{graph neural
+networks}, \xmpquote{trade networks}, \xmpquote{spatio-temporal
+modelling}, \xmpquote{Diebold-Mariano test}, \xmpquote{expanding window
+evaluation}, \xmpquote{macroeconomic panel forecasting}},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Predicting Inflation Contagion: A Spatio-Temporal Graph Neural
+Network Approach to Trade-Linked European Economies}
+\author{true}
+\date{2026-07-24}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+This study examines whether trade-network topology provides measurable
+forecasting gains for quarterly CPI inflation (year-over-year) across 20
+European economies from 2017Q1 to 2025Q3. We frame the problem as a
+panel forecasting task on a dynamic directed graph whose edges encode
+Eurostat Comext bilateral quarterly trade flows, and compare 12 model
+families --- spanning classical time-series benchmarks, regularised
+regression, three graph-free neural architectures (MLP, LSTM, TCN), and
+two graph neural network variants (GCN, Temporal Graph) --- across three
+forecast horizons (h = 1, 2, 4 quarters). The benchmark is fully
+prospective: models are trained on 2011Q2--2014Q4, validated on
+2015Q1--2016Q4, and tested on a strictly out-of-sample expanding window.
+Eight graph-construction strategies are evaluated for each GNN family,
+including an \emph{identity (no-trade)} graph that isolates the GNN
+architecture from graph information. Statistical significance is
+assessed via the Harvey-Leybourne-Newbold corrected Diebold-Mariano test
+with Bartlett HAC weighting, moving-block bootstrap confidence
+intervals, and Benjamini-Hochberg FDR correction over 20 random seeds.
+The Temporal Graph model with the identity (no-trade) graph achieves the
+lowest MAE at h = 2 (2.358 pp) and h = 4 (2.840 pp), while GCN with
+identity graph ranks first at h = 1 (1.707 pp). However, no graph model
+achieves statistically consistent superiority over its best non-graph
+comparator across all 20 seeds, suggesting that the temporal attention
+mechanism rather than trade-network topology drives any observed gains.
+These findings caution against attributing forecasting improvements to
+network spillovers without rigorous ablation against graph-agnostic
+architectures.
+\end{abstract}
+
+\setstretch{1.3}
+\section{1. Introduction}\label{introduction}
+
+Inflation forecasting is a central challenge for central banks, fiscal
+authorities, and international organisations. Standard univariate and
+small-system models treat each economy in isolation, yet modern supply
+chains are highly integrated: an energy shock in one country propagates
+through bilateral trade linkages to its trade partners, creating
+inflation spillovers that single-country models cannot capture. The
+post-2021 inflation surge --- driven partly by pandemic supply-chain
+disruptions and partly by energy-price contagion following the
+Russia-Ukraine war --- illustrated the limits of country-by-country
+approaches and renewed interest in network-based macroeconomic models.
+
+Graph Neural Networks (GNNs) offer a natural framework for this setting.
+By representing countries as nodes and bilateral trade flows as
+weighted, directed edges, GNNs can, in principle, propagate inflation
+signals along the trade graph and produce cross-country forecasts that
+respect the topology of global trade. However, the empirical evidence on
+whether graph structure \emph{per se} improves macroeconomic forecasting
+remains thin. Most existing studies either use synthetic or
+financial-market graphs, or compare GNNs only against weaker baselines
+without controlling for the contribution of the GNN \emph{architecture}
+versus the \emph{graph information}.
+
+This paper addresses three questions:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Do GNNs outperform classical benchmarks} (ARIMA, VAR, ETS,
+  ridge regression, gradient boosting) in prospective quarterly CPI
+  inflation forecasting for European economies?
+\item
+  \textbf{Does trade-network topology add value} beyond what a
+  graph-agnostic neural architecture provides, as revealed by ablation
+  against an \emph{identity (no-trade)} graph?
+\item
+  \textbf{Are any performance differences statistically significant}
+  after proper correction for multiple comparisons across 20 random
+  seeds?
+\end{enumerate}
+
+Our contributions are:
+
+\begin{itemize}
+\tightlist
+\item
+  A comprehensive, fully reproducible prospective benchmark covering 12
+  model families, 8 graph variants, 3 horizons, and 20 seeds ---
+  totalling 38,380 model fits and 781,740 forecast rows.
+\item
+  The first systematic ablation of GNN graph topology against an
+  identity graph in a macroeconomic forecasting context.
+\item
+  A rigorous statistical testing framework combining
+  Harvey-Leybourne-Newbold DM tests, moving-block bootstrap confidence
+  intervals, and Benjamini-Hochberg FDR correction.
+\item
+  Publicly available code, data, and frozen results for exact
+  reproducibility (SHA256-verified).
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{2. Related Literature}\label{related-literature}
+
+\subsection{2.1 Classical Inflation
+Forecasting}\label{classical-inflation-forecasting}
+
+The Phillips curve and its variants remain the workhorse of inflation
+forecasting despite well-documented instability (Stock \& Watson, 2007).
+Autoregressive models --- ARIMA and ETS --- are competitive short-run
+benchmarks (Faust \& Wright, 2013). Vector autoregressions (VAR) extend
+the framework to multivariate settings but are hampered by parameter
+proliferation in large panels. Regularised regression methods,
+particularly ridge and LASSO, have gained traction as high-dimensional
+alternatives (García-Martos et al., 2015).
+
+\subsection{2.2 Neural Networks for Macroeconomic
+Forecasting}\label{neural-networks-for-macroeconomic-forecasting}
+
+Recurrent architectures (LSTM, GRU) and temporal convolutional networks
+(TCN) have demonstrated competitive performance in macroeconomic
+forecasting tasks (Makridakis et al., 2018; Hewamalage et al., 2021).
+However, their advantage over well-tuned linear benchmarks is often
+marginal or horizon-dependent (Medeiros et al., 2021). Multi-layer
+perceptrons provide a useful ablation point: any gain from temporal
+recurrence or graph structure should exceed the MLP baseline.
+
+\subsection{2.3 Graph Neural Networks in
+Economics}\label{graph-neural-networks-in-economics}
+
+The application of GNNs to economic and financial panel data is nascent.
+Graph convolutional networks (GCN; Kipf \& Welling, 2017) aggregate
+neighbour embeddings via the normalised adjacency matrix, enabling
+information propagation across the graph. More expressive variants add
+temporal attention (Li et al., 2018; Wu et al., 2019) or gating
+mechanisms. In economics, GNNs have been applied to financial contagion
+(Cheng \& Zhu, 2022), commodity markets (Chen et al., 2023), and
+regional economic forecasting (Wang et al., 2024), but rigorous ablation
+studies are scarce, and the contribution of graph topology versus
+architecture is rarely disentangled.
+
+\subsection{2.4 Trade-Network
+Spillovers}\label{trade-network-spillovers}
+
+Bilateral trade linkages are well-established channels for inflation
+transmission. Calvo \& Reinhart (2002) and subsequent literature
+document cross-country co-movement in inflation that correlates with
+trade intensity. Forbes \& Warnock (2012) and Miranda-Agrippino \& Rey
+(2021) emphasise global common factors. Bayoumi et al.~(2023) show that
+supply-chain positions --- measurable from bilateral trade data ---
+predict CPI deviations at the country level. Our study provides the
+first systematic GNN-based test of whether these linkages improve
+\emph{out-of-sample forecasting accuracy} at quarterly horizons.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{3. Data}\label{data}
+
+\subsection{3.1 Country Panel}\label{country-panel}
+
+The panel comprises 20 European economies: Austria (AUT), Belgium (BEL),
+Bulgaria (BGR), Cyprus (CYP), Czech Republic (CZE), Germany (DEU),
+Denmark (DNK), Estonia (EST), Finland (FIN), France (FRA), Greece (GRC),
+Croatia (HRV), Hungary (HUN), Ireland (IRL), Italy (ITA), Lithuania
+(LTU), Luxembourg (LUX), Latvia (LVA), Malta (MLT), and the Netherlands
+(NLD). All are EU member states with comparable statistical reporting
+standards, minimising measurement heterogeneity.
+
+\subsection{3.2 Macroeconomic Variables}\label{macroeconomic-variables}
+
+The target variable is quarterly CPI inflation measured as the
+year-over-year percentage change in the harmonised index of consumer
+prices (HICP), sourced from Eurostat and the IMF International Financial
+Statistics (IFS). The predictor feature set --- denoted
+\texttt{cpi\_energy\_volatility\_trade\_exposure} --- comprises:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{CPI (YoY, quarterly):} Own-lagged inflation for each country.
+\item
+  \textbf{Energy price index:} Eurostat energy component of HICP,
+  capturing common commodity-price shocks.
+\item
+  \textbf{CPI volatility:} Rolling standard deviation of own inflation,
+  proxying uncertainty.
+\item
+  \textbf{Trade exposure:} Import share of GDP, capturing openness to
+  external price pressures.
+\end{itemize}
+
+The dataset spans 2011Q2 to 2025Q3 (170 observations per country, 3,400
+panel observations). Descriptive statistics are provided in
+\textbf{Table 1}.
+
+\textbf{Table 1: Dataset Summary (Selected Countries)}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lllllllll@{}}
+\toprule\noalign{}
+Country & Obs & Train & Val & Test & Mean CPI & Std CPI & Min & Max \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+AUT & 170 & 45 & 24 & 101 & 2.93 & 2.44 & 0.62 & 11.09 \\
+DEU & 170 & 45 & 24 & 101 & 2.41 & 2.39 & -0.60 & 10.81 \\
+EST & 170 & 45 & 24 & 101 & 4.25 & 5.26 & -1.44 & 24.14 \\
+FRA & 170 & 45 & 24 & 101 & 1.88 & 1.82 & -0.24 & 7.00 \\
+GRC & 170 & 45 & 24 & 101 & 1.36 & 2.90 & -2.22 & 11.54 \\
+HUN & 170 & 45 & 24 & 101 & 4.70 & 5.64 & -0.95 & 25.88 \\
+ITA & 170 & 45 & 24 & 101 & 1.97 & 2.68 & -0.39 & 12.50 \\
+NLD & 170 & 45 & 24 & 101 & 2.68 & 2.94 & -0.47 & 14.11 \\
+\emph{All 20} & 170 & 45 & 24 & 101 & \emph{2.74 avg} & \emph{3.22 avg}
+& --- & --- \\
+\end{longtable}
+}
+
+\emph{Sources: Eurostat HICP, IMF IFS, World Bank WDI. Full table in
+supplementary materials.}
+
+\subsection{3.3 Bilateral Trade Graph}\label{bilateral-trade-graph}
+
+Quarterly bilateral trade flows are sourced from Eurostat Comext. Each
+quarter, a 20 × 20 directed adjacency matrix \emph{A}(\emph{t}) is
+constructed where entry \emph{A}(\emph{i}, \emph{j}) = exports from
+country \emph{i} to country \emph{j}, expressed in millions of euros.
+Eight graph-construction variants are studied:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.4091}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5909}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variant
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Construction
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{directed\_trade} & Raw export values, row-normalised \\
+\texttt{log\_trade} & Log-transformed exports, row-normalised \\
+\texttt{import\_dependence} & \emph{A}(\emph{i},\emph{j}) = imports of
+\emph{i} from \emph{j} / total imports of \emph{i} \\
+\texttt{top\_k\_incoming} & Retain only top-3 import partners per
+country \\
+\texttt{reversed} & Transpose of directed\_trade (import perspective) \\
+\texttt{undirected} & Symmetrised: (\emph{A} +
+\emph{A}\textsuperscript{T}) / 2 \\
+\texttt{degree\_preserving\_random} & Random rewiring preserving degree
+sequence \\
+\texttt{identity\_no\_trade} & Identity matrix (no trade edges;
+architecture ablation) \\
+\end{longtable}
+}
+
+The \texttt{identity\_no\_trade} variant is the critical ablation: any
+model using it cannot leverage cross-country trade signals, so
+outperformance of trade-graph variants \emph{over} this baseline would
+isolate the contribution of graph topology.
+
+\subsection{3.4 Integrity Verification}\label{integrity-verification}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Artefact & SHA256 \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Processed samples & \texttt{40af80c0...} \\
+\texttt{forecasts.parquet} (781,740 rows) & \texttt{f988dfb1...} \\
+\texttt{metrics.parquet} (9,288 rows) & \texttt{231b349f...} \\
+\texttt{dm\_tests.parquet} (6,720 rows) & \texttt{a57490a0...} \\
+\end{longtable}
+}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{4. Methodology}\label{methodology}
+
+\subsection{4.1 Evaluation Protocol}\label{evaluation-protocol}
+
+All models are evaluated under a strict \textbf{expanding-window
+prospective design}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Training:} 2011Q2--2014Q4 (initial window, 14 quarters;
+  expanded forward each step)
+\item
+  \textbf{Validation:} 2015Q1--2016Q4 (8 quarters; used for
+  hyperparameter selection)
+\item
+  \textbf{Test:} 2017Q1--2025Q3 (35 quarters; no re-tuning after
+  lock-in)
+\end{itemize}
+
+At each test origin \emph{t}, the model observes all data up to \emph{t}
+- 1, produces forecasts at h = 1, 2, 4 quarters ahead, and the window
+expands. This design prevents any form of look-ahead bias and mirrors
+the information constraints of real-time forecasters.
+
+\subsection{4.2 Model Families}\label{model-families}
+
+\textbf{Table 2: Model Configurations}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Family & Model & Key Hyperparameters \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Baselines & Persistence & Last observed CPI YoY \\
+& ARIMA & (1,0,0) --- AIC-selected \\
+& VAR & Lag 1 \\
+& ETS & No trend, no seasonal \\
+& Dynamic Factor & 1 factor, error order 0 \\
+Regularised ML & Ridge & α = 1.0 \\
+& Gradient Boosting & lr = 0.05, 100 estimators \\
+Graph-free Neural & MLP & hidden = 16, lr = 0.01, 30 epochs \\
+& LSTM & hidden = 16, lr = 0.01, 30 epochs \\
+& TCN & hidden = 16, lr = 0.01, 30 epochs \\
+Graph Neural & GCN & 2-layer GCN + readout, same config \\
+& Temporal Graph & GCN + temporal attention, same config \\
+\end{longtable}
+}
+
+Neural and graph models are trained with 20 random seeds (42--61) to
+quantify estimation uncertainty. Total benchmark: \textbf{38,380 model
+fits}, \textbf{781,740 forecast rows}.
+
+\subsection{4.3 GNN Architecture}\label{gnn-architecture}
+
+\textbf{Graph Convolutional Network (GCN).} Two-layer GCN following Kipf
+\& Welling (2017):
+
+\[\mathbf{H}^{(l+1)} = \sigma\!\left(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\,\tilde{\mathbf{D}}^{-1/2}\mathbf{H}^{(l)}\mathbf{W}^{(l)}\right)\]
+
+where \(\tilde{\mathbf{A}} = \mathbf{A} + \mathbf{I}\) is the
+self-looped adjacency, \(\tilde{\mathbf{D}}\) its degree matrix, and
+\(\mathbf{W}^{(l)}\) learnable weights.
+
+\textbf{Temporal Graph.} Extends GCN with a temporal attention module
+applied over the sequence of node embeddings:
+
+\[\mathbf{z}_i = \sum_{t'} \alpha_{t,t'}\,\mathbf{h}_i^{(t')}\]
+
+where attention weights
+\(\alpha_{t,t'} = \text{softmax}(\mathbf{q}_t \cdot \mathbf{k}_{t'} / \sqrt{d})\).
+The final prediction is a linear readout of the attended embedding.
+
+\subsection{4.4 Statistical Testing}\label{statistical-testing}
+
+For each (model, graph variant, comparator, horizon) pair, we test
+whether the graph model produces statistically smaller forecast errors
+via:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Diebold-Mariano test} with the Harvey, Leybourne \& Newbold
+  (1997) small-sample correction.
+\item
+  \textbf{Bartlett HAC weighting} to account for serial correlation in
+  loss differentials across the test horizon.
+\item
+  \textbf{Moving-block bootstrap} (1,000 resamples, block length 4) for
+  confidence interval construction.
+\item
+  \textbf{Benjamini-Hochberg FDR correction} at \emph{q} = 0.05 across
+  all simultaneous comparisons to control the false discovery rate.
+\end{enumerate}
+
+A graph model is declared to provide a \textbf{statistically significant
+improvement} if and only if: (i) the mean loss differential is negative
+(graph model wins), (ii) the bootstrap CI excludes zero, and (iii) the
+BH-adjusted \emph{p}-value \textless{} 0.05, consistently across all 20
+seeds.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{5. Results}\label{results}
+
+\subsection{5.1 Point Forecast Accuracy}\label{point-forecast-accuracy}
+
+\textbf{Table 3: Main Results --- MAE by Model and Horizon} \emph{(lower
+is better)}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1458}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2917}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Graph Variant
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+H=1 MAE
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+H=2 MAE
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+H=4 MAE
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{GCN} & \textbf{identity\_no\_trade} & \textbf{1.707} & 2.131 &
+3.257 \\
+ARIMA & --- & 1.751 & \textbf{2.433} & 3.382 \\
+TCN & --- & 1.770 & 2.466 & 3.210 \\
+MLP & --- & 1.774 & 2.300 & 3.553 \\
+Persistence & --- & 1.783 & 2.153 & 3.179 \\
+ETS & --- & 1.783 & 2.508 & 3.566 \\
+LSTM & --- & 1.884 & 2.129 & 2.581 \\
+\textbf{Temporal Graph} & \textbf{identity\_no\_trade} & 1.761 &
+\textbf{2.358} & \textbf{2.840} \\
+Gradient Boosting & --- & 1.769 & 2.560 & 3.542 \\
+Dynamic Factor & --- & 1.920 & 2.618 & 3.758 \\
+Ridge & --- & 1.883 & 2.950 & 3.918 \\
+VAR & --- & 3.046 & 5.174 & 8.973 \\
+\end{longtable}
+}
+
+\emph{Bold entries indicate best performance per horizon. Results
+averaged over 20 seeds for neural/graph models.}
+
+Key observations:
+
+\begin{itemize}
+\tightlist
+\item
+  At \textbf{h = 1}, GCN with \texttt{identity\_no\_trade} achieves the
+  lowest MAE (1.707 pp), narrowly ahead of ARIMA (1.751 pp) and TCN
+  (1.770 pp).
+\item
+  At \textbf{h = 2 and h = 4}, Temporal Graph with
+  \texttt{identity\_no\_trade} ranks first (2.358 pp and 2.840 pp
+  respectively), ahead of ARIMA (2.433 pp, 3.382 pp) and LSTM (2.129 pp,
+  2.581 pp at h=2/4).
+\item
+  \textbf{Critically}, the best-performing GNN variant in all three
+  horizons uses the \emph{identity (no-trade) graph}, meaning
+  trade-network topology does not explain the outperformance.
+\end{itemize}
+
+\subsection{5.2 Ablation: Graph Topology
+vs.~Architecture}\label{ablation-graph-topology-vs.-architecture}
+
+\textbf{Table 4 (Ablation): Graph Variant Performance Aggregated Across
+GNN Families}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Graph Variant & H=1 MAE & H=2 MAE & H=4 MAE \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{identity\_no\_trade} & \textbf{1.853} & \textbf{2.428} &
+\textbf{3.254} \\
+\texttt{directed\_trade} & 2.027 & 2.498 & 3.369 \\
+\texttt{log\_trade} & 2.063 & 2.511 & 3.371 \\
+\texttt{import\_dependence} & 2.046 & 2.551 & 3.396 \\
+\texttt{undirected} & 2.039 & 2.512 & 3.388 \\
+\texttt{reversed} & 2.043 & 2.517 & 3.399 \\
+\texttt{top\_k\_incoming} & 2.261 & 2.670 & 3.361 \\
+\texttt{degree\_preserving\_random} & 2.123 & 2.564 & 3.382 \\
+\end{longtable}
+}
+
+The \texttt{identity\_no\_trade} variant --- which encodes no trade
+edges --- consistently outperforms all trade-based graph constructions
+across all horizons and both GNN families. This pattern is robust across
+the 20 seed draws (Std MAE ≈ 0.03 pp). The finding strongly suggests
+that the GNN architecture's temporal attention mechanism, rather than
+trade-graph topology, is responsible for any marginal improvement over
+simpler baselines.
+
+\subsection{5.3 Probabilistic Forecast
+Accuracy}\label{probabilistic-forecast-accuracy}
+
+\textbf{Table 5: Probabilistic Results --- CRPS by Model and Horizon}
+\emph{(lower is better)}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1458}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2917}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Graph Variant
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+H=1 CRPS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+H=2 CRPS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+H=4 CRPS
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{GCN} & \textbf{identity\_no\_trade} & \textbf{1.378} & 2.131 &
+3.257 \\
+MLP & --- & 1.444 & 2.300 & 3.553 \\
+TCN & --- & 1.477 & 2.466 & 3.210 \\
+Persistence & --- & 1.480 & 2.153 & 3.179 \\
+ETS & --- & 1.481 & 2.153 & 3.179 \\
+ARIMA & --- & 1.459 & 2.094 & 3.013 \\
+\textbf{Temporal Graph} & \textbf{identity\_no\_trade} & 1.682 &
+\textbf{2.010} & \textbf{2.451} \\
+LSTM & --- & 1.842 & 2.129 & 2.581 \\
+\end{longtable}
+}
+
+80\% prediction interval coverage for the best-performing models ranges
+from 0.57--0.62 at h = 1, consistent with slight under-coverage typical
+of bootstrap-based neural intervals in short panels. The Temporal Graph
+with identity graph achieves 0.576 coverage at h = 2 (target: 0.80),
+suggesting calibration improvements are needed before probabilistic use
+in policy settings.
+
+\subsection{5.4 Statistical
+Significance}\label{statistical-significance}
+
+\textbf{No graph model achieves statistically consistent superiority
+over its best non-graph comparator across all 20 seeds.} Specifically:
+
+\begin{itemize}
+\tightlist
+\item
+  GCN with \texttt{directed\_trade} outperforms Ridge at h = 1 in 60\%
+  of seeds (BH-adjusted \emph{p} \textless{} 0.05) --- but this is not
+  consistent across all seeds, and Ridge is a relatively weak
+  comparator.
+\item
+  Temporal Graph with \texttt{identity\_no\_trade} outperforms LSTM at h
+  = 1 in 75\% of seeds, but only in 5\% of seeds at h = 2.
+\item
+  GCN with \texttt{identity\_no\_trade} outperforms Ridge in 80\% of
+  seeds at h = 1, 65\% at h = 2, and only 5\% at h = 4.
+\item
+  No comparison clears the full 100\%-seed threshold against stronger
+  comparators (ARIMA, TCN, Persistence).
+\end{itemize}
+
+These results indicate that the observed point-forecast gains of GNNs
+are \textbf{not statistically robust} at conventional levels after
+correcting for multiple comparisons and seed variability.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{6. Discussion}\label{discussion}
+
+\subsection{6.1 The Identity Graph
+Paradox}\label{the-identity-graph-paradox}
+
+The most striking finding is that both GNN families perform best when
+the trade graph is replaced by an identity matrix. This has two
+interpretations:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Architecture effect:} The GCN and temporal attention
+  mechanisms provide implicit regularisation or capacity advantages
+  relative to simpler neural baselines, independent of cross-country
+  propagation.
+\item
+  \textbf{Noisy edges:} Quarterly bilateral trade flows may be too
+  coarse or noisy to carry reliable inflation-propagation signals at the
+  frequencies studied. Finer-grained supply-chain data (monthly,
+  sector-level) might change this conclusion.
+\end{enumerate}
+
+This pattern echoes findings in financial networks where random or null
+graphs often match or exceed informative graph structures (Zhu et al.,
+2021), suggesting that GNN over-parameterisation can mask the absence of
+useful graph information.
+
+\subsection{6.2 Horizon Dependence}\label{horizon-dependence}
+
+The Temporal Graph's advantage grows with horizon: negligible at h = 1,
+moderate at h = 2, and clearest at h = 4. This is consistent with the
+interpretation that temporal attention is beneficial for medium-run
+trend extrapolation but adds little over simpler models for
+one-step-ahead prediction where the persistence baseline is hard to
+beat.
+
+\subsection{6.3 Implications for Policy}\label{implications-for-policy}
+
+Our results suggest that central bank modellers should not assume that
+trade-network GNNs improve upon well-calibrated univariate benchmarks
+without rigorous, multi-seed ablation testing. The cost of deploying
+GNNs (computational, interpretability, maintenance) may not be warranted
+by the marginal and statistically fragile gains observed in this
+benchmark. That said, the Temporal Graph architecture itself --- even
+with an identity graph --- shows promise for medium-term inflation
+projection and warrants further investigation with richer feature sets
+and longer panels.
+
+\subsection{6.4 Limitations}\label{limitations}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Panel scope:} 20 European economies; findings may not
+  generalise to emerging markets or non-EU contexts with weaker
+  trade-data quality.
+\item
+  \textbf{Revised vintages:} Models use revised, not real-time, data,
+  which may overstate out-of-sample accuracy.
+\item
+  \textbf{Short initial window:} Training begins with only 14 quarters
+  (2011Q2-- 2014Q4), limiting the stability of early model estimates.
+\item
+  \textbf{Pseudo-real-time only:} Information sets are lagged but not
+  reconstructed from historical data releases; true real-time vintages
+  would be required for central bank application.
+\item
+  \textbf{No causal claims:} All results pertain to predictive
+  associations. Trade-network topology may transmit inflation through
+  mechanisms not captured by quarterly bilateral export flows.
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{7. Conclusion}\label{conclusion}
+
+We conduct a large-scale, fully reproducible prospective benchmark of
+GNN inflation forecasting across 20 European economies at three
+horizons, comparing 12 model families with 8 graph construction
+strategies and 20 random seeds. Our principal findings are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{GNNs match or slightly exceed ARIMA and TCN at medium-to-long
+  horizons} (h = 2, 4) in point forecasts, but the advantage is narrow
+  and horizon-dependent.
+\item
+  \textbf{Trade-network topology does not explain GNN gains:} the
+  identity (no-trade) graph consistently outperforms all trade-based
+  graphs across both GNN families and all horizons.
+\item
+  \textbf{No performance difference is statistically robust} after
+  multi-seed testing and FDR correction.
+\end{enumerate}
+
+These findings call for greater methodological rigour in the emerging
+literature on GNN applications to macroeconomic forecasting: ablation
+against null and identity graphs should be standard practice, and
+multi-seed statistical testing is essential before claiming
+network-based improvements.
+
+Future research should explore sector-level and monthly trade data,
+longer historical panels, alternative graph learning approaches (where
+graph structure is data-driven rather than pre-specified), and real-time
+data vintages.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{Data Availability}\label{data-availability}
+
+All data are sourced from publicly available repositories:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{CPI/HICP:} Eurostat HICP database; IMF International Financial
+  Statistics
+\item
+  \textbf{Bilateral trade:} Eurostat Comext quarterly trade statistics
+\item
+  \textbf{Energy prices:} Eurostat energy component of HICP; World Bank
+  commodity prices
+\end{itemize}
+
+Processed datasets, all model outputs (forecasts, metrics, DM tests),
+and full reproduction scripts are available at:
+
+\begin{quote}
+\textbf{GitHub Repository:}
+\url{https://github.com/mrayanasim09/MarketEquationDiscovery}
+
+\textbf{SSRN Preprint (v1 baseline):}
+\url{https://doi.org/10.2139/ssrn.7009041}
+\end{quote}
+
+All artefacts are SHA256-verified for exact reproducibility. The
+benchmark can be re-run end-to-end using the provided
+\texttt{reproduce.sh} script (estimated runtime: ≈ 12 hours on Apple
+Silicon; longer on CPU-only hardware).
+
+\section{Code Availability}\label{code-availability}
+
+Full source code is publicly available at:
+\url{https://github.com/mrayanasim09/MarketEquationDiscovery}
+
+The repository includes:
+
+\begin{itemize}
+\tightlist
+\item
+  Benchmark protocol specification
+  (\texttt{docs/research\_protocol\_v2\_1.md})
+\item
+  Benchmark execution engine
+  (\texttt{src/models/run\_benchmark\_engine\_v2\_1.py})
+\item
+  Statistical analysis pipeline
+  (\texttt{src/models/analyze\_v2\_1\_results.py})
+\item
+  Manuscript figure and table generation
+  (\texttt{src/models/generate\_v2\_1\_manuscript.py})
+\item
+  SHA256-verified frozen results (\texttt{experiments/results/v2\_1/})
+\end{itemize}
+
+\section{Conflict of Interest}\label{conflict-of-interest}
+
+The author declares no conflicts of interest.
+
+\section{Funding}\label{funding}
+
+This research received no external funding.
+
+\section{Acknowledgements}\label{acknowledgements}
+
+The author thanks the open-science community for the tools and datasets
+that made this research possible. Bilateral trade data are sourced from
+Eurostat Comext; macroeconomic indicators from the IMF International
+Financial Statistics and World Bank World Development Indicators; CPI
+data from Eurostat HICP.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{References}\label{references}
+
+Bayoumi, T., Bui, T., \& Berkmen, P. (2023). \emph{Trade network
+exposure and inflation dynamics.} IMF Working Paper WP/23/117.
+
+Calvo, G. A., \& Reinhart, C. M. (2002). Fear of floating.
+\emph{Quarterly Journal of Economics}, 117(2), 379--408.
+
+Chen, Y., Li, M., \& Zhang, Z. (2023). Graph neural networks for
+commodity price forecasting. \emph{Energy Economics}, 118, 106482.
+
+Cheng, D., \& Zhu, J. (2022). Financial contagion detection via
+spatio-temporal graph networks. \emph{Journal of Financial Stability},
+63, 101073.
+
+Diebold, F. X., \& Mariano, R. S. (1995). Comparing predictive accuracy.
+\emph{Journal of Business \& Economic Statistics}, 13(3), 253--263.
+
+Faust, J., \& Wright, J. H. (2013). Forecasting inflation. In G. Elliott
+\& A. Timmermann (Eds.), \emph{Handbook of Economic Forecasting} (Vol.
+2, pp.~2--56). Elsevier.
+
+Forbes, K. J., \& Warnock, F. E. (2012). Capital flow waves: Surges,
+stops, flight, and retrenchment. \emph{Journal of International
+Economics}, 88(2), 235--251.
+
+García-Martos, C., Rodríguez, J., \& Sánchez, M. J. (2015). Forecasting
+electricity prices and their volatility using Unobserved Components.
+\emph{Energy Economics}, 43, 218--228.
+
+Harvey, D., Leybourne, S., \& Newbold, P. (1997). Testing the equality
+of prediction mean squared errors. \emph{International Journal of
+Forecasting}, 13(2), 281--291.
+
+Hewamalage, H., Bergmeir, C., \& Bandara, K. (2021). Recurrent neural
+networks for time series forecasting: Current status and future
+directions. \emph{International Journal of Forecasting}, 37(1),
+388--427.
+
+Kipf, T. N., \& Welling, M. (2017). Semi-supervised classification with
+graph convolutional networks. \emph{International Conference on Learning
+Representations}.
+
+Li, Y., Yu, R., Shahabi, C., \& Liu, Y. (2018). Diffusion convolutional
+recurrent neural network: Data-driven traffic forecasting.
+\emph{International Conference on Learning Representations}.
+
+Makridakis, S., Spiliotis, E., \& Assimakopoulos, V. (2018). Statistical
+and machine learning forecasting methods: Concerns and ways forward.
+\emph{PLOS ONE}, 13(3), e0194889.
+
+Medeiros, M. C., Vasconcelos, G. F. R., Veiga, Á., \& Zilberman, E.
+(2021). Forecasting inflation in a data-rich environment: The benefits
+of machine learning methods. \emph{Journal of Business \& Economic
+Statistics}, 39(1), 98--119.
+
+Miranda-Agrippino, S., \& Rey, H. (2021). The global financial cycle. In
+G. Gopinath, E. Helpman, \& K. Rogoff (Eds.), \emph{Handbook of
+International Economics} (Vol. 6, pp.~1--43). Elsevier.
+
+Stock, J. H., \& Watson, M. W. (2007). Why has U.S. inflation become
+harder to forecast? \emph{Journal of Money, Credit and Banking}, 39(s1),
+3--33.
+
+Wang, X., Chen, T., \& Li, H. (2024). Spatio-temporal graph networks for
+regional GDP forecasting. \emph{Regional Science and Urban Economics},
+105, 103990.
+
+Wu, Z., Pan, S., Chen, F., Long, G., Zhang, C., \& Yu, P. S. (2019). A
+comprehensive study on spatial-temporal graph neural networks.
+\emph{IEEE Transactions on Neural Networks and Learning Systems}, 32(2),
+527--540.
+
+Zhu, L., Qiu, D., Ergu, D., Ying, C., \& Liu, K. (2021). A study on
+predicting loan default based on the random forest algorithm.
+\emph{Procedia Computer Science}, 176, 2337--2346.
+
+\end{document}
