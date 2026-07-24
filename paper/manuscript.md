@@ -259,22 +259,21 @@ tuned relative to its true capacity; this is discussed further in Section 6.4.
 
 ## 4.3 GNN Architecture
 
-**Graph Convolutional Network (GCN)** follows Kipf and Welling (2017):
+**Graph Convolutional Network (GCN)** applies a spatial graph convolution operator over node features:
 
-$$\mathbf{H}^{(l+1)} = \sigma\!\left(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\,\tilde{\mathbf{D}}^{-1/2}\mathbf{H}^{(l)}\mathbf{W}^{(l)}\right)$$
+$$\mathbf{H} = \mathrm{ReLU}\!\left(\tilde{\mathbf{A}}\mathbf{X}\mathbf{W}_{\text{node}}\right)$$
 
-where $\tilde{\mathbf{A}} = \mathbf{A} + \mathbf{I}$ is the self-looped adjacency,
-$\tilde{\mathbf{D}}$ its degree matrix, and $\mathbf{W}^{(l)}$ are learnable
-weight matrices. Two graph convolutional layers are applied, followed by a linear
-readout over node embeddings.
+where $\tilde{\mathbf{A}}$ is the row-normalised spatial adjacency matrix, $\mathbf{X} \in \mathbb{R}^{N \times F}$ represents input node features for $N$ countries, and $\mathbf{W}_{\text{node}} \in \mathbb{R}^{F \times d}$ is a learnable weight matrix mapping features to hidden dimension $d$. A linear readout layer $\mathbf{W}_{\text{head}} \in \mathbb{R}^{d \times 1}$ maps the node embeddings to individual country forecasts: $\hat{\mathbf{y}} = \mathbf{H}\mathbf{W}_{\text{head}}$.
 
-**Temporal Graph** extends GCN with a temporal self-attention module applied over
-the sequence of per-origin node embeddings:
+**Temporal Graph** combines the spatial GCN message-passing operator with a Recurrent LSTM temporal encoder. For each time step $t' \in \{t-K, \dots, t-1\}$ in the lookback window of length $K$, spatial node representations are computed:
 
-$$\mathbf{z}_i = \sum_{t'} \alpha_{t,t'}\,\mathbf{h}_i^{(t')}$$
+$$\mathbf{h}_i^{(t')} = \mathrm{ReLU}\!\left(\sum_{j=1}^N \tilde{A}_{ij}^{(t')}\,\mathbf{x}_j^{(t')}\mathbf{W}_{\text{node}}\right)$$
 
-where $\alpha_{t,t'} = \mathrm{softmax}(\mathbf{q}_t \cdot \mathbf{k}_{t'} / \sqrt{d})$.
-A linear layer maps the attended embedding to the final scalar forecast.
+The temporal sequence of spatial embeddings $\{\mathbf{h}_i^{(t-K)}, \dots, \mathbf{h}_i^{(t-1)}\}$ is fed into a Long Short-Term Memory (LSTM) network:
+
+$$\mathbf{z}_i = \mathrm{LSTM}\!\left(\{\mathbf{h}_i^{(t')}\}_{t'=t-K}^{t-1}\right)$$
+
+The final hidden state $\mathbf{z}_i \in \mathbb{R}^d$ is passed to a linear readout layer to produce the forecast: $\hat{y}_{i, t+h} = \mathbf{W}_{\text{head}}\mathbf{z}_i$.
 
 ## 4.4 Statistical Testing Framework
 

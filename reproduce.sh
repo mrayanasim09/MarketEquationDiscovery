@@ -26,7 +26,7 @@ if (( $(echo "$PY_VERSION < 3.10" | bc -l) )); then
 fi
 
 # Set up virtual environment
-VENV_DIR="../.venv"
+VENV_DIR="./.venv"
 if [ ! -d "$VENV_DIR" ]; then
     echo "[1/2] Creating virtual environment at $VENV_DIR..."
     $PYTHON_CMD -m venv "$VENV_DIR"
