@@ -6,6 +6,8 @@
 \usepackage{xcolor}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{float}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
 \ifPDFTeX
@@ -70,7 +72,7 @@ panel forecasting}},
 
 \title{Do Trade Networks Help Forecast Inflation? A Benchmark Refutation
 Using Spatio-Temporal Graph Neural Networks}
-\author{true}
+\author{Rayyan Asim}
 \date{2026-07-24}
 
 \begin{document}
@@ -100,10 +102,10 @@ graph ranks first at h = 1 (1.707 pp). Crucially, removing trade-network
 topology entirely (\emph{identity\_no\_trade}) outperforms all actual
 trade-edge models, and no trade-graph model achieves statistically
 significant superiority over its best non-graph comparator in a majority
-of seeds after FDR correction. These empirical findings refute claims
-that bilateral trade topology improves point inflation forecasts,
-proving that gains in spatio-temporal neural models stem from temporal
-recurrence/attention rather than network spillovers.
+of seeds after FDR correction. These empirical findings are consistent with
+the hypothesis that bilateral trade topology does not improve point inflation
+forecasts, and suggest that gains in spatio-temporal neural models
+derive from temporal recurrence rather than cross-country network spillovers.
 \end{abstract}
 
 \section{1. Introduction}\label{introduction}
@@ -183,10 +185,10 @@ Forecasting}\label{classical-inflation-forecasting}
 
 The Phillips curve and its variants remain the workhorse of inflation
 forecasting despite well-documented instability (Stock and Watson,
-2007). Autoregressive models --- ARIMA and ETS --- are competitive
+2007; Atkeson and Ohanian, 2001). Autoregressive models --- ARIMA and ETS --- are competitive
 short-run benchmarks (Faust and Wright, 2013). Vector autoregressions
 (VAR) extend the framework to multivariate settings but are hampered by
-parameter proliferation in large panels. Regularised regression methods,
+parameter proliferation in large panels. Bayesian VARs (BVAR) with shrinkage priors provide a standard benchmark to mitigate parameter proliferation in large panels (Giannone et al., 2015; Ba\'nbura et al., 2010). Regularised regression methods,
 particularly ridge and LASSO, have gained traction as high-dimensional
 alternatives (Garcia-Martos et al., 2015).
 
@@ -380,9 +382,9 @@ Artefact & SHA256 (first 16 hex) \\
 \bottomrule\noalign{}
 \endlastfoot
 Processed samples & \texttt{40af80c0...} \\
-\texttt{forecasts.parquet} (781,740 rows) & \texttt{f988dfb1...} \\
-\texttt{metrics.parquet} (9,288 rows) & \texttt{231b349f...} \\
-\texttt{dm\_tests.parquet} (6,720 rows) & \texttt{a57490a0...} \\
+\texttt{forecasts.parquet} (783,760 rows) & \texttt{363e6994d44b575a...} \\
+\texttt{metrics.parquet} (9,312 rows) & \texttt{22bd6677c9a89d5d...} \\
+\texttt{dm\_tests.parquet} (6,720 rows) & \texttt{d2d383a021dcb877...} \\
 \end{longtable}
 }
 
@@ -434,7 +436,7 @@ Family & Model & Selected Hyperparameters \\
 \bottomrule\noalign{}
 \endlastfoot
 Baselines & Persistence & Last observed CPI YoY \\
-& ARIMA & Order (1,0,0) \\
+& ARIMA & Order ($p$,0,0) with AIC selection, $p \in \{1,2,3,4\}$ \\
 & VAR & Lag 1 \\
 & ETS & No trend, no seasonal \\
 & Dynamic Factor & 1 factor, error order 0 \\
@@ -460,25 +462,21 @@ true capacity; this is discussed further in Section 6.4.
 
 \subsection{4.3 GNN Architecture}\label{gnn-architecture}
 
-\textbf{Graph Convolutional Network (GCN)} follows Kipf and Welling
-(2017):
+\textbf{Graph Convolutional Network (GCN)} applies a spatial graph convolution operator over node features:
 
-\[\mathbf{H}^{(l+1)} = \sigma\!\left(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\,\tilde{\mathbf{D}}^{-1/2}\mathbf{H}^{(l)}\mathbf{W}^{(l)}\right)\]
+\[\mathbf{H} = \mathrm{ReLU}\!\left(\tilde{\mathbf{A}}\mathbf{X}\mathbf{W}_{\text{node}}\right)\]
 
-where \(\tilde{\mathbf{A}} = \mathbf{A} + \mathbf{I}\) is the
-self-looped adjacency, \(\tilde{\mathbf{D}}\) its degree matrix, and
-\(\mathbf{W}^{(l)}\) are learnable weight matrices. Two graph
-convolutional layers are applied, followed by a linear readout over node
-embeddings.
+where \(\tilde{\mathbf{A}}\) is the row-normalised spatial adjacency matrix, \(\mathbf{X} \in \mathbb{R}^{N \times F}\) represents input node features for \(N\) countries, and \(\mathbf{W}_{\text{node}} \in \mathbb{R}^{F \times d}\) is a learnable weight matrix mapping features to hidden dimension \(d\). A linear readout layer \(\mathbf{W}_{\text{head}} \in \mathbb{R}^{d \times 1}\) maps the node embeddings to individual country forecasts: \(\hat{\mathbf{y}} = \mathbf{H}\mathbf{W}_{\text{head}}\).
 
-\textbf{Temporal Graph} extends GCN with a temporal self-attention
-module applied over the sequence of per-origin node embeddings:
+\textbf{Temporal Graph} combines the spatial GCN message-passing operator with a Recurrent LSTM temporal encoder. For each time step \(t' \in \{t-K, \dots, t-1\}\) in the lookback window of length \(K\), spatial node representations are computed:
 
-\[\mathbf{z}_i = \sum_{t'} \alpha_{t,t'}\,\mathbf{h}_i^{(t')}\]
+\[\mathbf{h}_i^{(t')} = \mathrm{ReLU}\!\left(\sum_{j=1}^N \tilde{A}_{ij}^{(t')}\,\mathbf{x}_j^{(t')}\mathbf{W}_{\text{node}}\right)\]
 
-where
-\(\alpha_{t,t'} = \mathrm{softmax}(\mathbf{q}_t \cdot \mathbf{k}_{t'} / \sqrt{d})\).
-A linear layer maps the attended embedding to the final scalar forecast.
+The temporal sequence of spatial embeddings \(\{\mathbf{h}_i^{(t-K)}, \dots, \mathbf{h}_i^{(t-1)}\}\) is fed into a Long Short-Term Memory (LSTM) network:
+
+\[\mathbf{z}_i = \mathrm{LSTM}\!\left(\{\mathbf{h}_i^{(t')}\}_{t'=t-K}^{t-1}\right)\]
+
+The final hidden state \(\mathbf{z}_i \in \mathbb{R}^d\) is passed to a linear readout layer to produce the forecast: \(\hat{y}_{i, t+h} = \mathbf{W}_{\text{head}}\mathbf{z}_i\).
 
 \subsection{4.4 Statistical Testing
 Framework}\label{statistical-testing-framework}
@@ -574,6 +572,7 @@ Dynamic Factor & --- & 1.920 & 2.618 & 3.758 & 2.983 & 4.141 & 5.871 \\
 \textbf{2.358} & \textbf{2.840} & 3.604 & 4.141 & 4.831 \\
 LSTM & --- & 2.183 & 2.485 & 2.968 & 3.768 & 4.284 & 4.952 \\
 Ridge & --- & 2.420 & 3.381 & 4.502 & 3.152 & 4.982 & 6.781 \\
+BVAR & --- & 2.341 & 3.857 & 6.312 & 3.534 & 5.947 & 10.213 \\
 VAR & --- & 3.047 & 5.174 & 8.973 & 4.524 & 7.923 & 14.089 \\
 \end{longtable}
 }
@@ -591,7 +590,7 @@ Key observations:
 \item
   At \textbf{h = 1}, GCN with \texttt{identity\_no\_trade} achieves the
   lowest MAE (1.707 pp), narrowly ahead of ARIMA (1.751 pp). However,
-  GCN's RMSE is notably higher than ARIMA's (2.750 vs 2.884 is close),
+  GCN's RMSE is marginally lower than ARIMA's (2.750 vs 2.884),
   suggesting comparable absolute accuracy with some large-error
   episodes.
 \item
@@ -606,6 +605,11 @@ Key observations:
   \textbf{Critically}, the best-performing GNN at every horizon uses the
   \emph{identity (no-trade)} graph, indicating trade-network topology is
   not responsible for observed outperformance.
+\item
+  \textbf{BVAR} with Minnesota-prior shrinkage (MAE = 2.341/3.857/6.312 pp
+  at h = 1/2/4) underperforms relative to simpler ARIMA, ETS, and
+  persistence baselines, consistent with the well-documented difficulty of
+  imposing informative priors on a volatile, post-COVID inflation regime.
 \end{itemize}
 
 \subsection{5.2 Ablation: Graph Topology versus
@@ -786,6 +790,50 @@ advantage.
 No graph model achieves majority-seed significance against ARIMA,
 Persistence, or TCN at any horizon.
 
+\subsection{5.5 Diagnostic Figures}\label{diagnostic-figures}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/graph_variant_heatmap.png}
+  \caption{\textbf{Figure 1: Graph Variant MAE Heatmap.} Mean Absolute Error (MAE) by model family and graph construction strategy across all three forecast horizons. Darker shading indicates lower (better) MAE. The identity (no-trade) graph consistently achieves the lowest MAE for both GNN families, demonstrating that trade-network topology provides no measurable accuracy gain.}
+  \label{fig:heatmap}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/forecast_comparison.png}
+  \caption{\textbf{Figure 2: Forecast comparison (France, Seed 42, H=1).} Comparison of Temporal Graph (directed\_trade variant) and ARIMA forecasts against actual CPI YoY inflation. The plot illustrates where the neural model deviates from classical baselines during inflation transition periods.}
+  \label{fig:forecast_comp}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/performance_by_horizon.png}
+  \caption{\textbf{Figure 3: Performance by Forecast Horizon.} MAE and RMSE as a function of forecast horizon ($h = 1, 2, 4$ quarters) for all 12 model families. Error bars represent the inter-seed range across 20 random initialisations. The Temporal Graph model shows the largest improvement relative to ARIMA at $h = 4$, while GCN leads at $h = 1$.}
+  \label{fig:perf_horizon}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/error_distribution.png}
+  \caption{\textbf{Figure 4: Forecast Error Distribution.} Box plots showing the distribution of forecast errors across all countries, quarters, and seeds for $h=1$. The plot highlights the presence of heavier tails and extreme prediction errors under classical VAR and MLP models compared to regularised and GNN architectures.}
+  \label{fig:error_dist}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/calibration_reliability.png}
+  \caption{\textbf{Figure 5: Calibration Reliability Diagram.} Nominal vs. empirical coverage for nominal confidence levels of 80\% and 95\%. Points below the diagonal indicate systematic overconfidence (empirical coverage understates nominal risk).}
+  \label{fig:coverage_reliability}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/prediction_interval_coverage.png}
+  \caption{\textbf{Figure 6: Prediction Interval Coverage.} Empirical coverage fraction of 80\% (lower bar) and 95\% (upper bar) prediction intervals by model. The dashed lines represent nominal targets (0.80 and 0.95). Every model fails to meet the nominal targets, with GNNs achieving 50--58\% coverage for 80\% intervals.}
+  \label{fig:coverage_bar}
+\end{figure}
+
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \section{6. Discussion}\label{discussion}
@@ -900,6 +948,8 @@ GNN-for-economics literature, can be substantially misleading.
   inflation transmission, nor does it imply that monitoring
   trade-network topology would improve central bank forecasting
   decisions without further validation.
+\item
+  \textbf{Prediction interval calibration shortfall.} Across all models, the empirical coverage of the 80\% prediction intervals is systematically low, ranging between 50\% and 58\%. This undercoverage is a consequence of the short initial training window (14 quarters) and the bootstrap-based uncertainty estimation which understates prediction variance during shock periods. Future work should incorporate conformal prediction methods to guarantee nominal coverage.
 \end{enumerate}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
@@ -1004,6 +1054,14 @@ Bank World Development Indicators; CPI data from Eurostat HICP.
 
 \section{References}\label{references}
 
+Atkeson, A., and Ohanian, L. E. (2001). Are Phillips curves useful for
+forecasting inflation? \emph{Federal Reserve Bank of Minneapolis
+Quarterly Review}, 25(1), 2--11.
+
+B\'{a}nbura, M., Giannone, D., and Reichlin, L. (2010). Large Bayesian
+vector autoregressions. \emph{Journal of Applied Econometrics}, 25(1),
+71--92.
+
 Bayoumi, T., Bui, T., and Berkmen, P. (2023). Trade network exposure and
 inflation dynamics. IMF Working Paper WP/23/117.
 
@@ -1016,6 +1074,18 @@ commodity price forecasting. \emph{Energy Economics}, 118, 106482.
 Cheng, D., and Zhu, J. (2022). Financial contagion detection via
 spatio-temporal graph networks. \emph{Journal of Financial Stability},
 63, 101073.
+
+Clark, T. E., and McCracken, M. W. (2001). Tests of equal forecast
+accuracy and encompassing for nested models. \emph{Journal of
+Econometrics}, 105(1), 85--110.
+
+Clark, T. E., and West, K. D. (2007). Approximately normal tests for
+equal predictive accuracy in nested models. \emph{Journal of
+Econometrics}, 138(1), 291--311.
+
+Coulombe, P. G., Leroux, M., Stevanovic, D., and Surprenant, S. (2020).
+How is machine learning useful for macroeconomic forecasting?
+\emph{Journal of Applied Econometrics}, 37(5), 920--964.
 
 Diebold, F. X., and Mariano, R. S. (1995). Comparing predictive
 accuracy. \emph{Journal of Business and Economic Statistics}, 13(3),
@@ -1032,6 +1102,10 @@ Economics}, 88(2), 235--251.
 Garcia-Martos, C., Rodriguez, J., and Sanchez, M. J. (2015). Forecasting
 electricity prices and their volatility using Unobserved Components.
 \emph{Energy Economics}, 43, 218--228.
+
+Giannone, D., Lenza, M., and Primiceri, G. E. (2015). Prior selection
+for vector autoregressions. \emph{Review of Economics and Statistics},
+97(2), 436--451.
 
 Harvey, D., Leybourne, S., and Newbold, P. (1997). Testing the equality
 of prediction mean squared errors. \emph{International Journal of

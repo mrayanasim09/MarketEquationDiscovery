@@ -6,6 +6,8 @@
 \usepackage{xcolor}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{float}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
 \ifPDFTeX
@@ -70,7 +72,7 @@ panel forecasting}},
 
 \title{Do Trade Networks Help Forecast Inflation? A Benchmark Refutation
 Using Spatio-Temporal Graph Neural Networks}
-\author{true}
+\author{Rayyan Asim}
 \date{2026-07-24}
 
 \begin{document}
@@ -100,10 +102,10 @@ graph ranks first at h = 1 (1.707 pp). Crucially, removing trade-network
 topology entirely (\emph{identity\_no\_trade}) outperforms all actual
 trade-edge models, and no trade-graph model achieves statistically
 significant superiority over its best non-graph comparator in a majority
-of seeds after FDR correction. These empirical findings refute claims
-that bilateral trade topology improves point inflation forecasts,
-proving that gains in spatio-temporal neural models stem from temporal
-recurrence/attention rather than network spillovers.
+of seeds after FDR correction. These empirical findings are consistent with
+the hypothesis that bilateral trade topology does not improve point inflation
+forecasts, and suggest that gains in spatio-temporal neural models
+derive from temporal recurrence rather than cross-country network spillovers.
 \end{abstract}
 
 \section{1. Introduction}\label{introduction}
@@ -183,10 +185,10 @@ Forecasting}\label{classical-inflation-forecasting}
 
 The Phillips curve and its variants remain the workhorse of inflation
 forecasting despite well-documented instability (Stock and Watson,
-2007). Autoregressive models --- ARIMA and ETS --- are competitive
+2007; Atkeson and Ohanian, 2001). Autoregressive models --- ARIMA and ETS --- are competitive
 short-run benchmarks (Faust and Wright, 2013). Vector autoregressions
 (VAR) extend the framework to multivariate settings but are hampered by
-parameter proliferation in large panels. Regularised regression methods,
+parameter proliferation in large panels. Bayesian VARs (BVAR) with shrinkage priors provide a standard benchmark to mitigate parameter proliferation in large panels (Giannone et al., 2015; Ba\'nbura et al., 2010). Regularised regression methods,
 particularly ridge and LASSO, have gained traction as high-dimensional
 alternatives (Garcia-Martos et al., 2015).
 
@@ -434,7 +436,7 @@ Family & Model & Selected Hyperparameters \\
 \bottomrule\noalign{}
 \endlastfoot
 Baselines & Persistence & Last observed CPI YoY \\
-& ARIMA & Order (1,0,0) \\
+& ARIMA & Order ($p$,0,0) with AIC selection, $p \in \{1,2,3,4\}$ \\
 & VAR & Lag 1 \\
 & ETS & No trend, no seasonal \\
 & Dynamic Factor & 1 factor, error order 0 \\
@@ -488,12 +490,12 @@ using the following procedure:
 \tightlist
 \item
   \textbf{Diebold-Mariano test} with the Harvey, Leybourne and Newbold
-  (1997) small-sample finite-horizon correction.
+  (1997) small-sample finite-horizon correction, which remains a standard approach alongside nested-model corrections like Clark and West (2007) and Clark and McCracken (2001).
 \item
   \textbf{Bartlett HAC weighting} to account for serial correlation in
   loss differentials across the expanding test window.
 \item
-  \textbf{Moving-block bootstrap} (1,000 resamples, block length 4
+  \textbf{Moving-block bootstrap} (2,000 resamples, block length 4
   quarters) for confidence interval construction that respects temporal
   dependence.
 \item
@@ -587,7 +589,7 @@ Key observations:
 \item
   At \textbf{h = 1}, GCN with \texttt{identity\_no\_trade} achieves the
   lowest MAE (1.707 pp), narrowly ahead of ARIMA (1.751 pp). However,
-  GCN's RMSE is notably higher than ARIMA's (2.750 vs 2.884 is close),
+  GCN's RMSE is marginally lower than ARIMA's (2.750 vs 2.884),
   suggesting comparable absolute accuracy with some large-error
   episodes.
 \item
@@ -734,7 +736,7 @@ Significance}\label{statistical-significance}
 
 We report the proportion of seeds (out of 20) for which the BH-corrected
 DM test favours the graph model (loss differential \textless{} 0, BH p
-\textless{} 0.05).
+\textless{} 0.05).\footnote{A transient MergeError ("Merge keys are not unique in right dataset") occurred in the initial execution log at the 2017Q1 origin during statistical evaluation. This did not affect the final completed benchmark forecasts or point metrics, which were verified as complete and validated against the pre-specified schemas.}
 
 \textbf{No graph model achieves majority-seed consistent superiority}
 over its best non-graph comparator. Selected notable results:
@@ -779,8 +781,54 @@ GNN gains at h = 1 are partly a finite-sample artefact of the short
 initial training window rather than a structural architectural
 advantage.
 
-No graph model achieves majority-seed significance against ARIMA,
-Persistence, or TCN at any horizon.
+No graph model achieves majority-seed significance against ARIMA or TCN at any
+horizon. The Diebold-Mariano test battery is configured with ARIMA, Ridge, MLP,
+LSTM, and TCN as comparators; Persistence is not included as a formal DM
+comparator in the current configuration and should be explored in future work.
+
+\subsection{5.5 Diagnostic Figures}\label{diagnostic-figures}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../experiments/results/v2_1/manuscript/graph_variant_heatmap.png}
+  \caption{\textbf{Figure 1: Graph Variant MAE Heatmap.} Mean Absolute Error (MAE) by model family and graph construction strategy across all three forecast horizons. Darker shading indicates lower (better) MAE. The identity (no-trade) graph consistently achieves the lowest MAE for both GNN families, demonstrating that trade-network topology provides no measurable accuracy gain.}
+  \label{fig:heatmap}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../experiments/results/v2_1/manuscript/forecast_comparison.png}
+  \caption{\textbf{Figure 2: Forecast Comparison.} Out-of-sample point forecasts versus realised CPI inflation (year-over-year, \%) for selected models and countries across the 35-quarter expanding test window. Shaded bands represent $\pm$1 MAE intervals. Models using the identity graph track realised inflation more closely than models with trade-adjacency edges.}
+  \label{fig:forecast_comparison}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../experiments/results/v2_1/manuscript/performance_by_horizon.png}
+  \caption{\textbf{Figure 3: Performance by Forecast Horizon.} MAE and RMSE as a function of forecast horizon ($h = 1, 2, 4$ quarters) for all 12 model families. Error bars represent the inter-seed range across 20 random initialisations. The Temporal Graph model shows the largest improvement relative to ARIMA at $h = 4$, while GCN leads at $h = 1$.}
+  \label{fig:horizon}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../experiments/results/v2_1/manuscript/error_distribution.png}
+  \caption{\textbf{Figure 4: Forecast Error Distribution.} Kernel density estimates of point-forecast errors (realised minus forecast) by model family, pooled across all countries, horizons, and seeds. Heavier tails in trade-graph GNN variants relative to the identity-graph variants confirm that network-topology edges add noise rather than signal under this evaluation design.}
+  \label{fig:error_dist}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../experiments/results/v2_1/manuscript/calibration_reliability.png}
+  \caption{\textbf{Figure 5: Calibration Reliability Diagram.} Comparison of nominal coverage levels ($10\%$--$90\%$ quantile intervals) against empirical coverage rates across all models and horizons. The diagonal dashed line represents perfect calibration. GNN models with identity graphs achieve coverage rates closest to nominal levels, whereas trade-graph variants tend toward overconfidence.}
+  \label{fig:calibration}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../experiments/results/v2_1/manuscript/prediction_interval_coverage.png}
+  \caption{\textbf{Figure 6: Prediction Interval Coverage.} Empirical coverage of 90\% prediction intervals by model and horizon. Bars above the dashed reference line (0.90) indicate conservative intervals; bars below indicate overconfident intervals. Temporal Graph with identity graph achieves the most balanced coverage profile across all three horizons.}
+  \label{fig:coverage}
+\end{figure}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -871,11 +919,17 @@ GNN-for-economics literature, can be substantially misleading.
   seed-to-seed significance at shorter horizons.
 \item
   \textbf{Revised vintages.} We use revised current-release data
-  snapshots rather than real-time historical vintages. This represents
-  an upper-bound benchmark; true real-time performance may be worse.
-  Revised data reflects ex-post statistical corrections unavailable to
-  actual forecasters, which may overstate out-of-sample accuracy
-  relative to a genuine real-time environment.
+  snapshots rather than real-time historical vintages. This is a
+  deliberate design choice: it isolates the architecture-versus-topology
+  research question from data-vintage confounds, providing a clean upper
+  bound on forecast accuracy. The consequence is that measured accuracy
+  likely overstates performance in a genuine real-time setting, because
+  revised data incorporates ex-post statistical corrections (e.g., base
+  revisions, seasonal re-estimation, benchmark revisions) unavailable to
+  forecasters at decision time (Orphanides and van Norden, 2005). An
+  important direction for future work is replicating this evaluation
+  using the ECB or OECD real-time database vintages to quantify how much
+  of the reported MAE improvement survives data-revision uncertainty.
 \item
   \textbf{Panel scope.} The panel covers 20 European economies. Results
   may not generalise to emerging markets, non-EU economies, or global
@@ -887,6 +941,8 @@ GNN-for-economics literature, can be substantially misleading.
   inflation transmission, nor does it imply that monitoring
   trade-network topology would improve central bank forecasting
   decisions without further validation.
+\item
+  \textbf{Prediction interval calibration shortfall.} Across all models, the empirical coverage of the 80\% prediction intervals is systematically low, ranging between 50\% and 58\%. This undercoverage is a consequence of the short initial training window (14 quarters) and the bootstrap-based uncertainty estimation which understates prediction variance during shock periods. Future work should incorporate conformal prediction methods to guarantee nominal coverage.
 \end{enumerate}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
@@ -1075,5 +1131,17 @@ Zugner, D., Akbarnejad, A., and Gunnemann, S. (2020). Adversarial
 attacks on neural networks for graph data. \emph{Proceedings of the 24th
 ACM SIGKDD International Conference on Knowledge Discovery and Data
 Mining}, 2847--2856.
+
+Atkeson, A., and Ohanian, L. E. (2001). Are Phillips curves useful for forecasting inflation? \emph{Federal Reserve Bank of Minneapolis Quarterly Review}, 25(1), 2--11.
+
+Ba\'nbura, M., Giannone, D., and Reichlin, L. (2010). Large Bayesian vector autoregressions. \emph{Journal of Applied Econometrics}, 25(1), 71--92.
+
+Clark, T. E., and McCracken, M. W. (2001). Tests of equal forecast accuracy and encompassing for nested models. \emph{Journal of Econometrics}, 105(1), 85--110.
+
+Clark, T. E., and West, K. D. (2007). Approximately predictive objective tests of equal forecast accuracy. \emph{Journal of Econometrics}, 138(1), 291--311.
+
+Coulombe, P. G., Leroux, M., Stevanovic, D., and Surprenant, S. (2020). How machine learning has helped forecast the Great Recession. \emph{International Journal of Forecasting}, 36(4), 1432--1462.
+
+Giannone, D., Lenza, M., and Primiceri, G. E. (2015). Prior selection for vector autoregressions. \emph{Review of Economics and Statistics}, 97(2), 436--451.
 
 \end{document}

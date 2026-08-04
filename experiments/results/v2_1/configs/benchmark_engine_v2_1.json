@@ -18,7 +18,7 @@
     "selection_split": "validation",
     "test_set_tuning_forbidden": true
   },
-  "models": ["persistence", "arima", "var", "ets", "dynamic_factor", "ridge", "gradient_boosting", "mlp", "lstm", "tcn", "gcn", "temporal_graph"],
+  "models": ["persistence", "arima", "var", "bvar", "ets", "dynamic_factor", "ridge", "gradient_boosting", "mlp", "lstm", "tcn", "gcn", "temporal_graph"],
   "graph_models": ["gcn", "temporal_graph"],
   "graph_variants": ["directed_trade", "log_trade", "import_dependence", "top_k_incoming", "reversed", "undirected", "degree_preserving_random", "identity_no_trade"],
   "feature_sets": ["cpi_energy_sequence", "cpi_energy_volatility_trade_exposure"],

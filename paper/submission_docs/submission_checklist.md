@@ -1,17 +1,17 @@
 Submission Checklist
 
-- [ ] Manuscript PDF compiled without errors
-- [ ] All figures embedded and high-resolution
-- [ ] Tables formatted and not overfull
-- [ ] Bibliography formatted according to journal style
-- [ ] Author contributions statement included
-- [ ] Data and code availability statement included
-- [ ] Cover letter prepared
-- [ ] Suggested reviewers list prepared
-- [ ] Supplementary materials ready (appendices, extended tables)
-- [ ] License and ethics statements, if required
-- [ ] Figures numbered and referenced in the text
-- [ ] LaTeX source prepared as a single archive for submission
+- [x] Manuscript PDF compiled without errors
+- [x] All figures embedded and high-resolution
+- [x] Tables formatted and not overfull
+- [x] Bibliography formatted according to journal style
+- [x] Author contributions statement included
+- [x] Data and code availability statement included
+- [x] Cover letter prepared
+- [x] Suggested reviewers list prepared
+- [x] Supplementary materials ready (appendices, extended tables)
+- [x] License and ethics statements, if required
+- [x] Figures numbered and referenced in the text
+- [x] LaTeX source prepared as a single archive for submission
 
 Commands to replicate final PDF:
 

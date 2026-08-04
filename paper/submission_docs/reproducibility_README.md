@@ -1,43 +1,58 @@
-Reproducibility Guide
+# Reproducibility Guide — v2.1
 
-This document explains how to reproduce the experiments and figures in the manuscript.
+This document describes how to fully reproduce all experiments, results tables,
+and figures reported in the manuscript.
 
-Environment
-- Python 3.10+ recommended
-- Create a virtual environment and install dependencies:
+## Requirements
+
+- Python 3.11 (tested; 3.10+ should work)
+- ~8 GB RAM; GPU optional but recommended for neural models
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-- Optionally use `conda` with `environment.yml` in repository root.
-
-Data
-- Raw data files are stored under `data/raw` (CEPII BACI, FRED, World Bank).
-- Processed datasets used for training and evaluation are under `data/processed/dataset_v1`.
-- If external data must be downloaded, run `python download_macro.py` and `python download_trade_baci.py` in `src/`.
-
-Running experiments
-- To reproduce baseline and ST-GNN training and evaluation run:
+## Quick Start (Full Pipeline)
 
 ```bash
-python -m src.train_stgnn --config experiments/configs/v2_benchmark.json
+bash reproduce.sh
 ```
 
-- To reproduce results tables and figures used in the manuscript:
+This runs the following six steps end-to-end:
 
-```bash
-python src/build_paper_tables.py --results-dir experiments/results/v2_1
-python src/build_graph.py --save-dir experiments/results/v2_1/graphs
-```
+| Step | Module | Description |
+|------|--------|-------------|
+| 1 | `validate_v2_1_contract` | Verifies SHA256 hashes of processed inputs |
+| 2 | `run_benchmark_engine_v2_1` | Runs all 12 model families × 8 graphs × 3 horizons × 20 seeds |
+| 3 | `validate_v2_1_results` | Verifies SHA256 hashes of all output artefacts |
+| 4 | `analyze_v2_1_results` | Generates Tables 3–6 and significance summaries |
+| 5 | `generate_v2_1_manuscript` | Generates Tables 1–6 (`.tex` + `.csv`) and 6 diagnostic figures |
+| 6 | `generate_v2_1_report` | Produces the plain-text summary report |
 
-Random seeds
-- Experiments use a fixed random seed `42` by default; set `SEED` env var to override.
+Estimated runtime: ~12 hours on Apple Silicon M-series; longer on CPU-only hardware.
 
-Computational notes
-- Full rolling-refit experiments require substantial time (GPU recommended for ST-GNN training).
+## Output Paths (v2.1)
 
-Contact
-- For reproduction issues contact mrayanasim09@gmail.com
+All outputs are written to `experiments/results/v2_1/`:
+
+- `forecasts.parquet` — 781,740 forecast rows (all models × countries × origins × seeds)
+- `metrics.parquet` — MAE / RMSE / CRPS per (model, variant, horizon, seed)
+- `dm_tests.parquet` — Diebold-Mariano test statistics and BH-corrected p-values
+- `manuscript/table_*.tex` and `.csv` — LaTeX and CSV tables
+- `manuscript/*.png` — Six diagnostic figures
+
+## Data
+
+Inputs are pre-committed to the repository under `data/processed/v2/`. No external
+download step is required. All input hashes are pre-registered in
+`data/processed/v2/transformation_validation.json`.
+
+## Random Seeds
+
+20 random seeds (42–61) are used for all stochastic models to quantify estimation uncertainty. Deterministic baselines (ARIMA, Ridge, Persistence, etc.) use "deterministic" as their seed value.
+
+## Contact
+
+For reproduction issues: mrayanasim09@gmail.com

@@ -13,7 +13,7 @@ CONFIG = ROOT / "experiments/results/v2_1/configs/benchmark_engine_v2_1.json"
 PROTOCOL = ROOT / "docs/research_protocol_v2_1.md"
 
 REQUIRED_MODELS = {
-    "persistence", "arima", "var", "ets", "dynamic_factor", "ridge",
+    "persistence", "arima", "var", "bvar", "ets", "dynamic_factor", "ridge",
     "gradient_boosting", "mlp", "lstm", "tcn", "gcn", "temporal_graph",
 }
 REQUIRED_DETERMINISTIC_METRICS = {"rmse", "mae", "smape"}
