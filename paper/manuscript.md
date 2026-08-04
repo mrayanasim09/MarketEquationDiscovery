@@ -1,5 +1,5 @@
 ---
-title: "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Graph Neural Networks for Inflation Forecasting"
+title: "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Spatio-Temporal Graph Neural Networks for EU Inflation Forecasting"
 author:
   - name: Rayyan Asim
     affiliation: Independent Researcher
@@ -7,7 +7,7 @@ author:
     orcid: 0000-0003-2461-5638
 date: "2026-07-24"
 abstract: |
-  We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1–2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 12 model families under a prospective expanding-window design, testing eight trade-graph constructions against an *identity (no-trade)* graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines (such as ARIMA or BVAR). These findings indicate that GNN forecast gains originate from temporal recurrence rather than network topology. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
+  We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1–2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 12 model families under a prospective expanding-window design, testing eight trade-graph constructions against an *identity (no-trade)* graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design — though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
 keywords:
   - inflation forecasting
   - graph neural networks
@@ -153,10 +153,10 @@ architecture is rarely disentangled.
 A recurring concern in the graph learning literature is that null or
 random graphs can match or even exceed structurally meaningful graphs
 when the GNN architecture itself provides implicit regularisation or
-pattern-matching capacity. Kawamoto et al. (2018) show that GCN-style
+pattern-matching capacity. Kawamoto et al. (2018) show that GCN-style
 architectures can learn classification rules that are largely
 independent of edge information under certain conditions. Zugner et
-al. (2020) demonstrate that graph structure can be adversarially
+al. (2020) demonstrate that graph structure can be adversarially
 irrelevant to GNN performance. These theoretical findings motivate our
 identity-graph ablation as a rigorous control for architectural versus
 topological effects.
@@ -167,13 +167,25 @@ Bilateral trade linkages are well-established channels for inflation
 transmission. Calvo and Reinhart (2002) and subsequent literature
 document cross-country co-movement in inflation that correlates with
 trade intensity. Forbes and Warnock (2012) and Miranda-Agrippino and Rey
-(2021) emphasise global common factors. Bayoumi et al. (2023) show that
+(2021) emphasise global common factors. Bayoumi et al. (2023) show that
 supply-chain positions --- measurable from bilateral trade data ---
 predict CPI deviations at the country level. Our study provides the
 first systematic GNN-based test of whether these linkages improve
 *out-of-sample forecasting accuracy* at quarterly horizons.
 
-## 2.5 Theoretical Motivation: Why Trade Networks Should Predict Inflation
+## 2.5 Adjacent Cross-Country Forecasting Traditions
+
+GNN-based approaches to cross-country forecasting sit within a broader tradition of models designed to capture international spillovers. Three families are directly relevant to the present study.
+
+**Global VAR (GVAR).** Pesaran, Schuermann, and Weiner (2004) introduce a multinational VAR in which each country model is linked to a trade-weighted foreign aggregate, directly encoding bilateral trade-intensity as a structural prior. GVAR is the natural classical predecessor to GNN-based bilateral-trade forecasting: it operationalises the same economic intuition — that inflation co-movement tracks trade intensity — in a linear, statistically tractable framework.
+
+**Panel VAR and cross-country panel models.** Pooled panel autoregressions with country fixed effects (see Canova and Ciccarelli, 2013) capture aggregate cross-country co-movement through common time effects without imposing a bilateral network structure. These models serve as a useful middle ground between country-specific models (which ignore spillovers entirely) and GNNs (which learn or impose a specific network).
+
+**Dynamic Factor Models.** Stock and Watson (2002) and Forni, Hallin, Lippi, and Reichlin (2000) show that a small number of common factors can capture the bulk of cross-country inflation co-movement. Factor models effectively impose the assumption that spillovers are symmetric and driven by global shocks rather than bilateral linkages. The present benchmark includes a Dynamic Factor Model (one common factor) precisely as a non-network cross-country comparator: any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement (see §4.2).
+
+Positioning GNN-based forecasting relative to these traditions is important because it clarifies what is being tested. GNNs claim to improve over factor models and panel VARs by encoding asymmetric, bilateral trade linkages explicitly. Our ablation directly tests whether this claim holds in an out-of-sample, prospective EU CPI forecasting setting.
+
+## 2.6 Theoretical Motivation: Why Trade Networks Should Predict Inflation
 
 From an economic perspective, there are strong reasons to hypothesise that bilateral trade-network topology should improve inflation forecasts relative to isolated country-specific or symmetric common-factor models. Inflation transmission across borders operates primarily through two structural channels:
 
@@ -403,6 +415,8 @@ explicitly in the limitations (Section 6.4).
 Neural and graph models are trained with 20 random seeds (42--61) to
 quantify estimation uncertainty. Total benchmark: **38,380 model fits**,
 **781,740 forecast rows**.
+
+Among the baseline model families, the **Dynamic Factor Model (DFM, 1 common factor)** serves as the designated non-GNN cross-country benchmark. Unlike country-specific models (ARIMA, Ridge) that treat each economy in isolation, the DFM captures common latent inflation co-movement across all 20 EU economies simultaneously. Any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement; failure to beat the DFM would imply that cross-country spillovers, to the extent they exist, are already captured by a single global factor.
 
 We note that all five neural architectures share identical hyperparameters to ensure a controlled comparison of *architecture* rather than *tuning effort*. While holding hyperparameters constant is necessary to isolate architectural differences (the ablation's primary goal), it implies the resulting forecasts do not reflect the peak empirical performance of any single model family under optimal, architecture-specific tuning. A model with higher representation capacity (like the Temporal Graph) may require more training epochs or larger hidden dimensions, whereas a simpler model (like TCN) might benefit from aggressive regularisation or dropout. Consequently, the relative ranking of models should be interpreted as characterizing these architectures under a uniform baseline constraint rather than representing their respective performance ceilings. A full discussion of this limitation is provided in Section 6.5.
 
@@ -920,12 +934,7 @@ literature, can be substantially misleading.
     pseudo-real-time vintage data. The sensitivity of the relative model rankings to these
     design choices remains unverified and represents a boundary condition of our findings.
 
-These findings are conditional on the experimental scope. The restricted
-covariate set, quarterly frequency, European panel, short initial
-training window, pre-specified trade graphs, lack of comprehensive robustness checks,
-and revised data releases may all affect the relative ranking of models. The results should
-therefore be interpreted as evidence about this specific forecasting
-design, not as a universal statement about trade networks or GNNs.
+These findings are conditional on the experimental scope. The restricted covariate set, quarterly frequency, European panel, short initial training window, pre-specified trade graphs, lack of comprehensive robustness checks, and revised data releases may all affect the relative ranking of models. The results should therefore be interpreted as evidence about this specific forecasting design, not as a universal statement about trade networks or GNNs.
 
 ## 6.6 Future Research Directions
 
@@ -1028,6 +1037,8 @@ What this study does not establish is whether trade-network topology
 improves forecast accuracy at monthly frequency, with richer covariate
 sets, over longer historical samples, or for non-EU economies. We
 encourage future work to vary these design dimensions systematically.
+
+The methodological contribution of this study is not a performance breakthrough but a design template. By publishing a pre-specified prospective ablation with a public identity-graph control, frozen evaluation outputs, and multi-seed significance reporting, this study establishes a reproducible baseline against which future graph-based macroeconomic forecasting work can be calibrated. Negative benchmark results — when rigorously designed and honestly reported — serve the forecasting community by establishing the conditions under which a modelling choice does not add value, guiding where research effort is more productively directed.
 
 ::: center
 
@@ -1132,6 +1143,8 @@ Clark, T. E., and West, K. D. (2007). Approximately normal tests for
 equal predictive accuracy in nested models. *Journal of Econometrics*,
 138(1), 291--311.
 
+Canova, F., and Ciccarelli, M. (2013). Panel Vector Autoregressive Models: A Survey. In VAR Models in Macroeconomics – New Developments and Applications: Essays in Honor of Christopher A. Sims, *Advances in Econometrics*, 32, 205--246.
+
 Coulombe, P. G., Leroux, M., Stevanovic, D., and Surprenant, S. (2020).
 How is machine learning useful for macroeconomic forecasting? *Journal
 of Applied Econometrics*, 37(5), 920--964.
@@ -1147,6 +1160,8 @@ Elliott and A. Timmermann (Eds.), *Handbook of Economic Forecasting*
 Forbes, K. J., and Warnock, F. E. (2012). Capital flow waves: Surges,
 stops, flight, and retrenchment. *Journal of International Economics*,
 88(2), 235--251.
+
+Forni, M., Hallin, M., Lippi, M., and Reichlin, L. (2000). The generalised dynamic factor model: Identification and estimation. *The Review of Economics and Statistics*, 82(4), 540--554.
 
 Giannone, D., Lenza, M., and Primiceri, G. E. (2015). Prior selection
 for vector autoregressions. *Review of Economics and Statistics*, 97(2),
@@ -1192,6 +1207,10 @@ Statistics*, 39(1), 98--119.
 Miranda-Agrippino, S., and Rey, H. (2021). The global financial cycle.
 In G. Gopinath, E. Helpman, and K. Rogoff (Eds.), *Handbook of
 International Economics* (Vol. 6, pp. 1--43). Elsevier.
+
+Pesaran, M. H., Schuermann, T., and Weiner, S. M. (2004). Modeling regional interdependencies using a global error-correcting macroeconometric model. *Journal of Business and Economic Statistics*, 22(2), 129--162.
+
+Stock, J. H., and Watson, M. W. (2002). Macroeconomic forecasting using diffusion indexes. *Journal of Business and Economic Statistics*, 20(2), 147--162.
 
 Stock, J. H., and Watson, M. W. (2007). Why has U.S. inflation become
 harder to forecast? *Journal of Money, Credit and Banking*, 39(s1),
