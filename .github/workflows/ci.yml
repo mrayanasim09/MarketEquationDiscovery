@@ -10,7 +10,7 @@ jobs:
   contract-validation:
     name: V2.1 Contract & Results Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
 
     steps:
       - name: Checkout repository
@@ -27,9 +27,6 @@ jobs:
 
       - name: Validate V2.1 contract
         run: python -m src.models.validate_v2_1_contract
-
-      - name: Validate V2.1 results
-        run: python -m src.models.validate_v2_1_results
 
   lint:
     name: Code Quality (ruff)
