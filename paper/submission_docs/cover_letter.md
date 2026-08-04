@@ -1,31 +1,33 @@
-July 27, 2026
+# Cover Letter — Revised Submission
 
-Editor-in-Chief
-International Journal of Forecasting
-Elsevier Editorial Office
+**Journal:** International Journal of Forecasting  
+**Manuscript Title:** Temporal Architecture or Trade Topology? A Prospective Ablation Study of Graph Neural Networks for Inflation Forecasting  
+**Authors:** Rayyan Asim  
+**Date:** August 2026
+
+---
 
 Dear Editor,
 
-Please find enclosed our manuscript entitled "Do Trade Networks Help Forecast Inflation? A Benchmark Refutation Using Spatio-Temporal Graph Neural Networks" by Rayyan Asim, submitted for consideration for publication in International Journal of Forecasting.
+Please consider our manuscript, "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Graph Neural Networks for Inflation Forecasting," for publication in the *International Journal of Forecasting* as a revised submission. 
 
-This paper provides a prospective benchmark refutation and ablation study evaluating quarterly CPI forecasting for 20 European economies using spatio-temporal graph neural networks (ST-GNNs) and a broad battery of 12 model families across 20 random seeds. We report rolling-refit evaluation, Diebold--Mariano tests with Harvey-Leybourne-Newbold corrections, moving-block bootstrap confidence intervals (2,000 resamples), and Benjamini-Hochberg FDR control. Our main empirical finding is that removing trade-network topology entirely (an identity/no-trade graph) outperforms all trade-edge models across all horizons and metrics, consistent with the interpretation that neural gains derive from temporal recurrence rather than cross-country network spillovers.
+The study presents a controlled prospective ablation benchmark for quarterly CPI inflation forecasting across 20 EU economies. Its central contribution is to isolate whether bilateral trade-network topology adds out-of-sample predictive value beyond graph architecture alone. Across 12 model families, 8 graph constructions, 3 horizons, and 20 random seeds (amounting to over 38,000 model fits), identity-graph controls consistently outperform trade-based graphs within the studied scope. 
 
-Why this paper fits International Journal of Forecasting:
-- Methodological refutation and rigorous ablation study demonstrating that trade-network GNNs do not improve point inflation forecasts.
-- Establishes essential benchmarking controls (identity-graph ablations) for future graph neural network research in macroeconomics.
-- Provides public, fully reproducible code, data, and SHA256-verified results.
+We believe this negative but methodologically important result is highly relevant to readers interested in forecasting evaluation, graph learning, and macroeconomic prediction. Specifically, it establishes the necessity of identity-graph ablation as a standard control when evaluating network-based models, highlighting the risk of over-parameterisation in macroeconomic panel forecasting.
 
-Suggested reviewers (no conflicts):
-- Prof. Spyros Makridakis, University of Nicosia, makridakis.s@unic.ac.cy
-- Prof. Fotios Petropoulos, University of Bath, f.petropoulos@bath.ac.uk
+We have addressed the comments from the editorial team and reviewers in this revision, including:
+1. **Reframing around the negative benchmark:** The title and abstract have been rewritten to foreground the negative ablation results and clarify why this control design is crucial for the forecasting community.
+2. **Adding a Theoretical Motivation Section:** Added Section 2.5 explicitly discussing the economic channels (import price pass-through, supply chains) and justifying why trade networks could plausibly improve forecasts over country-specific or common-factor baselines.
+3. **Addressing the BVAR Baseline:** Added a Minnesota-prior BVAR baseline as a formally estimated competitor.
+4. **DM-Testing and Persistence Consistency:** Persistence is consistently excluded from all formal Diebold–Mariano comparisons since it is a degenerate, non-estimated baseline.
+5. **Hyperparameter and Calibration Disclaimers:** Added detailed disclaimers in the Methodology (§4.2) and Limitations (§6.5) sections regarding the shared hyperparameters, interval calibration shortfall, and the lack of sensitivity checks.
+6. **Reference Audit:** Replaced the out-of-domain Garcia-Martos citation with Medeiros et al. (2021) and Coulombe et al. (2020), and added Stark and Croushore (2002) in §4.0.
 
-Conflicts of interest: None declared.
+The manuscript is original, not under review elsewhere, and all code, configuration files, and frozen outputs are publicly available to support complete reproducibility.
 
-Corresponding author:
-Muhammad Rayyan Asim
-Email: mrayanasim09@gmail.com
-Affiliation: Independent Researcher
+Yours sincerely,
 
-Sincerely,
-
-Muhammad Rayyan Asim
+Rayyan Asim  
+Independent Researcher  
+mrayanasim09@gmail.com  
+ORCID: 0000-0003-2461-5638
