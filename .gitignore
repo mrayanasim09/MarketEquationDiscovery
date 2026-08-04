@@ -70,6 +70,8 @@ temp/
 
 # Root-level compiled PDF and duplicate docx (canonical copies live in paper/)
 /main.pdf
+/manuscript.pdf
+/*.pdf
 /manuscript.docx
 
 # Data (raw and processed data are large; only gitkeep markers are committed)
