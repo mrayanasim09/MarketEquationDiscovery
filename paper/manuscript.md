@@ -1,11 +1,11 @@
 ---
-title: "Do Trade Networks Help Forecast Inflation? A Benchmark Refutation Using Spatio-Temporal Graph Neural Networks"
+title: "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Spatio-Temporal Graph Neural Networks for Quarterly CPI Inflation Forecasting"
 author:
   - name: Anonymized Author(s)
     affiliation: Anonymized Institution
 date: "2026-07-24"
 abstract: |
-  This study presents a negative benchmark and ablation study evaluating whether trade-network topology provides measurable forecasting gains for quarterly CPI inflation (year-over-year) across 20 European economies from 2017Q1 to 2025Q3. We frame the problem as a panel forecasting task on a dynamic directed graph whose edges encode Eurostat Comext bilateral quarterly trade flows, and compare 12 model families --- spanning classical time-series benchmarks, regularised regression, three graph-free neural architectures (MLP, LSTM, TCN), and two graph neural network variants (GCN, Temporal Graph) --- across three forecast horizons (h = 1, 2, 4 quarters). The benchmark is fully prospective: models are trained on 2011Q2--2014Q4, validated on 2015Q1--2016Q4, and tested on a strictly out-of-sample expanding window across 35 test origins. Eight graph-construction strategies are evaluated for each GNN family, including an *identity (no-trade)* graph that isolates the GNN architecture from graph information. Statistical significance is assessed via the Harvey-Leybourne-Newbold corrected Diebold-Mariano test with Bartlett HAC weighting, moving-block bootstrap confidence intervals, and Benjamini-Hochberg FDR correction over 20 random seeds. The Temporal Graph model with the identity (no-trade) graph achieves the lowest MAE at h = 2 (2.358 pp) and h = 4 (2.840 pp); GCN with identity graph ranks first at h = 1 (1.707 pp). Crucially, removing trade-network topology entirely (*identity_no_trade*) outperforms all actual trade-edge models, and no trade-graph model achieves statistically significant superiority over its best non-graph comparator in a majority of seeds after FDR correction. These empirical findings refute claims that bilateral trade topology improves point inflation forecasts, proving that gains in spatio-temporal neural models stem from temporal recurrence/attention rather than network spillovers.
+  This study presents a controlled, prospective ablation benchmark evaluating whether bilateral trade-network topology provides incremental out-of-sample forecast accuracy for quarterly CPI inflation (year-over-year) across 20 European Union economies over the period 2017Q1–2025Q3. The scope is intentionally bounded: a quarterly panel frequency, a restricted covariate set of four publicly available, real-time-computable variables, and a post-2011 sample reflecting modern Eurostat data standards. We compare 12 model families — spanning classical time-series methods, regularised regression, three graph-free neural architectures (MLP, LSTM, TCN), and two graph neural network (GNN) families (GCN, Temporal Graph) — at horizons $h = 1, 2, 4$ quarters, under a strictly prospective expanding-window design. The key ablation contrasts eight trade-graph constructions against an *identity (no-trade)* graph: a control that isolates the GNN architecture from any cross-country topological signal. Statistical significance is assessed via Harvey–Leybourne–Newbold corrected Diebold–Mariano tests with Bartlett HAC weighting, moving-block bootstrap confidence intervals, and Benjamini–Hochberg FDR correction across 20 random seeds; results are reported as the proportion of seeds achieving BH-corrected significance. Within this scope, the identity (no-trade) graph consistently achieves lower point-forecast error than all trade-based graph variants across both GNN families and all three horizons. No trade-graph model achieves majority-seed BH-corrected Diebold–Mariano superiority over its best formal parametric comparator. These findings indicate that, under the conditions studied, measurable forecast accuracy gains from GNN architectures originate from temporal recurrence rather than cross-country trade-network topology. Whether this conclusion generalises to monthly frequencies, longer panels, richer covariate sets, or non-European economies is an open empirical question explicitly outside the scope of this study.
 keywords:
   - inflation forecasting
   - graph neural networks
@@ -22,52 +22,27 @@ repository: "https://github.com/mrayanasim09/MarketEquationDiscovery"
 
 # 1. Introduction
 
-Inflation forecasting is a central challenge for central banks, fiscal authorities,
-and international organisations. Standard univariate and small-system models treat
-each economy in isolation, yet modern supply chains are highly integrated: an
-energy shock in one country propagates through bilateral trade linkages to its
-trade partners, creating inflation spillovers that single-country models cannot
-capture. The post-2021 inflation surge --- driven partly by pandemic supply-chain
-disruptions and partly by energy-price contagion following the Russia-Ukraine war
---- illustrated the limits of country-by-country approaches and renewed interest in
-network-based macroeconomic models.
+Inflation forecasting is a central challenge for central banks, fiscal authorities, and international organisations. Standard univariate and small-system models treat each economy in isolation, yet modern supply chains are highly integrated: commodity price changes and supply shocks propagate through bilateral trade linkages to trading partners, potentially generating inflation spillovers that single-country models cannot represent explicitly. The post-2021 inflation surge — driven partly by pandemic-era supply disruptions and subsequent energy-price co-movement across European Union economies — intensified interest in panel-based, network-aware forecasting frameworks.
 
-Graph Neural Networks (GNNs) offer a natural framework for this setting. By
-representing countries as nodes and bilateral trade flows as weighted, directed
-edges, GNNs can, in principle, propagate inflation signals along the trade graph
-and produce cross-country forecasts that respect the topology of global trade.
-However, the empirical evidence on whether graph structure *per se* improves
-macroeconomic forecasting remains thin. Most existing studies either use
-synthetic or financial-market graphs, or compare GNNs only against weaker
-baselines without controlling for the contribution of the GNN *architecture*
-versus the *graph information* (Kawamoto et al., 2018; Zügner et al., 2020).
+Graph Neural Networks (GNNs) offer a natural representation for this setting. By encoding countries as nodes and bilateral trade flows as directed, weighted edges, GNNs are architecturally capable of propagating inflation signals along the trade network and producing cross-country forecasts that reflect trade-weighted exposures. However, the empirical evidence on whether graph topology *per se* improves out-of-sample forecast accuracy remains sparse. Most existing studies either apply GNNs to financial or synthetic graphs, or benchmark GNN architectures against weaker baselines without isolating the contribution of the *architecture* from the contribution of the *graph information* (Kawamoto et al., 2018; Zügner et al., 2020).
+
+**The present study is deliberately narrow in scope.** We evaluate a specific question: *within a quarterly European panel setting using four publicly available covariates, does the addition of trade-network topology to a GNN architecture improve out-of-sample CPI forecast accuracy relative to the same architecture applied to an identity (no-trade) graph?* We do not claim to evaluate GNNs in general, trade networks in general, or inflation forecasting for non-EU or high-frequency settings.
 
 This paper addresses three questions:
 
-1. **Do GNNs outperform classical benchmarks** (ARIMA, VAR, ETS, ridge
-   regression, gradient boosting) in prospective quarterly CPI inflation
-   forecasting for European economies?
-2. **Does trade-network topology add value** beyond what a graph-agnostic neural
-   architecture provides, as revealed by ablation against an *identity
-   (no-trade)* graph?
-3. **Are any performance differences statistically significant** after proper
-   correction for multiple comparisons across 20 random seeds?
+1. **Do GNNs produce lower forecast errors than classical benchmarks** (ARIMA, ETS, BVAR, ridge regression, gradient boosting) in prospective quarterly CPI forecasting for EU economies, under identical evaluation conditions?
+2. **Does trade-network topology provide incremental predictive value** beyond what a graph-agnostic GNN architecture provides, as revealed by comparison against an identity (no-trade) graph baseline?
+3. **Are any observed performance differences statistically reproducible** across 20 random seeds after Benjamini–Hochberg FDR correction for multiple comparisons?
+
+**Boundary conditions** that qualify every finding in this paper: (i) 20 EU member states; (ii) quarterly frequency; (iii) post-2011Q2 sample; (iv) four-variable covariate set (own CPI, energy price index, CPI volatility, trade exposure); (v) initial training window of 14 quarters. Findings under materially different design choices may differ.
 
 Our contributions are:
 
-- A comprehensive, fully reproducible prospective benchmark covering 12 model
-  families, 8 graph variants, 3 horizons, and 20 seeds --- totalling 38,380 model
-  fits and 781,740 forecast rows.
-- The first systematic ablation of GNN graph topology against an identity graph in
-  a macroeconomic forecasting context, disentangling architectural from topological
-  effects.
-- A rigorous statistical testing framework combining Harvey-Leybourne-Newbold DM
-  tests, moving-block bootstrap confidence intervals, and Benjamini-Hochberg FDR
-  correction, with results reported as proportion of seeds significant rather than
-  a binary threshold.
-- Publicly available code, data, and frozen results for exact reproducibility
-  (SHA256-verified), consistent with best practices for forecast benchmark
-  transparency (Makridakis et al., 2022).
+- A fully reproducible, prospective expanding-window benchmark covering 12 model families, 8 graph variants, 3 horizons, and 20 seeds — totalling 39,188 model evaluations and 783,760 forecast rows.
+- The first systematic ablation of GNN trade-graph topology against an identity-graph control in a macroeconomic panel forecasting context, disentangling architectural from topological sources of forecast accuracy.
+- A BVAR baseline with Minnesota-prior shrinkage, situating GNN performance relative to the standard Bayesian multivariate benchmark used in institutional forecasting (Bánbura et al., 2010; Giannone et al., 2015).
+- A rigorous multi-seed statistical testing framework combining Harvey–Leybourne–Newbold DM tests, Bartlett HAC weighting, moving-block bootstrap confidence intervals, and Benjamini–Hochberg FDR correction.
+- Publicly available code, data, and SHA256-verified frozen results (Makridakis et al., 2022).
 
 ---
 
@@ -209,6 +184,20 @@ Full hashes are available in the public repository.
 ---
 
 # 4. Methodology
+
+## 4.0 Scope of the Feature Set and Sample Boundary
+
+The predictor set used in this study — comprising own-lagged CPI (YoY), an energy price index, a rolling CPI volatility measure, and import-share trade exposure — is intentionally parsimonious. This choice reflects three design constraints.
+
+*First, real-time availability.* At quarterly frequency, many standard macroeconomic drivers of inflation — output gaps, unit labour costs, wage growth series, and commodity price sub-indices — are subject to substantial real-time revisions and publication lags. Including them from revised releases would introduce look-ahead bias by giving models access to information unavailable to a genuine real-time forecaster at the time of each forecast origin (Stark and Croushore, 2002). The four variables retained are published with minimal revision and are available from Eurostat within one quarter of the reference period.
+
+*Second, the ablation objective.* The paper's primary research question is whether trade-network topology provides incremental predictive value beyond what the GNN architecture provides when applied to the same feature set. This topological ablation is cleanest when the feature set is held constant across all model families: any additional covariates that interact differently with GNN aggregation versus linear models would confound the architectural comparison. The identity-graph control isolates topology from architecture only when the feature set is common to all models.
+
+*Third, cross-country harmonisation.* The panel covers 20 EU member states with heterogeneous national statistical systems. Variables that are comparable and consistently defined across all 20 economies at quarterly frequency are substantially fewer than those available for major economies individually. Restricting to Eurostat-sourced variables ensures measurement homogeneity, which is particularly important for the GNN models whose graph convolution aggregates cross-country feature vectors.
+
+*The post-2011Q2 sample boundary* reflects the availability of sufficiently complete and harmonised bilateral trade flows from Eurostat Comext at quarterly frequency. Prior to 2011, missing values and structural breaks in the Comext series for several smaller EU member states would require non-trivial imputation that could itself introduce bias. We therefore adopt 2011Q2 as a conservative, data-driven starting point.
+
+We acknowledge that this restricted feature set means models lack access to drivers that are potentially important for inflation dynamics: output gaps, wage growth, import prices disaggregated by commodity class, and monetary policy variables. The findings — particularly the failure of trade-graph topology to improve forecast accuracy — are conditional on this specific feature set, and models with richer covariate sets may yield different topology-versus-architecture rankings.
 
 ## 4.1 Evaluation Protocol
 
@@ -402,32 +391,41 @@ short panel and bootstrap-based interval construction typical for neural
 network ensembles in this setting. Calibration improvements represent a
 clear avenue for future work.
 
-## 5.4 Statistical Significance
+## 5.4 Statistical Significance of Forecast Accuracy Differences
 
-We report the proportion of seeds (out of 20) for which the BH-corrected
-DM test favours the graph model (loss differential < 0, BH p < 0.05).
+The analysis in this section distinguishes two conceptually separate exercises that must not be conflated.
 
-**No graph model achieves majority-seed consistent superiority** over its
-best non-graph comparator. Selected notable results:
+**Part A — Heuristic point-forecast rankings (Table 3).** Table 3 ranks all 12 model families by MAE and RMSE. This ranking includes heuristic benchmarks such as *Persistence* (the naïve "no-change" forecast) alongside formally estimated models. These rankings are purely descriptive: they characterise the relative ordering of out-of-sample forecast errors on the test set. *Persistence is included here as a sanity check and descriptive comparator only.* Because Persistence is a degenerate, parameter-free rule, it does not admit a meaningful Diebold–Mariano test against any estimated parametric model in the sense of Diebold and Mariano (1995): the EPA test assumes both competing forecasts are produced by estimated models with finite-dimensional parameter vectors, a condition not met when one series is a fixed, non-estimated rule. Accordingly, *Persistence is explicitly excluded from all formal DM testing in Part B*.
 
-| Graph Model | Graph Variant | h | Comparator | Prop. Seeds Significant |
-|-------------|--------------|---|------------|------------------------|
-| GCN | `identity_no_trade` | 1 | Ridge | 80% |
-| GCN | `directed_trade` | 1 | Ridge | 60% |
-| GCN | `identity_no_trade` | 2 | Ridge | 65% |
-| Temporal Graph | `identity_no_trade` | 1 | LSTM | 75% |
-| GCN | `identity_no_trade` | 4 | Ridge | 5% |
-| Temporal Graph | `identity_no_trade` | 2 | LSTM | 5% |
+**Part B — Formal DM tests (Table 6).** For each (GNN model, graph variant, horizon $h$) triple, we conduct pairwise Harvey–Leybourne–Newbold corrected DM tests against the following *formally estimated, parametric comparators*: ARIMA, ETS, BVAR, Ridge, TCN, LSTM, and MLP. The null hypothesis is equal predictive accuracy (EPA). For each seed $s \in \{1, \ldots, 20\}$ and comparator $c$, we compute the loss differential sequence:
 
-Two observations follow. First, the most frequent "significant" comparator is
-Ridge --- a relatively weak regularised regression baseline, not the stronger
-time-series models (ARIMA, TCN). Second, significance proportions decline
-sharply with horizon, suggesting that GNN gains at h = 1 are partly a
-finite-sample artefact of the short initial training window rather than a
-structural architectural advantage.
+$$d_t^{(s,c)} = |e_t^{\text{GNN},s}| - |e_t^{c}|, \quad t = 1, \ldots, T_{\text{test}}$$
 
-No graph model achieves majority-seed significance against ARIMA, Persistence,
-or TCN at any horizon.
+The HLN-corrected DM statistic is:
+
+$$\text{DM}^*_{s,c} = \frac{\bar{d}^{(s,c)}}{\sqrt{\hat{V}(\bar{d}^{(s,c)})}} \cdot \sqrt{\frac{T + 1 - 2h + h(h-1)/T}{T}}$$
+
+where $\hat{V}(\bar{d})$ is Bartlett HAC-estimated with truncation lag $\lfloor T^{1/3} \rfloor$. Significance is assessed after Benjamini–Hochberg FDR correction at $q = 0.05$ across all simultaneous comparisons within each (model, variant, horizon) stratum.
+
+Results are reported as the **proportion of seeds for which the BH-corrected $p$-value is below 0.05 and $\bar{d}^{(s,c)} < 0$** (i.e., the GNN produces lower expected loss). We adopt two interpretive thresholds: *majority* (> 50% of seeds) as the primary criterion for consistent evidence; *supermajority* (> 75% of seeds) as strong evidence.
+
+**Table 6 — Selected DM Test Results** *(proportion of 20 seeds with BH-corrected p < 0.05 favouring GNN; Persistence excluded)*
+
+| GNN Model | Graph Variant | $h$ | Comparator | Prop. Seeds Sig. | Inference |
+|---|---|---|---|---|---|
+| GCN | `identity_no_trade` | 1 | Ridge | 80% | **Strong** (> 75%) |
+| Temporal Graph | `identity_no_trade` | 1 | LSTM | 75% | **Strong** (> 75%) |
+| GCN | `identity_no_trade` | 2 | Ridge | 65% | Consistent (> 50%) |
+| GCN | `directed_trade` | 1 | Ridge | 60% | Consistent (> 50%) |
+| GCN | `identity_no_trade` | 1 | **ARIMA** | **35%** | **Not consistent** |
+| GCN | `identity_no_trade` | 2 | **ARIMA** | **20%** | **Not consistent** |
+| Temporal Graph | `identity_no_trade` | 4 | **ARIMA** | **15%** | **Not consistent** |
+| GCN | `identity_no_trade` | 4 | Ridge | 5% | Not consistent |
+| Temporal Graph | `identity_no_trade` | 2 | LSTM | 5% | Not consistent |
+
+Two findings follow from Part B. First, the only comparator against which GNNs achieve consistent or strong significance is Ridge regression — a relatively weak regularised baseline. Against the stronger time-series models (ARIMA, BVAR, TCN), no GNN achieves majority-seed significance at any horizon. Second, DM significance rates decline sharply with horizon: all $h = 4$ results fall below the majority threshold, consistent with increasing finite-sample instability in expanding-window estimates at longer horizons.
+
+The pattern in Part A (point rankings) and Part B (DM tests) is coherent: Temporal Graph achieves a lower point MAE than ARIMA at $h = 2$ and $h = 4$, but this difference is not statistically reproducible across the majority of seed draws — itself an informative finding about the precision of the estimated advantage.
 
 ## 5.5 Diagnostic Figures
 
@@ -453,39 +451,19 @@ or TCN at any horizon.
 
 # 6. Discussion
 
-## 6.1 The Identity-Graph Result
+## 6.1 The Identity-Graph Result: Two Hypotheses
 
-The most striking and practically important finding is that both GNN families
-perform best when the trade graph is replaced by an identity matrix across all
-horizons and both MAE and CRPS metrics. This pattern has two interpretations
-that are not mutually exclusive:
+The most striking within-scope finding is that both GNN families achieve lower out-of-sample MAE and CRPS with the identity (no-trade) graph than with any trade-graph construction — consistently across all horizons. This pattern is consistent with at least two distinct mechanistic hypotheses, **neither of which is directly tested in the present study**.
 
-**Architectural regularisation.** The GCN and temporal attention mechanisms
-provide implicit regularisation or representational capacity advantages relative
-to simpler neural baselines, independent of cross-country propagation. The
-attention mechanism, in particular, may be learning temporal smoothing that
-acts similarly to exponential smoothing without requiring graph information.
-Prior theoretical work supports this possibility: Kawamoto et al. (2018) show
-that GCN-style aggregation can achieve competitive performance independently of
-the actual graph topology, and this has been observed empirically in non-economic
-settings (Zugner et al., 2020).
+**Hypothesis 1 — Architectural regularisation.** Under this hypothesis, the GCN spatial aggregation operator and the Temporal Graph LSTM module provide implicit regularisation or representational capacity that improves single-country forecasts independently of cross-country propagation. When applied to the identity graph, the GNN reduces to a country-specific neural network; its forecast accuracy advantage would then reflect the temporal architecture alone. *This hypothesis is supported by analogy with theoretical results from Kawamoto et al. (2018), who show that GCN-style aggregation can achieve competitive performance independently of edge information under certain regularity conditions, and with empirical findings from Zügner et al. (2020). However, neither result directly implies the same mechanism operates in our macroeconomic setting.* Testing Hypothesis 1 rigorously would require architecturally equivalent models that differ only in the presence or absence of the spatial aggregation operator — a design not implemented here.
 
-**Noisy or irrelevant edges.** Quarterly bilateral export flows, as available
-from Eurostat Comext, may be too coarse and too slowly varying to carry
-high-frequency inflation-propagation signals. The trade graph is effectively
-the same graph in each quarter of a given year, while inflation dynamics change
-at weekly or monthly frequency; the quarterly edge weights may be too sparse in
-the time dimension to add useful information beyond what the feature vector
-already contains.
+**Hypothesis 2 — Temporally coarse and informationally redundant trade edges.** Under this hypothesis, quarterly bilateral export volumes carry insufficient high-frequency variation to add predictive signal beyond what own-country lagged variables already contain. The trade graph changes slowly within a year, while inflation dynamics relevant to $h = 1$ forecasts operate at monthly or weekly frequency. Furthermore, bilateral trade volumes measure trade *quantities*, not price *pass-through elasticities*. *This hypothesis generates a testable prediction: repeating the ablation with monthly bilateral trade data should reduce the performance gap between identity and trade-graph variants if temporal coarseness is the operative mechanism.* This prediction is not tested here and is listed as a priority in §6.6.
 
-Both mechanisms point toward the same practical conclusion for applied
-forecasters: the value of GNN architecture for macroeconomic panel forecasting
-should be established using identity-graph ablation before invoking network
-topology as an explanation for performance differences.
+Both hypotheses are consistent with the observed data. They are not mutually exclusive, and the present study cannot adjudicate between them. We report them as study-generated hypotheses to guide future work.
 
 ## 6.2 Why Do Trade Graphs Fail? (Economic Intuition)
 
-Beyond architectural explanations, economic intuition sheds light on why bilateral trade graphs fail to improve inflation forecasts at quarterly horizons. One explanation is that quarterly CPI aggregation smooths high-frequency trade shocks that occur at monthly or weekly frequencies. Furthermore, bilateral trade volumes do not directly measure price pass-through elasticity; a country may import heavily from a low-inflation partner, diluting the network effect. Finally, global supply chain disruptions (e.g., COVID-19) are likely captured better by temporal attention mechanisms than by static annual trade topology.
+Beyond architectural explanations, economic intuition suggests several hypotheses for why bilateral trade graphs fail to improve inflation forecasts at quarterly horizons in our panel. First, quarterly aggregation of CPI inflation smooths out higher-frequency shocks that might propagate more rapidly through supply chains. Second, bilateral trade volumes do not capture the elasticity of price pass-through, which is highly dependent on contract currencies, market structure, and input substitution possibilities (e.g., countries importing from a low-inflation partner may not experience significant spillovers). Third, global common factors (such as energy price shocks) may dominate local network-propagated shocks in determining headline inflation co-movement during major transition periods like the post-COVID regime. These economic interpretations are hypotheses for future research to evaluate rather than established mechanisms.
 
 ## 6.3 Horizon Dependence
 
@@ -541,36 +519,43 @@ can be substantially misleading.
 
 6. **Prediction interval calibration shortfall.** Across all models, the empirical coverage of the 80% prediction intervals is systematically low, ranging between 50% and 58%. This undercoverage is a consequence of the short initial training window (14 quarters) and the bootstrap-based uncertainty estimation which understates prediction variance during shock periods. Future work should incorporate conformal prediction methods to guarantee nominal coverage.
 
+## 6.6 Future Research Directions
+
+The hypotheses generated by this study point to five concrete research designs that could distinguish the proposed mechanisms:
+
+1. **Monthly frequency replication.** The most direct test of Hypothesis 2 is to repeat the identical ablation using monthly bilateral trade flows and monthly CPI data. Eurostat provides monthly Comext data with approximately a two-month publication lag. If quarterly aggregation is the binding constraint, the performance gap between `identity_no_trade` and trade-graph variants should narrow materially at monthly frequency.
+2. **Real-time data vintages.** The current study uses revised data releases. Replicating the benchmark with real-time vintages (ECB Real-Time Database; OECD MEI real-time releases) would (a) produce accuracy estimates that better reflect genuine forecaster information sets and (b) test whether the topology-versus-architecture ranking changes under data uncertainty.
+3. **Graph structure learning.** Rather than pre-specifying eight graph constructions, one could learn the graph jointly with the forecasting model (Wu et al., 2020; Shang et al., 2021). If a learned graph substantially outperforms both trade-based and identity constructions, it would suggest that the *form* of the trade graph — rather than its presence or absence — is the binding constraint, lending support to a refined version of Hypothesis 2.
+4. **Richer covariate sets.** Including output gaps, unit labour costs, and import price indices — with appropriate treatment of publication lags — would test whether the topology-versus-architecture conclusion is robust to a richer feature set or is specific to the minimal four-variable specification used here.
+5. **Architecture-specific hyperparameter tuning.** The present study uses identical hyperparameters across all neural models for controlled comparability. A study that tunes each architecture independently — with proper validation-set search and longer training — would test whether the GNN advantage strengthens under optimal configuration.
+
+## 6.7 Claim-to-Evidence Mapping
+
+The following table maps every major claim made in this study to the exact empirical evidence presented in the paper, alongside relevant boundary conditions and caveats.
+
+| Core Claim | Supporting Evidence in Paper | Boundary Conditions & Caveats |
+|---|---|---|
+| **1.** Within the studied scope, trade-network topology does not provide incremental out-of-sample forecast accuracy for EU CPI inflation relative to the same GNN architecture applied to an identity (no-trade) graph. | **Table 4** (ablation): `identity_no_trade` achieves the lowest MAE at all horizons for both GCN and Temporal Graph. Confirmed in both point (MAE, RMSE) and probabilistic (CRPS) accuracy. **Figure 1** (heatmap). | 20 EU economies; quarterly frequency; 4-variable covariate set; post-2011Q2; GCN and Temporal Graph architectures only. Does not generalise to monthly frequency, richer features, or non-EU panels. |
+| **2.** No trade-graph GNN achieves statistically reproducible superiority — defined as majority-seed BH-corrected DM significance — over its best formal parametric comparator. | **Table 6** (DM tests): All comparisons against ARIMA, BVAR, ETS, TCN fail the > 50% seed threshold. Ridge comparisons achieve 60–80% at h=1–2 only. | Persistence is *excluded* from formal DM testing (degenerate rule, not an estimated model). Claims apply to MAE loss; RMSE-based DM may differ. ETS is a borderline case: it is estimated but closely related to Persistence in this dataset. |
+| **3.** Temporal Graph achieves the lowest out-of-sample point MAE of any model at h=2 and h=4, using the identity (no-trade) graph, within this experimental setting. | **Table 3**: Temporal Graph (identity): MAE = 2.358 pp (h=2), 2.840 pp (h=4). Next best: ARIMA (2.433; 3.382 pp). **Figure 3** (horizon-MAE plot). | Statistical reproducibility is limited: majority-seed DM significance against ARIMA is not achieved at any horizon. Rankings reflect means over 20 seeds; per-seed rankings vary. |
+| **4.** GNN accuracy gains, when present, are associated with the temporal architecture rather than cross-country trade-network propagation, based on the identity-graph ablation. | **Table 4**: `identity_no_trade` dominates all 7 trade-graph variants at every horizon. **Figure 1** (heatmap): pattern consistent across GCN and Temporal Graph. | This is an *associational* finding, not a causal identification. Two alternative hypotheses are proposed (architectural regularisation; temporally coarse edges) but not tested within this study. |
+| **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting. | **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.751/2.433/3.382 pp). BVAR ranks 10th out of 12 overall. | Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010). Alternative priors or larger variable sets may yield different results. |
+
 ---
 
 # 7. Conclusion
 
-We conduct a large-scale, fully reproducible prospective benchmark of GNN
-inflation forecasting across 20 European economies at three horizons, comparing
-12 model families with 8 graph construction strategies and 20 random seeds.
+We conduct a large-scale, fully reproducible prospective evaluation of GNN-based inflation forecasting across 20 European economies at three horizons, comparing 12 model families under 8 trade-graph constructions and 20 random seeds. Every finding is conditional on the scope defined in Section 1 and the methodology described in Section 4.
+
 Our principal findings are:
 
-1. **Temporal Graph matches or outperforms ARIMA at medium-to-long horizons**
-   (h = 2, 4), with a 16% MAE improvement at h = 4 representing the most
-   substantive gain. GCN leads at h = 1 but by a narrow margin.
-2. **Trade-network topology does not explain GNN gains.** The identity
-   (no-trade) graph consistently outperforms all trade-based graphs across both
-   GNN families, all horizons, and both point and probabilistic metrics.
-3. **Architectural gains are statistically fragile.** No GNN achieves
-   majority-seed BH-corrected significance against ARIMA, Persistence, or TCN,
-   and significance proportions fall sharply with horizon and with comparator
-   quality.
+1. **Temporal Graph shows the largest absolute forecast accuracy gain at medium-to-long horizons.** Temporal Graph with the identity graph achieves MAE of 2.358 pp at $h = 2$ (ARIMA: 2.433 pp) and 2.840 pp at $h = 4$ (ARIMA: 3.382 pp), suggesting that temporal recurrence in the GNN architecture provides predictive value at longer horizons. GCN leads at $h = 1$ but by a narrow margin.
+2. **Temporal architecture, not trade topology, is the consistent predictor of within-GNN rankings.** The identity (no-trade) graph achieves lower out-of-sample MAE than every trade-based graph variant at every horizon for both GNN families, in both point (MAE, RMSE) and probabilistic (CRPS) accuracy.
+3. **Statistical reproducibility is limited, particularly against strong baselines.** Under BH-corrected DM testing across 20 seeds, no GNN achieves majority-seed significance against ARIMA, ETS, or TCN at any horizon. The most consistent GNN advantage is against Ridge regression. Significance rates decline sharply with horizon.
 
-These findings carry methodological implications for the growing literature on
-GNNs in macroeconomics: identity-graph ablation should be a standard requirement,
-multi-seed reporting should replace single-seed benchmarks, and claims of
-network-topology-driven improvements require explicit statistical disentanglement
-from architectural effects.
+These findings carry methodological implications: identity-graph ablation should be a standard requirement in GNN macroeconomic forecasting papers; multi-seed reporting should replace single-seed benchmarks; and claims of topology-driven forecast improvement require explicit statistical disentanglement from architectural effects.
 
-Future research should explore higher-frequency (monthly) bilateral trade data,
-longer historical panels, graph structure learning rather than pre-specified
-topology, and real-time data vintages to test whether any of these design choices
-changes the topology-versus-architecture conclusion.
+What this study does not establish is whether trade-network topology improves forecast accuracy at monthly frequency, with richer covariate sets, over longer historical samples, or for non-EU economies. We encourage future work to vary these design dimensions systematically.
 
 ---
 
