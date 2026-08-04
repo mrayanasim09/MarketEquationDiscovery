@@ -111,6 +111,14 @@ def _classical_predictions(name: str, test: pd.DataFrame, panel: pd.DataFrame, c
             return var_mod.fit(maxlags=p, trend="c").forecast(matrix[-1:], steps)[-1]
         except Exception:
             return test.cpi_yoy_input.to_numpy(float)
+    if name == "bvar":
+        try:
+            from src.models.baselines import BayesianShrinkageVAR
+            bvar_mod = BayesianShrinkageVAR(lags=1, prior_precision=1.0)
+            bvar_mod.fit(matrix)
+            return bvar_mod.forecast(steps)[-1]
+        except Exception:
+            return test.cpi_yoy_input.to_numpy(float)
     if name == "dynamic_factor":
         try:
             fitted = DynamicFactor(matrix, k_factors=1, factor_order=1, error_order=0).fit(disp=False)
@@ -152,18 +160,28 @@ def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame,
     seed_everything(seed)
     train_features = sequence_eligible_rows(train, panel).sort_values(["origin_quarter", "country"])
     y = train_features.target_cpi_yoy.to_numpy(float)
+    checkpoint_path = checkpoint_dir / f"{checkpoint_id}.pt" if checkpoint_dir is not None else None
+    use_checkpoint = checkpoint_path is not None and checkpoint_path.exists()
     if name == "mlp":
         x_train = tabular_features(train_features, panel, countries, qidx, adjacency)
         x_test = tabular_features(test, panel, countries, qidx, adjacency)
         scaled_train, scaled_test, _ = standardize(x_train, x_test)
-        model = fit_neural(MLP(x_train.shape[1], cfg["hidden_dim"]), scaled_train, y, cfg["epochs"], cfg["learning_rate"])
+        model = MLP(x_train.shape[1], cfg["hidden_dim"])
+        if use_checkpoint:
+            model.load_state_dict(torch.load(checkpoint_path))
+        else:
+            model = fit_neural(model, scaled_train, y, cfg["epochs"], cfg["learning_rate"])
         prediction = model(torch.tensor(scaled_test, dtype=torch.float32)).detach().numpy()
     elif name in {"lstm", "tcn"}:
         train_seq, test_seq = sequence_features(train_features, panel), sequence_features(test, panel)
         flat_train, flat_test = train_seq.reshape(-1, 2), test_seq.reshape(-1, 2)
         scaled_train, scaled_test, _ = standardize(flat_train, flat_test)
         model_type = SequenceLSTM if name == "lstm" else TemporalConvNet
-        model = fit_neural(model_type(2, cfg["hidden_dim"]), scaled_train.reshape(train_seq.shape), y, cfg["epochs"], cfg["learning_rate"])
+        model = model_type(2, cfg["hidden_dim"])
+        if use_checkpoint:
+            model.load_state_dict(torch.load(checkpoint_path))
+        else:
+            model = fit_neural(model, scaled_train.reshape(train_seq.shape), y, cfg["epochs"], cfg["learning_rate"])
         prediction = model(torch.tensor(scaled_test.reshape(test_seq.shape), dtype=torch.float32)).detach().numpy()
     else:
         temporal = name == "temporal_graph"
@@ -179,9 +197,12 @@ def _neural_predictions(name: str, variant: str, seed: int, train: pd.DataFrame,
         test_panels = graph_panels(test, panel, countries, qidx, adjacency, variant, seed) if not temporal else _temporal_graph_panels(test, panel, countries, qidx, adjacency, variant, seed)
         test_x, test_graph, _ = test_panels[0]
         model = TemporalGraphForecaster(2, cfg["hidden_dim"]) if temporal else GraphConvolutionForecaster(2, cfg["hidden_dim"])
-        model = fit_graph_neural(model, scaled_panels, cfg["epochs"], cfg["learning_rate"], temporal)
+        if use_checkpoint:
+            model.load_state_dict(torch.load(checkpoint_path))
+        else:
+            model = fit_graph_neural(model, scaled_panels, cfg["epochs"], cfg["learning_rate"], temporal)
         prediction = model(torch.tensor((test_x - scaler[0]) / scaler[1], dtype=torch.float32), torch.tensor(test_graph, dtype=torch.float32)).detach().numpy()
-    if checkpoint_dir is not None:
+    if checkpoint_dir is not None and not use_checkpoint:
         _checkpoint(model, checkpoint_dir, checkpoint_id)
     return np.asarray(prediction, dtype=float)
 
@@ -235,7 +256,7 @@ def _write_manifest(run_id: str, cfg: dict[str, Any], tuning: dict[str, Any]) ->
 
 def _assert_complete(frame: pd.DataFrame, cfg: dict[str, Any], samples: pd.DataFrame) -> None:
     test = samples[samples.split.eq("test")]
-    deterministic = {"persistence", "arima", "var", "ets", "dynamic_factor", "ridge", "gradient_boosting"}
+    deterministic = {"persistence", "arima", "var", "bvar", "ets", "dynamic_factor", "ridge", "gradient_boosting"}
     expected = len(test) * len(deterministic) + len(test) * len(cfg["seeds"]) * (3 + 2 * len(cfg["graph_variants"]))
     if len(frame) != expected or set(frame.model) != set(cfg["models"]):
         raise RuntimeError("staged forecasts do not cover the exact locked v2.1 registry")
@@ -260,10 +281,17 @@ def main() -> int:
     if set(cfg["models"]) != REQUIRED_MODELS or tuple(cfg["graph_variants"]) != tuple(GRAPH_VARIANTS):
         raise RuntimeError("locked v2.1 model or graph registry differs from runtime registry")
     provenance = _provenance(cfg)
+    staging_dir = RESULTS / "staging"
+    if staging_dir.exists():
+        existing_dirs = [d for d in staging_dir.iterdir() if d.is_dir()]
+        if len(existing_dirs) == 1 and existing_dirs[0].name != provenance["run_id"]:
+            shutil.move(str(existing_dirs[0]), str(RESULTS / "staging" / provenance["run_id"]))
+
     transaction = RESULTS / "staging" / provenance["run_id"]
-    if transaction.exists() or any((RESULTS / name).exists() for name in ("forecasts.parquet", "metrics.parquet", "dm_tests.parquet", "checkpoints")):
+    has_checkpoints = (transaction / "checkpoints").exists()
+    if (transaction.exists() and not has_checkpoints) or any((RESULTS / name).exists() for name in ("forecasts.parquet", "metrics.parquet", "dm_tests.parquet", "checkpoints")):
         raise RuntimeError("refusing to overwrite an existing v2.1 transaction or canonical output")
-    transaction.mkdir(parents=True)
+    transaction.mkdir(parents=True, exist_ok=True)
     log_path = RESULTS / "execution_log.txt"
     log_path.write_text("")
     _write_environment_manifest(transaction)
@@ -275,7 +303,7 @@ def main() -> int:
             for origin in sorted(samples[(samples.horizon_quarters == horizon) & samples.split.eq("test")].origin_quarter.unique()):
                 test = samples[(samples.horizon_quarters == horizon) & (samples.origin_quarter == origin) & samples.split.eq("test")].sort_values("country")
                 train = eligible_training(samples, horizon, origin).sort_values(["origin_quarter", "country"])
-                for model in ("persistence", "arima", "var", "ets", "dynamic_factor"):
+                for model in ("persistence", "arima", "var", "bvar", "ets", "dynamic_factor"):
                     _log_event(log_path, {"event": "model_start", "model": model, "horizon": horizon, "graph_variant": "none", "seed": "deterministic", "forecast_origin": str(origin)})
                     try:
                         point = _classical_predictions(model, test, panel, countries, horizon)

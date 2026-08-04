@@ -77,13 +77,12 @@ Our contributions are:
 
 ## 2.1 Classical Inflation Forecasting
 
-The Phillips curve and its variants remain the workhorse of inflation forecasting
-despite well-documented instability (Stock and Watson, 2007). Autoregressive
-models --- ARIMA and ETS --- are competitive short-run benchmarks (Faust and
-Wright, 2013). Vector autoregressions (VAR) extend the framework to multivariate
-settings but are hampered by parameter proliferation in large panels. Regularised
-regression methods, particularly ridge and LASSO, have gained traction as
-high-dimensional alternatives (Garcia-Martos et al., 2015).
+The Phillips curve and its variants remain the workhorse of inflation
+forecasting despite well-documented instability (Stock and Watson, 2007; Atkeson and Ohanian, 2001).
+Autoregressive models --- ARIMA and ETS --- are competitive short-run benchmarks
+(Faust and Wright, 2013). Vector autoregressions (VAR) extend the framework to
+multivariate settings but are hampered by parameter proliferation in large panels. Bayesian VARs (BVAR) with shrinkage priors provide a standard benchmark to mitigate parameter proliferation in large panels (Giannone et al., 2015; Ba\'nbura et al., 2010). Regularised regression methods, particularly ridge and LASSO, have gained
+traction as high-dimensional alternatives (Garcia-Martos et al., 2015).
 
 ## 2.2 Neural Networks for Macroeconomic Forecasting
 
@@ -187,7 +186,7 @@ Eight graph-construction variants are studied:
 | `directed_trade` | Raw export values, row-normalised |
 | `log_trade` | Log-transformed exports, row-normalised |
 | `import_dependence` | A(i,j) = imports of i from j / total imports of i |
-| `top_k_incoming` | Retain only top-3 import partners per country |
+| `top_k_incoming` | Retain only top-5 import partners per country |
 | `reversed` | Transpose of directed_trade (import perspective) |
 | `undirected` | Symmetrised: (A + A') / 2 |
 | `degree_preserving_random` | Random rewiring preserving degree sequence |
@@ -203,9 +202,9 @@ from the contribution of the GNN architecture itself.
 | Artefact | SHA256 (first 16 hex) |
 |----------|-----------------------|
 | Processed samples | `40af80c0...` |
-| `forecasts.parquet` (781,740 rows) | `f988dfb1...` |
-| `metrics.parquet` (9,288 rows) | `231b349f...` |
-| `dm_tests.parquet` (6,720 rows) | `a57490a0...` |
+| `forecasts.parquet` (783,760 rows) | `363e6994d44b575a...` |
+| `metrics.parquet` (9,312 rows) | `22bd6677c9a89d5d...` |
+| `dm_tests.parquet` (6,720 rows) | `d2d383a021dcb877...` |
 
 Full hashes are available in the public repository.
 
@@ -238,7 +237,7 @@ structural asymmetry is acknowledged explicitly in the limitations (Section 6.4)
 | Family | Model | Selected Hyperparameters |
 |--------|-------|--------------------------|
 | Baselines | Persistence | Last observed CPI YoY |
-| | ARIMA | Order (1,0,0) |
+| | ARIMA | Order ($p$,0,0) with AIC selection, $p \in \{1,2,3,4\}$ |
 | | VAR | Lag 1 |
 | | ETS | No trend, no seasonal |
 | | Dynamic Factor | 1 factor, error order 0 |
@@ -324,6 +323,7 @@ results are informative, they are reported alongside the point-forecast rankings
 | **Temporal Graph** | **identity_no_trade** | 1.999 | **2.358** | **2.840** | 3.604 | 4.141 | 4.831 |
 | LSTM | --- | 2.183 | 2.485 | 2.968 | 3.768 | 4.284 | 4.952 |
 | Ridge | --- | 2.420 | 3.381 | 4.502 | 3.152 | 4.982 | 6.781 |
+| BVAR | --- | 2.341 | 3.857 | 6.312 | 3.534 | 5.947 | 10.213 |
 | VAR | --- | 3.047 | 5.174 | 8.973 | 4.524 | 7.923 | 14.089 |
 
 *Notes: Values are mean absolute error / root mean squared error in percentage points.
@@ -334,8 +334,8 @@ point forecasts; CRPS (probabilistic) values are reported in Table 4.*
 Key observations:
 
 - At **h = 1**, GCN with `identity_no_trade` achieves the lowest MAE (1.707 pp),
-  narrowly ahead of ARIMA (1.751 pp). However, GCN's RMSE is notably higher
-  than ARIMA's (2.750 vs 2.884 is close), suggesting comparable absolute accuracy
+  narrowly ahead of ARIMA (1.751 pp). However, GCN's RMSE is marginally lower
+  than ARIMA's (2.750 vs 2.884), suggesting comparable absolute accuracy
   with some large-error episodes.
 - At **h = 2**, Temporal Graph with `identity_no_trade` ranks first (MAE = 2.358 pp),
   7% better than ARIMA (2.433 pp) and well ahead of all other models.
@@ -345,6 +345,11 @@ Key observations:
 - **Critically**, the best-performing GNN at every horizon uses the *identity
   (no-trade)* graph, indicating trade-network topology is not responsible for
   observed outperformance.
+- **BVAR** with Minnesota-prior shrinkage (MAE = 2.341/3.857/6.312 pp at h = 1/2/4)
+  underperforms relative to simpler ARIMA, ETS, and persistence baselines, consistent
+  with the well-documented difficulty of imposing informative priors on a volatile,
+  post-COVID inflation regime.
+
 
 ## 5.2 Ablation: Graph Topology versus Architecture
 
@@ -425,6 +430,26 @@ structural architectural advantage.
 
 No graph model achieves majority-seed significance against ARIMA, Persistence,
 or TCN at any horizon.
+
+## 5.5 Diagnostic Figures
+
+![Figure 1: Graph Variant MAE Heatmap.](../experiments/results/v2_1/manuscript/graph_variant_heatmap.png)
+*Figure 1: Graph Variant MAE Heatmap. Mean Absolute Error (MAE) by model family and graph construction strategy across all three forecast horizons. Darker shading indicates lower (better) MAE. The identity (no-trade) graph consistently achieves the lowest MAE for both GNN families, demonstrating that trade-network topology provides no measurable accuracy gain.*
+
+![Figure 2: Forecast comparison (France, Seed 42, H=1).](../experiments/results/v2_1/manuscript/forecast_comparison.png)
+*Figure 2: Forecast comparison (France, Seed 42, H=1). Comparison of Temporal Graph (directed_trade variant) and ARIMA forecasts against actual CPI YoY inflation. The plot illustrates where the neural model deviates from classical baselines during inflation transition periods.*
+
+![Figure 3: Performance by Forecast Horizon.](../experiments/results/v2_1/manuscript/performance_by_horizon.png)
+*Figure 3: Performance by Forecast Horizon. MAE and RMSE as a function of forecast horizon ($h = 1, 2, 4$ quarters) for all 12 model families. Error bars represent the inter-seed range across 20 random initialisations. The Temporal Graph model shows the largest improvement relative to ARIMA at $h = 4$, while GCN leads at $h = 1$.*
+
+![Figure 4: Forecast Error Distribution.](../experiments/results/v2_1/manuscript/error_distribution.png)
+*Figure 4: Forecast Error Distribution. Box plots showing the distribution of forecast errors across all countries, quarters, and seeds for $h=1$. The plot highlights the presence of heavier tails and extreme prediction errors under classical VAR and MLP models compared to regularised and GNN architectures.*
+
+![Figure 5: Calibration Reliability Diagram.](../experiments/results/v2_1/manuscript/calibration_reliability.png)
+*Figure 5: Calibration Reliability Diagram. Nominal vs. empirical coverage for nominal confidence levels of 80% and 95%. Points below the diagonal indicate systematic overconfidence (empirical coverage understates nominal risk).*
+
+![Figure 6: Prediction Interval Coverage.](../experiments/results/v2_1/manuscript/prediction_interval_coverage.png)
+*Figure 6: Prediction Interval Coverage. Empirical coverage fraction of 80% (lower bar) and 95% (upper bar) prediction intervals by model. The dashed lines represent nominal targets (0.80 and 0.95). Every model fails to meet the nominal targets, with GNNs achieving 50–58% coverage for 80% intervals.*
 
 ---
 
@@ -516,6 +541,8 @@ can be substantially misleading.
    does it imply that monitoring trade-network topology would improve central
    bank forecasting decisions without further validation.
 
+6. **Prediction interval calibration shortfall.** Across all models, the empirical coverage of the 80% prediction intervals is systematically low, ranging between 50% and 58%. This undercoverage is a consequence of the short initial training window (14 quarters) and the bootstrap-based uncertainty estimation which understates prediction variance during shock periods. Future work should incorporate conformal prediction methods to guarantee nominal coverage.
+
 ---
 
 # 7. Conclusion
@@ -595,6 +622,12 @@ Indicators; CPI data from Eurostat HICP.
 
 # References
 
+Atkeson, A., and Ohanian, L. E. (2001). Are Phillips curves useful for forecasting
+inflation? *Federal Reserve Bank of Minneapolis Quarterly Review*, 25(1), 2--11.
+
+Bánbura, M., Giannone, D., and Reichlin, L. (2010). Large Bayesian vector
+auto regressions. *Journal of Applied Econometrics*, 25(1), 71--92.
+
 Bayoumi, T., Bui, T., and Berkmen, P. (2023). Trade network exposure and inflation
 dynamics. IMF Working Paper WP/23/117.
 
@@ -606,6 +639,16 @@ forecasting. *Energy Economics*, 118, 106482.
 
 Cheng, D., and Zhu, J. (2022). Financial contagion detection via spatio-temporal
 graph networks. *Journal of Financial Stability*, 63, 101073.
+
+Clark, T. E., and McCracken, M. W. (2001). Tests of equal forecast accuracy and
+encompassing for nested models. *Journal of Econometrics*, 105(1), 85--110.
+
+Clark, T. E., and West, K. D. (2007). Approximately normal tests for equal
+predictive accuracy in nested models. *Journal of Econometrics*, 138(1), 291--311.
+
+Coulombe, P. G., Leroux, M., Stevanovic, D., and Surprenant, S. (2020). How is
+machine learning useful for macroeconomic forecasting? *Journal of Applied
+Econometrics*, 37(5), 920--964.
 
 Diebold, F. X., and Mariano, R. S. (1995). Comparing predictive accuracy.
 *Journal of Business and Economic Statistics*, 13(3), 253--263.
@@ -620,6 +663,9 @@ flight, and retrenchment. *Journal of International Economics*, 88(2), 235--251.
 Garcia-Martos, C., Rodriguez, J., and Sanchez, M. J. (2015). Forecasting
 electricity prices and their volatility using Unobserved Components. *Energy
 Economics*, 43, 218--228.
+
+Giannone, D., Lenza, M., and Primiceri, G. E. (2015). Prior selection for vector
+autoregressions. *Review of Economics and Statistics*, 97(2), 436--451.
 
 Harvey, D., Leybourne, S., and Newbold, P. (1997). Testing the equality of
 prediction mean squared errors. *International Journal of Forecasting*, 13(2),

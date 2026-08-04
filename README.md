@@ -139,7 +139,7 @@ python -m src.models.generate_v2_1_report
 | Property | Value |
 |---|---|
 | Target variable | Quarterly CPI inflation, YoY (%) |
-| Countries | 20 European economies (AUT, BEL, BGR, CYP, CZE, DEU, ESP, EST, FIN, FRA, GBR, GRC, HUN, IRL, ITA, LTU, LVA, NLD, POL, PRT) |
+| Countries | 20 European economies (AUT, BEL, BGR, CYP, CZE, DEU, DNK, EST, FIN, FRA, GRC, HRV, HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD) |
 | Training window | 2011Q2 – 2014Q4 |
 | Validation window | 2015Q1 – 2016Q4 |
 | Prospective test | 2017Q1 – 2025Q3 (expanding-window, no look-ahead) |

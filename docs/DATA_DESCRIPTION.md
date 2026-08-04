@@ -5,7 +5,7 @@ This study utilizes a balanced panel dataset of 20 European countries, spanning 
 
 ## Country Panel
 The 20 countries included (ISO-3 codes):
-AUT, BEL, BGR, CYP, CZE, DEU, ESP, EST, FIN, FRA, GBR, GRC, HUN, IRL, ITA, LTU, LVA, NLD, POL, PRT.
+AUT, BEL, BGR, CYP, CZE, DEU, DNK, EST, FIN, FRA, GRC, HRV, HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD.
 
 ## Primary Data Sources
 
@@ -24,8 +24,8 @@ Two distinct feature sets are evaluated:
 
 ## Processing Pipeline
 1. **Temporal Alignment**: All monthly series are aggregated to quarterly frequencies using end-of-period values for stock variables and averages for flow variables.
-2. **Differencing**: CPI is transformed into Quarter-over-Quarter (QoQ) percentage changes to achieve stationarity.
-3. **Imputation**: Missing bilateral trade flows (rare within the EU panel) are interpolated using linear splines.
+2. **Differencing**: CPI is transformed into Year-over-Year (YoY) percentage changes to achieve stationarity.
+3. **Imputation**: Missing bilateral trade flows (rare within the EU panel) remain zero and are not imputed with linear splines.
 4. **Normalization**: Features are cross-sectionally standardized (Z-score) using only data available up to the current training window ($t-1$) to prevent data leakage.
 
 ## Cryptographic Hashes

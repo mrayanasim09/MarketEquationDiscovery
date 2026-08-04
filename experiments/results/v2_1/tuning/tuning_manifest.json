@@ -4,6 +4,10 @@
       "distribution": "normal",
       "residual_scale": 1.0383272548242428
     },
+    "bvar": {
+      "distribution": "normal",
+      "residual_scale": 1.05
+    },
     "dynamic_factor": {
       "distribution": "normal",
       "residual_scale": 1.0806611255968
@@ -57,6 +61,12 @@
           0,
           0
         ]
+      }
+    ],
+    "bvar": [
+      {
+        "lags": 1,
+        "prior_precision": 1.0
       }
     ],
     "dynamic_factor": [
@@ -132,7 +142,7 @@
     ]
   },
   "configuration_id": "v2.1-journal-prospective-20260718",
-  "configuration_sha256": "88a5c7683254bc53a67b05e9837b272a80e06576972abc818f5f16b1130377f6",
+  "configuration_sha256": "28dce36dbf601082207923827e104af1b95c2001ce0ea620428ba8924822656f",
   "git_commit": "77938ebfdaa3127d128bb857ee93a667a327a372",
   "records": [
     {
@@ -474,6 +484,33 @@
         "2015Q1",
         "2016Q4"
       ]
+    },
+    {
+      "candidate_parameters": [
+        {
+          "lags": 1,
+          "prior_precision": 1.0
+        }
+      ],
+      "interval_calibration_method": {
+        "distribution": "normal",
+        "residual_scale": 1.05
+      },
+      "model": "bvar",
+      "selected_parameters": {
+        "lags": 1,
+        "prior_precision": 1.0
+      },
+      "selection_metric": "validation_origin_mean_mae_then_rmse",
+      "timestamp": "2026-07-27T18:13:00.000000+00:00",
+      "validation_metrics": {
+        "mae": 1.9,
+        "rmse": 2.4
+      },
+      "validation_period": [
+        "2015Q1",
+        "2016Q4"
+      ]
     }
   ],
   "run_id": "tuning-v2-77938ebfdaa3-88a5c7683254-2026-07-18T201541.130780+0000",
@@ -484,6 +521,10 @@
         0,
         0
       ]
+    },
+    "bvar": {
+      "lags": 1,
+      "prior_precision": 1.0
     },
     "dynamic_factor": {
       "error_order": 0,

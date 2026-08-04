@@ -70,13 +70,18 @@ def main() -> int:
         errors.append(f"Horizon mismatch in forecasts: expected {expected_horizons}, got {actual_horizons}")
 
     # Row count check
-    # 7 deterministic models: 1 seed ("deterministic"), 1 graph variant ("none")
-    # 3 non-graph neural models: 20 seeds, 1 graph variant ("none")
-    # 2 graph neural models: 20 seeds, 8 graph variants
-    # expected rows = len(test_samples) * 7 + len(test_samples) * 3 * 20 + len(test_samples) * 2 * 20 * 8
-    # 101 combinations * 20 countries = 2020 sample rows in test_samples
-    expected_rows = len(test_samples) * 7 + len(test_samples) * 3 * len(expected_seeds) + len(test_samples) * 2 * len(expected_seeds) * len(expected_variants)
-    # expected_rows = 2020 * 7 + 2020 * 60 + 2020 * 320 = 14140 + 121200 + 646400 = 781,740
+    # Deterministic models: 1 seed ("deterministic"), 1 graph variant ("none")
+    # Non-graph neural models (mlp, lstm, tcn): 20 seeds, 1 graph variant ("none")
+    # Graph neural models (gcn, temporal_graph): 20 seeds, 8 graph variants
+    graph_neural = {"gcn", "temporal_graph"}
+    non_graph_neural = {"mlp", "lstm", "tcn"}
+    deterministic_models = set(cfg["models"]) - graph_neural - non_graph_neural
+    n_det = len(deterministic_models)
+    expected_rows = (
+        len(test_samples) * n_det
+        + len(test_samples) * len(non_graph_neural) * len(expected_seeds)
+        + len(test_samples) * len(graph_neural) * len(expected_seeds) * len(expected_variants)
+    )
     if len(forecasts) != expected_rows:
         errors.append(f"Forecast row count mismatch: expected {expected_rows}, got {len(forecasts)}")
 

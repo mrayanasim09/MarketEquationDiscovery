@@ -1,6 +1,6 @@
 # Research Protocol v2.1: Journal-Ready Trade-Network Inflation Forecasting
 
-**Status:** Prospective protocol amendment; no v2.1 forecast has been generated.  
+**Status:** v2.1 forecasts fully generated and SHA256-validated; results archived under `experiments/results/v2_1/`.  
 **Supersedes for submission:** v2.0 experiment contract only.  
 **Preserves:** v2 raw/processed artifacts, configuration, failed manifests, checkpoints, and all prior commits.
 
