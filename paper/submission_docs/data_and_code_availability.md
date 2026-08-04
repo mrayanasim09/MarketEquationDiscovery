@@ -22,7 +22,7 @@ No proprietary or restricted data sources were used.
 Full source code and all experiment outputs (forecasts, metrics, DM test results)
 are available at:
 
-**GitHub:** https://github.com/mrayanasim09/MarketEquationDiscovery
+**GitHub:** [Anonymized for blind review]
 
 All results are reproducible end-to-end using the provided `reproduce.sh` script.
 SHA256 hashes of all outputs are pre-registered in `experiments/results/v2_1/contract/`
