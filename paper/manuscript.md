@@ -1,3 +1,28 @@
+---
+title: "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Spatio-Temporal Graph Neural Networks for Quarterly CPI Inflation Forecasting"
+author:
+  - name: Rayyan Asim
+    affiliation: Independent Researcher
+    email: mrayanasim09@gmail.com
+    orcid: 0000-0003-2461-5638
+date: "2026-07-24"
+abstract: |
+  This study presents a controlled, prospective ablation benchmark evaluating whether bilateral trade-network topology provides incremental out-of-sample forecast accuracy for quarterly CPI inflation (year-over-year) across 20 European Union economies over the period 2017Q1–2025Q3. The scope is intentionally bounded: a quarterly panel frequency, a restricted covariate set of four variables with low revision intensity, and a post-2011 sample reflecting modern Eurostat data standards. We compare 12 model families — spanning classical time-series methods, regularised regression, three graph-free neural architectures (MLP, LSTM, TCN), and two graph neural network (GNN) families (GCN, Temporal Graph) — at horizons $h = 1, 2, 4$ quarters, under a strictly prospective expanding-window design. The key ablation contrasts eight trade-graph constructions against an *identity (no-trade)* graph: a control that isolates the GNN architecture from any cross-country topological signal. Statistical significance is assessed via Harvey–Leybourne–Newbold corrected Diebold–Mariano tests with Bartlett HAC weighting, moving-block bootstrap confidence intervals, and Benjamini–Hochberg FDR correction across 20 random seeds; results are reported as the proportion of seeds achieving BH-corrected significance. Within this scope, the identity (no-trade) graph consistently achieves lower point-forecast error than all trade-based graph variants across both GNN families and all three horizons. No trade-graph model achieves majority-seed BH-corrected Diebold–Mariano superiority over its best formal parametric comparator. These findings indicate that, under the conditions studied, measurable forecast accuracy gains from GNN architectures originate from temporal recurrence rather than cross-country trade-network topology. Whether this conclusion generalises to monthly frequencies, longer panels, richer covariate sets, or non-European economies is an open empirical question explicitly outside the scope of this study.
+keywords:
+  - inflation forecasting
+  - graph neural networks
+  - trade networks
+  - negative benchmark
+  - ablation study
+  - Diebold-Mariano test
+  - expanding window evaluation
+  - macroeconomic panel forecasting
+jel: "C32, C33, C53, E31, E37, F14"
+journal: "International Journal of Forecasting"
+doi: "10.2139/ssrn.7009041"
+repository: "https://github.com/mrayanasim09/MarketEquationDiscovery"
+---
+
 **JEL Codes:** C32, C33, C53, E31, E37, F14
 
 **Keywords:** inflation forecasting; graph neural networks; trade
