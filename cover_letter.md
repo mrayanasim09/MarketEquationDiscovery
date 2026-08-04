@@ -1,4 +1,4 @@
-# Cover Letter — Revised Submission
+# Cover Letter
 
 **Journal:** International Journal of Forecasting  
 **Manuscript Title:** Temporal Architecture or Trade Topology? A Prospective Ablation Study of Spatio-Temporal Graph Neural Networks for Quarterly CPI Inflation Forecasting  
