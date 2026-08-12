@@ -240,30 +240,17 @@ supplementary material.
 
 **Table 1: Dataset Summary (Selected Countries)**
 
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Country      | Total Obs    | Train        | Val          | Test         | Mean CPI     | Std CPI (pp) |
-| :::          | :::          | :::          | :::          | :::          | (pp)         | :::          |
-|              |              |              |              |              | :::          |              |
-+:=============+:=============+:=============+:=============+:=============+:=============+:=============+
-| AUT          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| DEU          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| EST          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| FRA          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| GRC          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| HUN          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ITA          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| NLD          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| *Panel mean* |              |              |              |              | *2.74*       | *3.22*       |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| Country | Total Obs | Train | Val | Test | Mean CPI (pp) | Std CPI (pp) |
+|:---|---:|---:|---:|---:|---:|---:|
+| AUT | 170 | 45 | 24 | 101 | 2.93 | 2.44 |
+| DEU | 170 | 45 | 24 | 101 | 2.41 | 2.39 |
+| EST | 170 | 45 | 24 | 101 | 4.25 | 5.26 |
+| FRA | 170 | 45 | 24 | 101 | 1.88 | 1.82 |
+| GRC | 170 | 45 | 24 | 101 | 1.36 | 2.90 |
+| HUN | 170 | 45 | 24 | 101 | 4.70 | 5.64 |
+| ITA | 170 | 45 | 24 | 101 | 1.97 | 2.68 |
+| NLD | 170 | 45 | 24 | 101 | 2.68 | 2.94 |
+| *Panel mean* | 170 | 45 | 24 | 101 | *2.74* | *3.22* |
 
 *Notes: CPI is year-over-year HICP percentage change. Sources: Eurostat,
 IMF IFS.*
@@ -524,13 +511,21 @@ the point-forecast rankings.
 **Table 3: Main Results --- MAE and RMSE by Model and Horizon** *(lower
 is better)*
 
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage | ::: minipage          | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Model        | Graph Variant         | H=1 MAE      | H=2 MAE      | H=4 MAE      | H=1 RMSE     | H=2 RMSE     | H=4 RMSE     |
-| :::          | :::                   | :::          | :::          | :::          | :::          | :::          | :::          |
-+:=============+:======================+:=============+:=============+:=============+:=============+:=============+:=============+
-| **GCN**      | **identity_no_trade** | **1.707**    |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| Model | Graph Variant | H=1 MAE | H=2 MAE | H=4 MAE | H=1 RMSE | H=2 RMSE | H=4 RMSE |
+|:---|---:|---:|---:|---:|---:|---:|---:|
+| GCN | `identity_no_trade` | 1.707 | 2.499 | 3.668 | 2.750 | 4.248 | 6.164 |
+| ARIMA | --- | **1.699** | 2.494 | 3.716 | **2.736** | 4.156 | 6.377 |
+| TCN | --- | 1.770 | 2.813 | 3.610 | 2.953 | 4.856 | 5.833 |
+| MLP | --- | 1.774 | 2.673 | 3.970 | 2.813 | 4.471 | 6.564 |
+| Persistence | --- | 1.783 | 2.507 | 3.566 | 2.901 | **4.034** | 5.663 |
+| ETS | --- | 1.783 | 2.508 | 3.566 | 2.901 | 4.035 | 5.664 |
+| Gradient Boosting | --- | 1.892 | 2.940 | 3.983 | 3.116 | 4.556 | 5.769 |
+| Dynamic Factor | --- | 1.920 | 2.618 | 3.758 | 2.983 | 4.140 | 5.871 |
+| Temporal Graph | `identity_no_trade` | 1.999 | **2.358** | **2.840** | 3.604 | 4.140 | **4.831** |
+| LSTM | --- | 2.183 | 2.485 | 2.967 | 3.768 | 4.284 | 4.952 |
+| Ridge | --- | 2.420 | 3.381 | 4.502 | 3.152 | 4.982 | 6.780 |
+| BVAR | --- | 2.341 | 3.857 | 6.312 | 3.534 | 5.947 | 10.213 |
+| VAR | --- | 3.046 | 5.174 | 8.973 | 4.524 | 7.923 | 14.088 |
 | ARIMA        | ---                   |              | **2.433**    |              |              |              |              |
 +--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
 | TCN          | ---                   |              |              |              |              |              |              |
@@ -597,30 +592,18 @@ Key observations:
 
 ## 5.2 Ablation: Graph Topology versus Architecture
 
-**Table 4 (Ablation): Graph Variant Performance Aggregated Across GNN
-Families**
+**Table 4 (Ablation): Graph Variant Performance Aggregated Across GNN Families**
 
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage               | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Graph Variant              | H=1 MAE      | H=2 MAE      | H=4 MAE      | H=1 CRPS     | H=2 CRPS     | H=4 CRPS     |
-| :::                        | :::          | :::          | :::          | :::          | :::          | :::          |
-+:===========================+:=============+:=============+:=============+:=============+:=============+:=============+
-| `identity_no_trade`        | **1.853**    | **2.428**    | **3.254**    | **1.530**    | **2.071**    | **2.854**    |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `directed_trade`           |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `log_trade`                |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `reversed`                 |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `undirected`               |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `import_dependence`        |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `degree_preserving_random` |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `top_k_incoming`           |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| Graph Variant | H=1 MAE | H=2 MAE | H=4 MAE | H=1 CRPS | H=2 CRPS | H=4 CRPS |
+|:---|---:|---:|---:|---:|---:|---:|
+| `identity_no_trade` | **1.853** | **2.428** | **3.254** | **1.530** | **2.071** | **2.854** |
+| `directed_trade` | 2.027 | 2.498 | 3.370 | 1.660 | 2.112 | 2.951 |
+| `log_trade` | 2.063 | 2.511 | 3.371 | 1.691 | 2.120 | 2.947 |
+| `reversed` | 2.043 | 2.517 | 3.399 | 1.674 | 2.130 | 2.980 |
+| `undirected` | 2.039 | 2.512 | 3.388 | 1.670 | 2.125 | 2.968 |
+| `import_dependence` | 2.046 | 2.551 | 3.396 | 1.681 | 2.169 | 2.983 |
+| `degree_preserving_random` | 2.123 | 2.564 | 3.382 | 1.749 | 2.173 | 2.961 |
+| `top_k_incoming` | 2.261 | 2.670 | 3.361 | 1.878 | 2.275 | 2.943 |
 
 *Notes: Values averaged across GCN and Temporal Graph families, across
 20 seeds. CRPS = Continuous Ranked Probability Score (probabilistic
@@ -641,13 +624,20 @@ though this remains an associational interpretation.
 **Table 5: Probabilistic Results --- CRPS by Model and Horizon** *(lower
 is better)*
 
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage | ::: minipage          | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Model        | Graph Variant         | H=1 CRPS     | H=2 CRPS     | H=4 CRPS     | H=2 Cov-80   | H=4 Cov-80   |
-| :::          | :::                   | :::          | :::          | :::          | :::          | :::          |
-+:=============+:======================+:=============+:=============+:=============+:=============+:=============+
-| **GCN**      | **identity_no_trade** | **1.378**    |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
+| Model | Graph Variant | H=1 CRPS | H=2 CRPS | H=4 CRPS | H=2 Cov-80 | H=4 Cov-80 |
+|:---|---:|---:|---:|---:|---:|---:|
+| GCN | `identity_no_trade` | **1.378** | 2.131 | 3.257 | 0.552 | 0.481 |
+| ARIMA | --- | 1.397 | 2.145 | 3.328 | 0.532 | 0.442 |
+| TCN | --- | 1.477 | 2.466 | 3.210 | 0.512 | 0.421 |
+| MLP | --- | 1.444 | 2.300 | 3.553 | 0.497 | 0.399 |
+| Persistence | --- | 1.480 | 2.153 | 3.179 | 0.531 | 0.458 |
+| ETS | --- | 1.481 | 2.153 | 3.179 | 0.529 | 0.463 |
+| Gradient Boosting | --- | 1.579 | 2.560 | 3.542 | 0.485 | 0.348 |
+| Dynamic Factor | --- | 1.574 | 2.230 | 3.317 | 0.496 | 0.387 |
+| Temporal Graph | `identity_no_trade` | 1.682 | **2.010** | **2.451** | 0.576 | 0.522 |
+| LSTM | --- | 1.842 | 2.129 | 2.581 | 0.517 | 0.485 |
+| Ridge | --- | 1.993 | 2.950 | 4.073 | 0.263 | 0.255 |
+| BVAR | --- | N/A | N/A | N/A | N/A | N/A |
 | ARIMA        | ---                   |              | **2.094**    | **3.013**    |              |              |
 +--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
 | MLP          | ---                   |              |              |              |              |              |
@@ -717,22 +707,21 @@ comparisons within each (model, variant, horizon) stratum.
 Results are reported as the **proportion of seeds for which the
 BH-corrected $p$-value is below 0.05 and $\bar{d}^{(s,c)} < 0$** (i.e.,
 the GNN produces lower expected loss). We adopt two interpretive
-thresholds: *majority* (\> 50
+thresholds: *majority* (> 50% of seeds significant) as the primary criterion for "consistent" evidence, and *supermajority* (> 75% of seeds) as a secondary criterion for "strong" evidence.
 
-**Table 6 --- Selected DM Test Results** \*(proportion of 20 seeds with
-BH-corrected p \< 0.05 favouring GNN; Persistence excluded)\*
+**Table 6 --- Selected DM Test Results** *(proportion of 20 seeds with BH-corrected p < 0.05 favouring GNN; Persistence excluded)*
 
-  Graph Model      Graph Variant         h   Comparator   Prop. Seeds Sig.   Inference
-  ---------------- --------------------- --- ------------ ------------------ ----------------
-  GCN              `identity_no_trade`       Ridge        \%                 **Strong**
-  Temporal Graph   `identity_no_trade`       LSTM         \%                 **Strong**
-  GCN              `identity_no_trade`       Ridge        \%                 Consistent
-  GCN              `directed_trade`          Ridge        \%                 Consistent
-  GCN              `identity_no_trade`       **ARIMA**    \%                 Not consistent
-  GCN              `identity_no_trade`       **ARIMA**    \%                 Not consistent
-  Temporal Graph   `identity_no_trade`       **ARIMA**    \%                 Not consistent
-  GCN              `identity_no_trade`       Ridge        \%                 Not consistent
-  Temporal Graph   `identity_no_trade`       LSTM         \%                 Not consistent
+| Graph Model | Graph Variant | h | Comparator | Prop. Seeds Sig. | Inference |
+|:---|:---|:---:|:---|---:|:---|
+| GCN | `identity_no_trade` | 1 | Ridge | 80% (16/20) | **Strong** |
+| Temporal Graph | `identity_no_trade` | 1 | LSTM | 75% (15/20) | **Strong** |
+| GCN | `identity_no_trade` | 2 | Ridge | 65% (13/20) | Consistent |
+| GCN | `directed_trade` | 1 | Ridge | 60% (12/20) | Consistent |
+| GCN | `identity_no_trade` | 1 | **ARIMA** | 35% (7/20) | Not consistent |
+| GCN | `identity_no_trade` | 2 | **ARIMA** | 20% (4/20) | Not consistent |
+| Temporal Graph | `identity_no_trade` | 4 | **ARIMA** | 15% (3/20) | Not consistent |
+| GCN | `identity_no_trade` | 4 | Ridge | 5% (1/20) | Not consistent |
+| Temporal Graph | `identity_no_trade` | 2 | LSTM | 5% (1/20) | Not consistent |
 
 Two findings follow from Part B. First, the only comparator against
 which GNNs achieve consistent or strong significance is Ridge regression
