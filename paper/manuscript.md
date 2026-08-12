@@ -1,10 +1,13 @@
 ---
-title: "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Graph Neural Networks for Inflation Forecasting"
+title: "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Spatio-Temporal Graph Neural Networks for EU Inflation Forecasting"
 author:
-  - name: Anonymized Author(s)
+  - name: Rayyan Asim
+    affiliation: Independent Researcher
+    email: mrayanasim09@gmail.com
+    orcid: 0000-0003-2461-5638
 date: "2026-07-24"
 abstract: |
-  We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1–2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 12 model families under a prospective expanding-window design, testing eight trade-graph constructions against an *identity (no-trade)* graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines (such as ARIMA or BVAR). These findings indicate that GNN forecast gains originate from temporal recurrence rather than network topology. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
+  We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1–2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 13 model families under a prospective expanding-window design, testing eight trade-graph constructions against an *identity (no-trade)* graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design — though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
 keywords:
   - inflation forecasting
   - graph neural networks
@@ -82,7 +85,7 @@ Findings under materially different design choices may differ.
 Our contributions are:
 
 - A fully reproducible, prospective expanding-window benchmark covering
-  12 model families, 8 graph variants, 3 horizons, and 20 seeds ---
+  13 model families, 8 graph variants, 3 horizons, and 20 seeds ---
   totalling 39,188 model evaluations and 783,760 forecast rows.
 
 - The first systematic ablation of GNN trade-graph topology against an
@@ -100,8 +103,9 @@ Our contributions are:
   moving-block bootstrap confidence intervals, and Benjamini--Hochberg
   FDR correction.
 
-- Publicly available code, data, and SHA256-verified frozen results
-  (Makridakis et al., 2022).
+- Publicly available code, data, and SHA256-verified frozen results,
+  following reproducibility standards recommended in the forecasting
+  literature (Makridakis et al., 2018).
 
 ::: center
 
@@ -150,10 +154,10 @@ architecture is rarely disentangled.
 A recurring concern in the graph learning literature is that null or
 random graphs can match or even exceed structurally meaningful graphs
 when the GNN architecture itself provides implicit regularisation or
-pattern-matching capacity. Kawamoto et al. (2018) show that GCN-style
+pattern-matching capacity. Kawamoto et al. (2018) show that GCN-style
 architectures can learn classification rules that are largely
-independent of edge information under certain conditions. Zugner et
-al. (2020) demonstrate that graph structure can be adversarially
+independent of edge information under certain conditions. Zügner et
+al. (2020) demonstrate that graph structure can be adversarially
 irrelevant to GNN performance. These theoretical findings motivate our
 identity-graph ablation as a rigorous control for architectural versus
 topological effects.
@@ -164,13 +168,25 @@ Bilateral trade linkages are well-established channels for inflation
 transmission. Calvo and Reinhart (2002) and subsequent literature
 document cross-country co-movement in inflation that correlates with
 trade intensity. Forbes and Warnock (2012) and Miranda-Agrippino and Rey
-(2021) emphasise global common factors. Bayoumi et al. (2023) show that
+(2021) emphasise global common factors. Bayoumi et al. (2023) show that
 supply-chain positions --- measurable from bilateral trade data ---
 predict CPI deviations at the country level. Our study provides the
 first systematic GNN-based test of whether these linkages improve
 *out-of-sample forecasting accuracy* at quarterly horizons.
 
-## 2.5 Theoretical Motivation: Why Trade Networks Should Predict Inflation
+## 2.5 Adjacent Cross-Country Forecasting Traditions
+
+GNN-based approaches to cross-country forecasting sit within a broader tradition of models designed to capture international spillovers. Three families are directly relevant to the present study.
+
+**Global VAR (GVAR).** Pesaran, Schuermann, and Weiner (2004) introduce a multinational VAR in which each country model is linked to a trade-weighted foreign aggregate, directly encoding bilateral trade-intensity as a structural prior. GVAR is the natural classical predecessor to GNN-based bilateral-trade forecasting: it operationalises the same economic intuition — that inflation co-movement tracks trade intensity — in a linear, statistically tractable framework.
+
+**Panel VAR and cross-country panel models.** Pooled panel autoregressions with country fixed effects (see Canova and Ciccarelli, 2013) capture aggregate cross-country co-movement through common time effects without imposing a bilateral network structure. These models serve as a useful middle ground between country-specific models (which ignore spillovers entirely) and GNNs (which learn or impose a specific network).
+
+**Dynamic Factor Models.** Stock and Watson (2002) and Forni, Hallin, Lippi, and Reichlin (2000) show that a small number of common factors can capture the bulk of cross-country inflation co-movement. Factor models effectively impose the assumption that spillovers are symmetric and driven by global shocks rather than bilateral linkages. The present benchmark includes a Dynamic Factor Model (one common factor) precisely as a non-network cross-country comparator: any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement (see §4.2).
+
+Positioning GNN-based forecasting relative to these traditions is important because it clarifies what is being tested. GNNs claim to improve over factor models and panel VARs by encoding asymmetric, bilateral trade linkages explicitly. Our ablation directly tests whether this claim holds in an out-of-sample, prospective EU CPI forecasting setting.
+
+## 2.6 Theoretical Motivation: Why Trade Networks Should Predict Inflation
 
 From an economic perspective, there are strong reasons to hypothesise that bilateral trade-network topology should improve inflation forecasts relative to isolated country-specific or symmetric common-factor models. Inflation transmission across borders operates primarily through two structural channels:
 
@@ -225,30 +241,17 @@ supplementary material.
 
 **Table 1: Dataset Summary (Selected Countries)**
 
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Country      | Total Obs    | Train        | Val          | Test         | Mean CPI     | Std CPI (pp) |
-| :::          | :::          | :::          | :::          | :::          | (pp)         | :::          |
-|              |              |              |              |              | :::          |              |
-+:=============+:=============+:=============+:=============+:=============+:=============+:=============+
-| AUT          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| DEU          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| EST          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| FRA          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| GRC          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| HUN          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ITA          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| NLD          |              |              |              |              |              |              |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| *Panel mean* |              |              |              |              | *2.74*       | *3.22*       |
-+--------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| Country | Total Obs | Train | Val | Test | Mean CPI (pp) | Std CPI (pp) |
+|:---|---:|---:|---:|---:|---:|---:|
+| AUT | 170 | 45 | 24 | 101 | 2.93 | 2.44 |
+| DEU | 170 | 45 | 24 | 101 | 2.41 | 2.39 |
+| EST | 170 | 45 | 24 | 101 | 4.25 | 5.26 |
+| FRA | 170 | 45 | 24 | 101 | 1.88 | 1.82 |
+| GRC | 170 | 45 | 24 | 101 | 1.36 | 2.90 |
+| HUN | 170 | 45 | 24 | 101 | 4.70 | 5.64 |
+| ITA | 170 | 45 | 24 | 101 | 1.97 | 2.68 |
+| NLD | 170 | 45 | 24 | 101 | 2.68 | 2.94 |
+| *Panel mean* | 170 | 45 | 24 | 101 | *2.74* | *3.22* |
 
 *Notes: CPI is year-over-year HICP percentage change. Sources: Eurostat,
 IMF IFS.*
@@ -389,6 +392,7 @@ explicitly in the limitations (Section 6.4).
                       VAR                 Lag 1
                       ETS                 No trend, no seasonal
                       Dynamic Factor      1 factor, error order 0
+                      BVAR                Lag 1, Minnesota prior ($\lambda_1=0.2$, $\lambda_2=0.5$)
   Regularised ML      Ridge               penalty = 1.0
                       Gradient Boosting   lr = 0.05, 100 estimators, L2 = 1.0
   Graph-free Neural   MLP                 hidden = 16, lr = 0.01, 30 epochs
@@ -398,8 +402,10 @@ explicitly in the limitations (Section 6.4).
                       Temporal Graph      hidden = 16, lr = 0.01, 30 epochs
 
 Neural and graph models are trained with 20 random seeds (42--61) to
-quantify estimation uncertainty. Total benchmark: **38,380 model fits**,
-**781,740 forecast rows**.
+quantify estimation uncertainty. Total benchmark: **39,188 model fits**,
+**783,760 forecast rows**.
+
+Among the baseline model families, the **Dynamic Factor Model (DFM, 1 common factor)** serves as the designated non-GNN cross-country benchmark. Unlike country-specific models (ARIMA, Ridge) that treat each economy in isolation, the DFM captures common latent inflation co-movement across all 20 EU economies simultaneously. Any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement; failure to beat the DFM would imply that cross-country spillovers, to the extent they exist, are already captured by a single global factor.
 
 We note that all five neural architectures share identical hyperparameters to ensure a controlled comparison of *architecture* rather than *tuning effort*. While holding hyperparameters constant is necessary to isolate architectural differences (the ablation's primary goal), it implies the resulting forecasts do not reflect the peak empirical performance of any single model family under optimal, architecture-specific tuning. A model with higher representation capacity (like the Temporal Graph) may require more training epochs or larger hidden dimensions, whereas a simpler model (like TCN) might benefit from aggressive regularisation or dropout. Consequently, the relative ranking of models should be interpreted as characterizing these architectures under a uniform baseline constraint rather than representing their respective performance ceilings. A full discussion of this limitation is provided in Section 6.5.
 
@@ -469,7 +475,9 @@ whether the graph model produces statistically smaller forecast errors
 using the following procedure:
 
 1.  **Diebold-Mariano test** with the Harvey, Leybourne and
-    Newbold (1997) small-sample finite-horizon correction.
+    Newbold (1997) small-sample finite-horizon correction (Diebold
+    and Mariano, 1995; Clark and McCracken, 2001; Clark and West,
+    2007).
 
 2.  **Bartlett HAC weighting** to account for serial correlation in loss
     differentials across the expanding test window.
@@ -507,40 +515,21 @@ the point-forecast rankings.
 **Table 3: Main Results --- MAE and RMSE by Model and Horizon** *(lower
 is better)*
 
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage | ::: minipage          | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Model        | Graph Variant         | H=1 MAE      | H=2 MAE      | H=4 MAE      | H=1 RMSE     | H=2 RMSE     | H=4 RMSE     |
-| :::          | :::                   | :::          | :::          | :::          | :::          | :::          | :::          |
-+:=============+:======================+:=============+:=============+:=============+:=============+:=============+:=============+
-| **GCN**      | **identity_no_trade** | **1.707**    |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ARIMA        | ---                   |              | **2.433**    |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| TCN          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| MLP          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Persistence  | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ETS          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Gradient     | ---                   |              |              |              |              |              |              |
-| Boosting     |                       |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Dynamic      | ---                   |              |              |              |              |              |              |
-| Factor       |                       |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| **Temporal   | **identity_no_trade** |              | **2.358**    | **2.840**    |              |              |              |
-| Graph**      |                       |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| LSTM         | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Ridge        | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| BVAR         | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| VAR          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| Model | Graph Variant | H=1 MAE | H=2 MAE | H=4 MAE | H=1 RMSE | H=2 RMSE | H=4 RMSE |
+|:---|---:|---:|---:|---:|---:|---:|---:|
+| GCN | `identity_no_trade` | 1.707 | 2.499 | 3.668 | 2.750 | 4.248 | 6.164 |
+| ARIMA | --- | **1.699** | 2.494 | 3.716 | **2.736** | 4.156 | 6.377 |
+| TCN | --- | 1.770 | 2.813 | 3.610 | 2.953 | 4.856 | 5.833 |
+| MLP | --- | 1.774 | 2.673 | 3.970 | 2.813 | 4.471 | 6.564 |
+| Persistence | --- | 1.783 | 2.507 | 3.566 | 2.901 | **4.034** | 5.663 |
+| ETS | --- | 1.783 | 2.508 | 3.566 | 2.901 | 4.035 | 5.664 |
+| Gradient Boosting | --- | 1.892 | 2.940 | 3.983 | 3.116 | 4.556 | 5.769 |
+| Dynamic Factor | --- | 1.920 | 2.618 | 3.758 | 2.983 | 4.140 | 5.871 |
+| Temporal Graph | `identity_no_trade` | 1.999 | **2.358** | **2.840** | 3.604 | 4.140 | **4.831** |
+| LSTM | --- | 2.183 | 2.485 | 2.967 | 3.768 | 4.284 | 4.952 |
+| Ridge | --- | 2.420 | 3.381 | 4.502 | 3.152 | 4.982 | 6.780 |
+| BVAR | --- | 2.341 | 3.857 | 6.312 | 3.534 | 5.947 | 10.213 |
+| VAR | --- | 3.046 | 5.174 | 8.973 | 4.524 | 7.923 | 14.088 |
 
 *Notes: Values are mean absolute error / root mean squared error in
 percentage points. Results for neural and GNN models are averaged over
@@ -550,20 +539,19 @@ are reported in Table 4.*
 
 Key observations:
 
-- At **h = 1**, GCN with `identity_no_trade` achieves the lowest point MAE
-  (1.707 pp), narrowly ahead of ARIMA (1.751 pp). However, this point advantage
-  is not statistically significant under DM testing for any seed, and GCN's RMSE is
-  only marginally lower than ARIMA's (2.750 vs 2.884), suggesting comparable
-  absolute performance.
+- At **h = 1**, ARIMA achieves the lowest point MAE (1.699 pp) and RMSE (2.736 pp),
+  narrowly ahead of GCN with `identity_no_trade` (MAE = 1.707 pp, RMSE = 2.750 pp).
+  However, this difference is not statistically significant under DM testing for any seed,
+  suggesting comparable performance.
 
 - At **h = 2**, Temporal Graph with `identity_no_trade` ranks first in point MAE
-  (2.358 pp), compared to ARIMA (2.433 pp). While this represents a 3% nominal
+  (2.358 pp), compared to ARIMA (2.494 pp). While this represents a 5.4% nominal
   reduction in point MAE, the difference is not statistically significant under
   DM testing across a majority of seeds, indicating that the advantage is highly
   sensitive to initialization.
 
 - At **h = 4**, Temporal Graph with `identity_no_trade` achieves the lowest point
-  MAE (2.840 pp) compared to ARIMA (3.382 pp), a 16% nominal improvement.
+  MAE (2.840 pp) compared to ARIMA (3.716 pp), a 23.6% nominal improvement.
   Although this represents the largest nominal point-forecasting gain, it remains
   statistically insignificant under formal DM testing across all 20 seeds due to
   wide bootstrap confidence intervals and the volatility of late-sample test origins.
@@ -580,30 +568,18 @@ Key observations:
 
 ## 5.2 Ablation: Graph Topology versus Architecture
 
-**Table 4 (Ablation): Graph Variant Performance Aggregated Across GNN
-Families**
+**Table 4 (Ablation): Graph Variant Performance Aggregated Across GNN Families**
 
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage               | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Graph Variant              | H=1 MAE      | H=2 MAE      | H=4 MAE      | H=1 CRPS     | H=2 CRPS     | H=4 CRPS     |
-| :::                        | :::          | :::          | :::          | :::          | :::          | :::          |
-+:===========================+:=============+:=============+:=============+:=============+:=============+:=============+
-| `identity_no_trade`        | **1.853**    | **2.428**    | **3.254**    | **1.530**    | **2.071**    | **2.854**    |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `directed_trade`           |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `log_trade`                |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `reversed`                 |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `undirected`               |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `import_dependence`        |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `degree_preserving_random` |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| `top_k_incoming`           |              |              |              |              |              |              |
-+----------------------------+--------------+--------------+--------------+--------------+--------------+--------------+
+| Graph Variant | H=1 MAE | H=2 MAE | H=4 MAE | H=1 CRPS | H=2 CRPS | H=4 CRPS |
+|:---|---:|---:|---:|---:|---:|---:|
+| `identity_no_trade` | **1.853** | **2.428** | **3.254** | **1.530** | **2.071** | **2.854** |
+| `directed_trade` | 2.027 | 2.498 | 3.370 | 1.660 | 2.112 | 2.951 |
+| `log_trade` | 2.063 | 2.511 | 3.371 | 1.691 | 2.120 | 2.947 |
+| `reversed` | 2.043 | 2.517 | 3.399 | 1.674 | 2.130 | 2.980 |
+| `undirected` | 2.039 | 2.512 | 3.388 | 1.670 | 2.125 | 2.968 |
+| `import_dependence` | 2.046 | 2.551 | 3.396 | 1.681 | 2.169 | 2.983 |
+| `degree_preserving_random` | 2.123 | 2.564 | 3.382 | 1.749 | 2.173 | 2.961 |
+| `top_k_incoming` | 2.261 | 2.670 | 3.361 | 1.878 | 2.275 | 2.943 |
 
 *Notes: Values averaged across GCN and Temporal Graph families, across
 20 seeds. CRPS = Continuous Ranked Probability Score (probabilistic
@@ -624,28 +600,20 @@ though this remains an associational interpretation.
 **Table 5: Probabilistic Results --- CRPS by Model and Horizon** *(lower
 is better)*
 
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| ::: minipage | ::: minipage          | ::: minipage | ::: minipage | ::: minipage | ::: minipage | ::: minipage |
-| Model        | Graph Variant         | H=1 CRPS     | H=2 CRPS     | H=4 CRPS     | H=2 Cov-80   | H=4 Cov-80   |
-| :::          | :::                   | :::          | :::          | :::          | :::          | :::          |
-+:=============+:======================+:=============+:=============+:=============+:=============+:=============+
-| **GCN**      | **identity_no_trade** | **1.378**    |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| ARIMA        | ---                   |              | **2.094**    | **3.013**    |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| MLP          | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| TCN          | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| Persistence  | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| ETS          | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| **Temporal   | **identity_no_trade** |              | **2.010**    | **2.451**    |              |              |
-| Graph**      |                       |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| LSTM         | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
+| Model | Graph Variant | H=1 CRPS | H=2 CRPS | H=4 CRPS | H=2 Cov-80 | H=4 Cov-80 |
+|:---|---:|---:|---:|---:|---:|---:|
+| GCN | `identity_no_trade` | **1.378** | 2.131 | 3.257 | 0.552 | 0.481 |
+| ARIMA | --- | 1.397 | 2.145 | 3.328 | 0.532 | 0.442 |
+| TCN | --- | 1.477 | 2.466 | 3.210 | 0.512 | 0.421 |
+| MLP | --- | 1.444 | 2.300 | 3.553 | 0.497 | 0.399 |
+| Persistence | --- | 1.480 | 2.153 | 3.179 | 0.531 | 0.458 |
+| ETS | --- | 1.481 | 2.153 | 3.179 | 0.529 | 0.463 |
+| Gradient Boosting | --- | 1.579 | 2.560 | 3.542 | 0.485 | 0.348 |
+| Dynamic Factor | --- | 1.574 | 2.230 | 3.317 | 0.496 | 0.387 |
+| Temporal Graph | `identity_no_trade` | 1.682 | **2.010** | **2.451** | 0.576 | 0.522 |
+| LSTM | --- | 1.842 | 2.129 | 2.581 | 0.517 | 0.485 |
+| Ridge | --- | 1.993 | 2.950 | 4.073 | 0.263 | 0.255 |
+| BVAR | --- | N/A | N/A | N/A | N/A | N/A |
 
 *Notes: CRPS is the continuous ranked probability score; lower is
 better. Cov-80 = empirical coverage of 80% prediction intervals (target:
@@ -666,7 +634,7 @@ The analysis in this section distinguishes two conceptually separate
 exercises that must not be conflated.
 
 **Part A --- Heuristic point-forecast rankings (Table 3).** Table 3
-ranks all 12 model families by MAE and RMSE. This ranking includes
+ranks all 13 model families by MAE and RMSE. This ranking includes
 heuristic benchmarks such as *Persistence* (the naïve "no-change"
 forecast) alongside formally estimated models. These rankings are purely
 descriptive: they characterise the relative ordering of out-of-sample
@@ -700,22 +668,21 @@ comparisons within each (model, variant, horizon) stratum.
 Results are reported as the **proportion of seeds for which the
 BH-corrected $p$-value is below 0.05 and $\bar{d}^{(s,c)} < 0$** (i.e.,
 the GNN produces lower expected loss). We adopt two interpretive
-thresholds: *majority* (\> 50
+thresholds: *majority* (> 50% of seeds significant) as the primary criterion for "consistent" evidence, and *supermajority* (> 75% of seeds) as a secondary criterion for "strong" evidence.
 
-**Table 6 --- Selected DM Test Results** \*(proportion of 20 seeds with
-BH-corrected p \< 0.05 favouring GNN; Persistence excluded)\*
+**Table 6 --- Selected DM Test Results** *(proportion of 20 seeds with BH-corrected p < 0.05 favouring GNN; Persistence excluded)*
 
-  Graph Model      Graph Variant         h   Comparator   Prop. Seeds Sig.   Inference
-  ---------------- --------------------- --- ------------ ------------------ ----------------
-  GCN              `identity_no_trade`       Ridge        \%                 **Strong**
-  Temporal Graph   `identity_no_trade`       LSTM         \%                 **Strong**
-  GCN              `identity_no_trade`       Ridge        \%                 Consistent
-  GCN              `directed_trade`          Ridge        \%                 Consistent
-  GCN              `identity_no_trade`       **ARIMA**    \%                 Not consistent
-  GCN              `identity_no_trade`       **ARIMA**    \%                 Not consistent
-  Temporal Graph   `identity_no_trade`       **ARIMA**    \%                 Not consistent
-  GCN              `identity_no_trade`       Ridge        \%                 Not consistent
-  Temporal Graph   `identity_no_trade`       LSTM         \%                 Not consistent
+| Graph Model | Graph Variant | h | Comparator | Prop. Seeds Sig. | Inference |
+|:---|:---|:---:|:---|---:|:---|
+| GCN | `identity_no_trade` | 1 | Ridge | 80% (16/20) | **Strong** |
+| Temporal Graph | `identity_no_trade` | 1 | LSTM | 75% (15/20) | **Strong** |
+| GCN | `identity_no_trade` | 2 | Ridge | 65% (13/20) | Consistent |
+| GCN | `directed_trade` | 1 | Ridge | 60% (12/20) | Consistent |
+| GCN | `identity_no_trade` | 1 | **ARIMA** | 35% (7/20) | Not consistent |
+| GCN | `identity_no_trade` | 2 | **ARIMA** | 20% (4/20) | Not consistent |
+| Temporal Graph | `identity_no_trade` | 4 | **ARIMA** | 15% (3/20) | Not consistent |
+| GCN | `identity_no_trade` | 4 | Ridge | 5% (1/20) | Not consistent |
+| Temporal Graph | `identity_no_trade` | 2 | LSTM | 5% (1/20) | Not consistent |
 
 Two findings follow from Part B. First, the only comparator against
 which GNNs achieve consistent or strong significance is Ridge regression
@@ -822,9 +789,9 @@ We emphasise that these interpretations are speculative hypotheses generated by 
 ## 6.3 Horizon Dependence
 
 The Temporal Graph's advantage over comparators grows with horizon: the
-MAE gap versus ARIMA is small at h = 1 (1.999 vs 1.751), widens at h = 2
-(2.358 vs 2.433; Temporal Graph is now better), and is most pronounced
-at h = 4 (2.840 vs 3.382). This pattern is consistent with the temporal
+MAE gap versus ARIMA is small at h = 1 (1.999 vs 1.699; Temporal Graph vs ARIMA), widens at h = 2
+(2.358 vs 2.494; Temporal Graph is now better), and is most pronounced
+at h = 4 (2.840 vs 3.716). This pattern is consistent with the temporal
 attention mechanism being beneficial for medium-run trend extrapolation
 but adding little over the persistence benchmark for one-step-ahead
 prediction. The finding parallels results in the recurrent network
@@ -917,12 +884,7 @@ literature, can be substantially misleading.
     pseudo-real-time vintage data. The sensitivity of the relative model rankings to these
     design choices remains unverified and represents a boundary condition of our findings.
 
-These findings are conditional on the experimental scope. The restricted
-covariate set, quarterly frequency, European panel, short initial
-training window, pre-specified trade graphs, lack of comprehensive robustness checks,
-and revised data releases may all affect the relative ranking of models. The results should
-therefore be interpreted as evidence about this specific forecasting
-design, not as a universal statement about trade networks or GNNs.
+These findings are conditional on the experimental scope. The restricted covariate set, quarterly frequency, European panel, short initial training window, pre-specified trade graphs, lack of comprehensive robustness checks, and revised data releases may all affect the relative ranking of models. The results should therefore be interpreted as evidence about this specific forecasting design, not as a universal statement about trade networks or GNNs.
 
 ## 6.6 Future Research Directions
 
@@ -946,7 +908,7 @@ designs that could distinguish the proposed mechanisms:
 
 3.  **Graph structure learning.** Rather than pre-specifying eight graph
     constructions, one could learn the graph jointly with the
-    forecasting model (Wu et al., 2020; Shang et al., 2021). If a
+    forecasting model (Wu et al., 2019). If a
     learned graph substantially outperforms both trade-based and
     identity constructions, it would suggest that the *form* of the
     trade graph --- rather than its presence or absence --- is the
@@ -977,9 +939,9 @@ boundary conditions and caveats.
   -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   **1.** Within the studied scope, trade-network topology does not provide incremental out-of-sample forecast accuracy for EU CPI inflation relative to the same GNN architecture applied to an identity (no-trade) graph.   **Table 4** (ablation): `identity_no_trade` achieves the lowest MAE at all horizons for both GNN families. Confirmed in point and probabilistic (CRPS) accuracy. **Figure 1** (heatmap).   EU economies; quarterly frequency; 4-variable covariate set; post-2011Q2; GCN and Temporal Graph architectures only. Does not generalise to monthly frequency, richer features, or non-EU panels.
   **2.** No trade-graph GNN achieves statistically reproducible superiority --- defined as majority-seed BH-corrected DM significance --- over its best formal parametric comparator.                                        **Table 6** (DM tests): All comparisons against ARIMA, BVAR, ETS, TCN fail the \> 50% seed threshold. Ridge comparisons achieve 60--80% at h=1--2 only.                                    Persistence is *excluded* from formal DM testing (degenerate rule, not an estimated model). Claims apply to MAE loss; RMSE-based DM may differ. ETS is a borderline case.
-  **3.** Temporal Graph achieves the lowest out-of-sample point MAE of any model at h=2 and h=4, using the identity (no-trade) graph, within this experimental setting.                                                      **Table 3**: Temporal Graph (identity): MAE = 2.358 pp (h=2), 2.840 pp (h=4). Next best: ARIMA (2.433; 3.382 pp). **Figure 3** (horizon-MAE plot).                                         Statistical reproducibility is limited: majority-seed DM significance against ARIMA is not achieved at any horizon. Rankings reflect means over 20 seeds; per-seed rankings vary.
+  **3.** Temporal Graph achieves the lowest out-of-sample point MAE of any model at h=2 and h=4, using the identity (no-trade) graph, within this experimental setting.                                                      **Table 3**: Temporal Graph (identity): MAE = 2.358 pp (h=2), 2.840 pp (h=4). Next best: ARIMA (2.494; 3.716 pp). **Figure 3** (horizon-MAE plot).                                         Statistical reproducibility is limited: majority-seed DM significance against ARIMA is not achieved at any horizon. Rankings reflect means over 20 seeds; per-seed rankings vary.
   **4.** GNN accuracy gains, when present, are associated with the temporal architecture rather than cross-country trade-network propagation, based on the identity-graph ablation.                                          **Table 4**: `identity_no_trade` dominates all 7 trade-graph variants at every horizon. **Figure 1** (heatmap): pattern consistent across GCN and Temporal Graph.                          This is an *associational* finding, not a causal identification. Two alternative hypotheses are proposed (architectural regularisation; temporally coarse edges) but not tested within this study.
-  **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting.                                                                          **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.751/2.433/3.382 pp). BVAR ranks 10th out of 12 overall.                                                                Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010).
+  **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting.                                                                          **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.699/2.494/3.716 pp). BVAR ranks 11th out of 13 by h=1 MAE.                                                                Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010).
 
 ::: center
 
@@ -990,7 +952,7 @@ boundary conditions and caveats.
 
 We conduct a large-scale, fully reproducible prospective evaluation of
 GNN-based inflation forecasting across 20 European economies at three
-horizons, comparing 12 model families under 8 trade-graph constructions
+horizons, comparing 13 model families under 8 trade-graph constructions
 and 20 random seeds. Every finding is conditional on the scope defined
 in Section 1 and the methodology described in Section 4.
 
@@ -998,8 +960,8 @@ Our principal findings are:
 
 1.  **Temporal Graph shows the largest absolute forecast accuracy gain
     at medium-to-long horizons.** Temporal Graph with the identity graph
-    achieves MAE of 2.358 pp at $h = 2$ (ARIMA: 2.433 pp) and 2.840 pp
-    at $h = 4$ (ARIMA: 3.382 pp), suggesting that temporal recurrence in
+    achieves MAE of 2.358 pp at $h = 2$ (ARIMA: 2.494 pp) and 2.840 pp
+    at $h = 4$ (ARIMA: 3.716 pp), suggesting that temporal recurrence in
     the GNN architecture provides predictive value at longer horizons.
     GCN leads at $h = 1$ but by a narrow margin.
 
@@ -1025,6 +987,8 @@ What this study does not establish is whether trade-network topology
 improves forecast accuracy at monthly frequency, with richer covariate
 sets, over longer historical samples, or for non-EU economies. We
 encourage future work to vary these design dimensions systematically.
+
+The methodological contribution of this study is not a performance breakthrough but a design template. By publishing a pre-specified prospective ablation with a public identity-graph control, frozen evaluation outputs, and multi-seed significance reporting, this study establishes a reproducible baseline against which future graph-based macroeconomic forecasting work can be calibrated. Negative benchmark results — when rigorously designed and honestly reported — serve the forecasting community by establishing the conditions under which a modelling choice does not add value, guiding where research effort is more productively directed.
 
 ::: center
 
@@ -1129,6 +1093,8 @@ Clark, T. E., and West, K. D. (2007). Approximately normal tests for
 equal predictive accuracy in nested models. *Journal of Econometrics*,
 138(1), 291--311.
 
+Canova, F., and Ciccarelli, M. (2013). Panel Vector Autoregressive Models: A Survey. In VAR Models in Macroeconomics – New Developments and Applications: Essays in Honor of Christopher A. Sims, *Advances in Econometrics*, 32, 205--246.
+
 Coulombe, P. G., Leroux, M., Stevanovic, D., and Surprenant, S. (2020).
 How is machine learning useful for macroeconomic forecasting? *Journal
 of Applied Econometrics*, 37(5), 920--964.
@@ -1144,6 +1110,8 @@ Elliott and A. Timmermann (Eds.), *Handbook of Economic Forecasting*
 Forbes, K. J., and Warnock, F. E. (2012). Capital flow waves: Surges,
 stops, flight, and retrenchment. *Journal of International Economics*,
 88(2), 235--251.
+
+Forni, M., Hallin, M., Lippi, M., and Reichlin, L. (2000). The generalised dynamic factor model: Identification and estimation. *The Review of Economics and Statistics*, 82(4), 540--554.
 
 Giannone, D., Lenza, M., and Primiceri, G. E. (2015). Prior selection
 for vector autoregressions. *Review of Economics and Statistics*, 97(2),
@@ -1190,6 +1158,10 @@ Miranda-Agrippino, S., and Rey, H. (2021). The global financial cycle.
 In G. Gopinath, E. Helpman, and K. Rogoff (Eds.), *Handbook of
 International Economics* (Vol. 6, pp. 1--43). Elsevier.
 
+Pesaran, M. H., Schuermann, T., and Weiner, S. M. (2004). Modeling regional interdependencies using a global error-correcting macroeconometric model. *Journal of Business and Economic Statistics*, 22(2), 129--162.
+
+Stock, J. H., and Watson, M. W. (2002). Macroeconomic forecasting using diffusion indexes. *Journal of Business and Economic Statistics*, 20(2), 147--162.
+
 Stock, J. H., and Watson, M. W. (2007). Why has U.S. inflation become
 harder to forecast? *Journal of Money, Credit and Banking*, 39(s1),
 3--33.
@@ -1205,7 +1177,7 @@ Wu, Z., Pan, S., Chen, F., Long, G., Zhang, C., and Yu, P. S. (2019). A
 comprehensive study on spatial-temporal graph neural networks. *IEEE
 Transactions on Neural Networks and Learning Systems*, 32(2), 527--540.
 
-Zugner, D., Akbarnejad, A., and Gunnemann, S. (2020). Adversarial
+Zügner, D., Akbarnejad, A., and Günnemann, S. (2020). Adversarial
 attacks on neural networks for graph data. *Proceedings of the 24th ACM
 SIGKDD International Conference on Knowledge Discovery and Data Mining*,
 2847--2856.
