@@ -526,33 +526,6 @@ is better)*
 | Ridge | --- | 2.420 | 3.381 | 4.502 | 3.152 | 4.982 | 6.780 |
 | BVAR | --- | 2.341 | 3.857 | 6.312 | 3.534 | 5.947 | 10.213 |
 | VAR | --- | 3.046 | 5.174 | 8.973 | 4.524 | 7.923 | 14.088 |
-| ARIMA        | ---                   |              | **2.433**    |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| TCN          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| MLP          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Persistence  | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| ETS          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Gradient     | ---                   |              |              |              |              |              |              |
-| Boosting     |                       |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Dynamic      | ---                   |              |              |              |              |              |              |
-| Factor       |                       |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| **Temporal   | **identity_no_trade** |              | **2.358**    | **2.840**    |              |              |              |
-| Graph**      |                       |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| LSTM         | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| Ridge        | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| BVAR         | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
-| VAR          | ---                   |              |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+--------------+
 
 *Notes: Values are mean absolute error / root mean squared error in
 percentage points. Results for neural and GNN models are averaged over
@@ -562,20 +535,19 @@ are reported in Table 4.*
 
 Key observations:
 
-- At **h = 1**, GCN with `identity_no_trade` achieves the lowest point MAE
-  (1.707 pp), narrowly ahead of ARIMA (1.751 pp). However, this point advantage
-  is not statistically significant under DM testing for any seed, and GCN's RMSE is
-  only marginally lower than ARIMA's (2.750 vs 2.884), suggesting comparable
-  absolute performance.
+- At **h = 1**, ARIMA achieves the lowest point MAE (1.699 pp) and RMSE (2.736 pp),
+  narrowly ahead of GCN with `identity_no_trade` (MAE = 1.707 pp, RMSE = 2.750 pp).
+  However, this difference is not statistically significant under DM testing for any seed,
+  suggesting comparable performance.
 
 - At **h = 2**, Temporal Graph with `identity_no_trade` ranks first in point MAE
-  (2.358 pp), compared to ARIMA (2.433 pp). While this represents a 3% nominal
+  (2.358 pp), compared to ARIMA (2.494 pp). While this represents a 5.4% nominal
   reduction in point MAE, the difference is not statistically significant under
   DM testing across a majority of seeds, indicating that the advantage is highly
   sensitive to initialization.
 
 - At **h = 4**, Temporal Graph with `identity_no_trade` achieves the lowest point
-  MAE (2.840 pp) compared to ARIMA (3.382 pp), a 16% nominal improvement.
+  MAE (2.840 pp) compared to ARIMA (3.716 pp), a 23.6% nominal improvement.
   Although this represents the largest nominal point-forecasting gain, it remains
   statistically insignificant under formal DM testing across all 20 seeds due to
   wide bootstrap confidence intervals and the volatility of late-sample test origins.
@@ -638,21 +610,6 @@ is better)*
 | LSTM | --- | 1.842 | 2.129 | 2.581 | 0.517 | 0.485 |
 | Ridge | --- | 1.993 | 2.950 | 4.073 | 0.263 | 0.255 |
 | BVAR | --- | N/A | N/A | N/A | N/A | N/A |
-| ARIMA        | ---                   |              | **2.094**    | **3.013**    |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| MLP          | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| TCN          | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| Persistence  | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| ETS          | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| **Temporal   | **identity_no_trade** |              | **2.010**    | **2.451**    |              |              |
-| Graph**      |                       |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
-| LSTM         | ---                   |              |              |              |              |              |
-+--------------+-----------------------+--------------+--------------+--------------+--------------+--------------+
 
 *Notes: CRPS is the continuous ranked probability score; lower is
 better. Cov-80 = empirical coverage of 80% prediction intervals (target:
@@ -828,9 +785,9 @@ We emphasise that these interpretations are speculative hypotheses generated by 
 ## 6.3 Horizon Dependence
 
 The Temporal Graph's advantage over comparators grows with horizon: the
-MAE gap versus ARIMA is small at h = 1 (1.999 vs 1.751), widens at h = 2
-(2.358 vs 2.433; Temporal Graph is now better), and is most pronounced
-at h = 4 (2.840 vs 3.382). This pattern is consistent with the temporal
+MAE gap versus ARIMA is small at h = 1 (1.999 vs 1.699; Temporal Graph vs ARIMA), widens at h = 2
+(2.358 vs 2.494; Temporal Graph is now better), and is most pronounced
+at h = 4 (2.840 vs 3.716). This pattern is consistent with the temporal
 attention mechanism being beneficial for medium-run trend extrapolation
 but adding little over the persistence benchmark for one-step-ahead
 prediction. The finding parallels results in the recurrent network
@@ -978,9 +935,9 @@ boundary conditions and caveats.
   -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   **1.** Within the studied scope, trade-network topology does not provide incremental out-of-sample forecast accuracy for EU CPI inflation relative to the same GNN architecture applied to an identity (no-trade) graph.   **Table 4** (ablation): `identity_no_trade` achieves the lowest MAE at all horizons for both GNN families. Confirmed in point and probabilistic (CRPS) accuracy. **Figure 1** (heatmap).   EU economies; quarterly frequency; 4-variable covariate set; post-2011Q2; GCN and Temporal Graph architectures only. Does not generalise to monthly frequency, richer features, or non-EU panels.
   **2.** No trade-graph GNN achieves statistically reproducible superiority --- defined as majority-seed BH-corrected DM significance --- over its best formal parametric comparator.                                        **Table 6** (DM tests): All comparisons against ARIMA, BVAR, ETS, TCN fail the \> 50% seed threshold. Ridge comparisons achieve 60--80% at h=1--2 only.                                    Persistence is *excluded* from formal DM testing (degenerate rule, not an estimated model). Claims apply to MAE loss; RMSE-based DM may differ. ETS is a borderline case.
-  **3.** Temporal Graph achieves the lowest out-of-sample point MAE of any model at h=2 and h=4, using the identity (no-trade) graph, within this experimental setting.                                                      **Table 3**: Temporal Graph (identity): MAE = 2.358 pp (h=2), 2.840 pp (h=4). Next best: ARIMA (2.433; 3.382 pp). **Figure 3** (horizon-MAE plot).                                         Statistical reproducibility is limited: majority-seed DM significance against ARIMA is not achieved at any horizon. Rankings reflect means over 20 seeds; per-seed rankings vary.
+  **3.** Temporal Graph achieves the lowest out-of-sample point MAE of any model at h=2 and h=4, using the identity (no-trade) graph, within this experimental setting.                                                      **Table 3**: Temporal Graph (identity): MAE = 2.358 pp (h=2), 2.840 pp (h=4). Next best: ARIMA (2.494; 3.716 pp). **Figure 3** (horizon-MAE plot).                                         Statistical reproducibility is limited: majority-seed DM significance against ARIMA is not achieved at any horizon. Rankings reflect means over 20 seeds; per-seed rankings vary.
   **4.** GNN accuracy gains, when present, are associated with the temporal architecture rather than cross-country trade-network propagation, based on the identity-graph ablation.                                          **Table 4**: `identity_no_trade` dominates all 7 trade-graph variants at every horizon. **Figure 1** (heatmap): pattern consistent across GCN and Temporal Graph.                          This is an *associational* finding, not a causal identification. Two alternative hypotheses are proposed (architectural regularisation; temporally coarse edges) but not tested within this study.
-  **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting.                                                                          **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.751/2.433/3.382 pp). BVAR ranks 10th out of 12 overall.                                                                Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010).
+  **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting.                                                                          **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.699/2.494/3.716 pp). BVAR ranks 10th out of 12 overall.                                                                Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010).
 
 ::: center
 
@@ -999,8 +956,8 @@ Our principal findings are:
 
 1.  **Temporal Graph shows the largest absolute forecast accuracy gain
     at medium-to-long horizons.** Temporal Graph with the identity graph
-    achieves MAE of 2.358 pp at $h = 2$ (ARIMA: 2.433 pp) and 2.840 pp
-    at $h = 4$ (ARIMA: 3.382 pp), suggesting that temporal recurrence in
+    achieves MAE of 2.358 pp at $h = 2$ (ARIMA: 2.494 pp) and 2.840 pp
+    at $h = 4$ (ARIMA: 3.716 pp), suggesting that temporal recurrence in
     the GNN architecture provides predictive value at longer horizons.
     GCN leads at $h = 1$ but by a narrow margin.
 
