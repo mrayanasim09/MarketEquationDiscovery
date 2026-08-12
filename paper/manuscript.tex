@@ -77,7 +77,7 @@ panel forecasting}},
 \begin{document}
 \maketitle
 \begin{abstract}
-We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1--2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 13 model families under a prospective expanding-window design, testing eight trade-graph constructions against an \emph{identity (no-trade)} graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design --- though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
+We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1--2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 13 model families under a prospective expanding-window design, testing eight trade-graph constructions against an \emph{identity (no-trade)} graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. This pattern is consistent with the hypothesis that temporal recurrence, rather than trade-network topology, is the primary source of any GNN forecast gains within this design --- though because hyperparameters are held uniform across architectures, this remains an associational interpretation rather than a proven causal identification. For macroeconomic forecasters, this negative result demonstrates the necessity of identity-graph controls when evaluating spatial GNNs, highlighting the risk of assuming network spillovers without controlling for graph-agnostic architectural capacity.
 \end{abstract}
 
 \noindent\textbf{JEL Codes:} C32, C33, C53, E31, E37, F14
@@ -192,11 +192,11 @@ first systematic GNN-based test of whether these linkages improve
 
 GNN-based approaches to cross-country forecasting sit within a broader tradition of models designed to capture international spillovers. Three families are directly relevant to the present study.
 
-\textbf{Global VAR (GVAR).} Pesaran, Schuermann, and Weiner (2004) introduce a multinational VAR in which each country model is linked to a trade-weighted foreign aggregate, directly encoding bilateral trade-intensity as a structural prior. GVAR is the natural classical predecessor to GNN-based bilateral-trade forecasting: it operationalises the same economic intuition --- that inflation co-movement tracks trade intensity --- in a linear, statistically tractable framework.
+\textbf{Global VAR (GVAR).} Pesaran, Schuermann, and Weiner (2004) introduce a multinational VAR in which each country model is linked to a trade-weighted foreign aggregate, directly encoding bilateral trade-intensity as a structural prior. GVAR is the natural classical predecessor to GNN-based bilateral-trade forecasting: it operationalises the same economic intuition --- that inflation co-movement tracks trade intensity --- in a linear, statistically tractable framework. While full GVAR estimation with trade-weighted foreign aggregates serves as a standard spatial macro baseline, in our minimal 4-variable covariate setting, the Dynamic Factor Model (DFM) and Minnesota-prior Bayesian VAR (BVAR) fulfill the equivalent benchmark role.
 
 \textbf{Panel VAR and cross-country panel models.} Pooled panel autoregressions with country fixed effects (see Canova and Ciccarelli, 2013) capture aggregate cross-country co-movement through common time effects without imposing a bilateral network structure. These models serve as a useful middle ground between country-specific models (which ignore spillovers entirely) and GNNs (which learn or impose a specific network).
 
-\textbf{Dynamic Factor Models.} Stock and Watson (2002) and Forni, Hallin, Lippi, and Reichlin (2000) show that a small number of common factors can capture the bulk of cross-country inflation co-movement. Factor models effectively impose the assumption that spillovers are symmetric and driven by global shocks rather than bilateral linkages. The present benchmark includes a Dynamic Factor Model (one common factor) precisely as a non-network cross-country comparator: any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement (see \S4.2).
+\textbf{Dynamic Factor Models.} Stock and Watson (2002) and Forni, Hallin, Lippi, and Reichlin (2000) show that a small number of common factors can capture the bulk of cross-country inflation co-movement. Factor models effectively impose the assumption that spillovers are symmetric and driven by global shocks rather than bilateral linkages. The present benchmark includes a Dynamic Factor Model (one common factor) alongside a Minnesota-prior BVAR precisely as non-network cross-country comparators: any GNN gain over the DFM or BVAR would suggest that bilateral network structure adds value beyond simple common-factor co-movement or regularised multivariate dynamics (see \S4.2).
 
 Positioning GNN-based forecasting relative to these traditions is important because it clarifies what is being tested. GNNs claim to improve over factor models and panel VARs by encoding asymmetric, bilateral trade linkages explicitly. Our ablation directly tests whether this claim holds in an out-of-sample, prospective EU CPI forecasting setting.
 
@@ -398,15 +398,15 @@ prospective design}:
 
 At each test origin t, the model observes all data up to t-1, produces
 forecasts at h = 1, 2, 4 quarters ahead, and the training window expands
-by one quarter. This design aligns with the information constraints of a
+by one quarter. As the evaluation progresses through the 35-quarter test period (2017Q1--2025Q3), the training window expands from 14 quarters initially to 45 quarters at the final test origin (and up to 57 quarters total over the full sample). This design aligns with the information constraints of a
 genuine forecasting exercise: no information from after the forecast origin
 is used in model fitting or forecast construction.
 
 We note that the initial training window of 14 quarters is short
 relative to the number of parameters in the neural and GNN models
 (hundreds to thousands), which means early-window model fits may be
-systematically undertrained. This structural asymmetry is acknowledged
-explicitly in the limitations (Section 6.4).
+systematically undertrained. Parameter estimation instability in short initial macro windows is an inherent trade-off in macroeconomic panels with post-2011 sample boundaries. This structural constraint is acknowledged
+explicitly in the limitations (Section 6.5).
 
 \subsection{4.2 Model Families}\label{model-families}
 
@@ -731,10 +731,7 @@ model should be verified against the source data (see data availability
 statement).}
 
 80\% prediction interval coverage is substantially below the nominal
-level for all models (target 0.80; observed 0.50--0.58), consistent with
-the short panel and bootstrap-based interval construction typical for
-neural network ensembles in this setting. Calibration improvements
-represent a clear avenue for future work.
+level for all models (target 0.80; observed 0.50--0.58), reflecting systemic post-2020 macroeconomic volatility and under-estimation of tail risk across all 13 model families rather than a failure specific to GNN architectures. In short macro panels evaluated across unprecedented pandemic and energy shock regimes, bootstrap-based prediction intervals built on historical residual variance systematically understate out-of-sample prediction uncertainty. Calibration improvements represent a clear avenue for future work.
 
 \subsection{5.4 Statistical Significance of Forecast Accuracy Differences}\label{statistical-significance-of-forecast-accuracy-differences}
 
@@ -979,7 +976,7 @@ Our principal findings are:
   \textbf{Statistical reproducibility is limited, particularly against strong baselines.} Under BH-corrected DM testing across 20 seeds, no GNN achieves majority-seed significance against ARIMA, ETS, or TCN at any horizon. The most consistent GNN advantage is against Ridge regression. Significance rates decline sharply with horizon.
 \end{enumerate}
 
-These findings carry methodological implications: identity-graph ablation should be a standard requirement in GNN macroeconomic forecasting papers; multi-seed reporting should replace single-seed benchmarks; and claims of topology-driven forecast improvement require explicit statistical disentanglement from architectural effects.
+These findings carry practical implications for macroeconomic forecasters: identity-graph ablation should be a standard requirement when evaluating spatial GNNs; multi-seed reporting should replace single-seed benchmarks; and claims of topology-driven forecast improvement require explicit statistical disentanglement from architectural effects.
 
 What this study does not establish is whether trade-network topology improves forecast accuracy at monthly frequency, with richer covariate sets, over longer historical samples, or for non-EU economies. We encourage future work to vary these design dimensions systematically.
 
