@@ -103,8 +103,9 @@ Our contributions are:
   moving-block bootstrap confidence intervals, and Benjamini--Hochberg
   FDR correction.
 
-- Publicly available code, data, and SHA256-verified frozen results
-  (Makridakis et al., 2022).
+- Publicly available code, data, and SHA256-verified frozen results,
+  following reproducibility standards recommended in the forecasting
+  literature (Makridakis et al., 2018).
 
 ::: center
 
@@ -155,7 +156,7 @@ random graphs can match or even exceed structurally meaningful graphs
 when the GNN architecture itself provides implicit regularisation or
 pattern-matching capacity. Kawamoto et al. (2018) show that GCN-style
 architectures can learn classification rules that are largely
-independent of edge information under certain conditions. Zugner et
+independent of edge information under certain conditions. Zügner et
 al. (2020) demonstrate that graph structure can be adversarially
 irrelevant to GNN performance. These theoretical findings motivate our
 identity-graph ablation as a rigorous control for architectural versus
@@ -391,6 +392,7 @@ explicitly in the limitations (Section 6.4).
                       VAR                 Lag 1
                       ETS                 No trend, no seasonal
                       Dynamic Factor      1 factor, error order 0
+                      BVAR                Lag 1, Minnesota prior ($\lambda_1=0.2$, $\lambda_2=0.5$)
   Regularised ML      Ridge               penalty = 1.0
                       Gradient Boosting   lr = 0.05, 100 estimators, L2 = 1.0
   Graph-free Neural   MLP                 hidden = 16, lr = 0.01, 30 epochs
@@ -473,7 +475,9 @@ whether the graph model produces statistically smaller forecast errors
 using the following procedure:
 
 1.  **Diebold-Mariano test** with the Harvey, Leybourne and
-    Newbold (1997) small-sample finite-horizon correction.
+    Newbold (1997) small-sample finite-horizon correction (Diebold
+    and Mariano, 1995; Clark and McCracken, 2001; Clark and West,
+    2007).
 
 2.  **Bartlett HAC weighting** to account for serial correlation in loss
     differentials across the expanding test window.
@@ -904,7 +908,7 @@ designs that could distinguish the proposed mechanisms:
 
 3.  **Graph structure learning.** Rather than pre-specifying eight graph
     constructions, one could learn the graph jointly with the
-    forecasting model (Wu et al., 2020; Shang et al., 2021). If a
+    forecasting model (Wu et al., 2019). If a
     learned graph substantially outperforms both trade-based and
     identity constructions, it would suggest that the *form* of the
     trade graph --- rather than its presence or absence --- is the
@@ -937,7 +941,7 @@ boundary conditions and caveats.
   **2.** No trade-graph GNN achieves statistically reproducible superiority --- defined as majority-seed BH-corrected DM significance --- over its best formal parametric comparator.                                        **Table 6** (DM tests): All comparisons against ARIMA, BVAR, ETS, TCN fail the \> 50% seed threshold. Ridge comparisons achieve 60--80% at h=1--2 only.                                    Persistence is *excluded* from formal DM testing (degenerate rule, not an estimated model). Claims apply to MAE loss; RMSE-based DM may differ. ETS is a borderline case.
   **3.** Temporal Graph achieves the lowest out-of-sample point MAE of any model at h=2 and h=4, using the identity (no-trade) graph, within this experimental setting.                                                      **Table 3**: Temporal Graph (identity): MAE = 2.358 pp (h=2), 2.840 pp (h=4). Next best: ARIMA (2.494; 3.716 pp). **Figure 3** (horizon-MAE plot).                                         Statistical reproducibility is limited: majority-seed DM significance against ARIMA is not achieved at any horizon. Rankings reflect means over 20 seeds; per-seed rankings vary.
   **4.** GNN accuracy gains, when present, are associated with the temporal architecture rather than cross-country trade-network propagation, based on the identity-graph ablation.                                          **Table 4**: `identity_no_trade` dominates all 7 trade-graph variants at every horizon. **Figure 1** (heatmap): pattern consistent across GCN and Temporal Graph.                          This is an *associational* finding, not a causal identification. Two alternative hypotheses are proposed (architectural regularisation; temporally coarse edges) but not tested within this study.
-  **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting.                                                                          **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.699/2.494/3.716 pp). BVAR ranks 10th out of 12 overall.                                                                Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010).
+  **5.** BVAR with Minnesota-prior shrinkage does not improve out-of-sample forecast accuracy over ARIMA or ETS in this quarterly EU panel setting.                                                                          **Table 3**: BVAR MAE = 2.341/3.857/6.312 pp at h=1/2/4 vs ARIMA (1.699/2.494/3.716 pp). BVAR ranks 11th out of 13 by h=1 MAE.                                                                Specific to Minnesota-prior BVAR, lag-1, on a 4-variable system. Prior not exhaustively tuned. Consistent with documented prior-selection challenges in volatile post-COVID regimes (Bánbura et al., 2010).
 
 ::: center
 
@@ -1173,7 +1177,7 @@ Wu, Z., Pan, S., Chen, F., Long, G., Zhang, C., and Yu, P. S. (2019). A
 comprehensive study on spatial-temporal graph neural networks. *IEEE
 Transactions on Neural Networks and Learning Systems*, 32(2), 527--540.
 
-Zugner, D., Akbarnejad, A., and Gunnemann, S. (2020). Adversarial
+Zügner, D., Akbarnejad, A., and Günnemann, S. (2020). Adversarial
 attacks on neural networks for graph data. *Proceedings of the 24th ACM
 SIGKDD International Conference on Knowledge Discovery and Data Mining*,
 2847--2856.
