@@ -77,7 +77,7 @@ panel forecasting}},
 \begin{document}
 \maketitle
 \begin{abstract}
-We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1--2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 12 model families under a prospective expanding-window design, testing eight trade-graph constructions against an \emph{identity (no-trade)} graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design --- though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
+We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1--2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 13 model families under a prospective expanding-window design, testing eight trade-graph constructions against an \emph{identity (no-trade)} graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design --- though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
 \end{abstract}
 
 \noindent\textbf{JEL Codes:} C32, C33, C53, E31, E37, F14
@@ -112,7 +112,7 @@ Our contributions are:
 \begin{itemize}
 \tightlist
 \item
-  A fully reproducible, prospective expanding-window benchmark covering 12 model families, 8 graph variants, 3 horizons, and 20 seeds — totalling 39,188 model evaluations and 783,760 forecast rows.
+  A fully reproducible, prospective expanding-window benchmark covering 13 model families, 8 graph variants, 3 horizons, and 20 seeds — totalling 39,188 model evaluations and 783,760 forecast rows.
 \item
   The first systematic ablation of GNN trade-graph topology against an identity-graph control in a macroeconomic panel forecasting context, disentangling architectural from topological sources of forecast accuracy.
 \item
@@ -436,8 +436,8 @@ Graph Neural & GCN & hidden = 16, lr = 0.01, 30 epochs \\
 }
 
 Neural and graph models are trained with 20 random seeds (42--61) to
-quantify estimation uncertainty. Total benchmark: \textbf{38,380 model
-fits}, \textbf{781,740 forecast rows}.
+quantify estimation uncertainty. Total benchmark: \textbf{39,188 model
+fits}, \textbf{783,760 forecast rows}.
 
 Among the baseline model families, the \textbf{Dynamic Factor Model (DFM, 1 common factor)} serves as the designated non-GNN cross-country benchmark. Unlike country-specific models (ARIMA, Ridge) that treat each economy in isolation, the DFM captures common latent inflation co-movement across all 20 EU economies simultaneously. Any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement; failure to beat the DFM would imply that cross-country spillovers, to the extent they exist, are already captured by a single global factor.
 
@@ -726,7 +726,7 @@ represent a clear avenue for future work.
 
 The analysis in this section distinguishes two conceptually separate exercises that must not be conflated.
 
-\textbf{Part A — Heuristic point-forecast rankings (Table 3).} Table 3 ranks all 12 model families by MAE and RMSE. This ranking includes heuristic benchmarks such as \emph{Persistence} (the na\"{i}ve ``no-change'' forecast) alongside formally estimated models. These rankings are purely descriptive: they characterise the relative ordering of out-of-sample forecast errors on the test set. Persistence is retained in the descriptive forecast rankings as a sanity-check benchmark only. Because it is a fixed, non-estimated forecasting rule, it does not satisfy the modelling assumptions underlying the Diebold--Mariano test and is therefore excluded from all formal Diebold--Mariano comparisons. Accordingly, \emph{Persistence is explicitly excluded from all formal DM testing in Part B}.
+\textbf{Part A — Heuristic point-forecast rankings (Table 3).} Table 3 ranks all 13 model families by MAE and RMSE. This ranking includes heuristic benchmarks such as \emph{Persistence} (the na\"{i}ve ``no-change'' forecast) alongside formally estimated models. These rankings are purely descriptive: they characterise the relative ordering of out-of-sample forecast errors on the test set. Persistence is retained in the descriptive forecast rankings as a sanity-check benchmark only. Because it is a fixed, non-estimated forecasting rule, it does not satisfy the modelling assumptions underlying the Diebold--Mariano test and is therefore excluded from all formal Diebold--Mariano comparisons. Accordingly, \emph{Persistence is explicitly excluded from all formal DM testing in Part B}.
 
 \textbf{Part B — Formal DM tests (Table 6).} For each (GNN model, graph variant, horizon $h$) triple, we conduct pairwise Harvey–Leybourne–Newbold corrected DM tests against the following \emph{formally estimated, parametric comparators}: ARIMA, ETS, BVAR, Ridge, TCN, LSTM, and MLP. The null hypothesis is equal predictive accuracy (EPA). For each seed $s \in \{1, \ldots, 20\}$ and comparator $c$, we compute the loss differential sequence:
 
@@ -791,7 +791,7 @@ The pattern in Part A (point rankings) and Part B (DM tests) is coherent: Tempor
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{experiments/results/v2_1/manuscript/performance_by_horizon.png}
-  \caption{\textbf{Figure 3: Performance by Forecast Horizon.} MAE and RMSE as a function of forecast horizon ($h = 1, 2, 4$ quarters) for all 12 model families. Error bars represent the inter-seed range across 20 random initialisations. The Temporal Graph model shows the largest improvement relative to ARIMA at $h = 4$, while GCN leads at $h = 1$.}
+  \caption{\textbf{Figure 3: Performance by Forecast Horizon.} MAE and RMSE as a function of forecast horizon ($h = 1, 2, 4$ quarters) for all 13 model families. Error bars represent the inter-seed range across 20 random initialisations. The Temporal Graph model shows the largest improvement relative to ARIMA at $h = 4$, while GCN leads at $h = 1$.}
   \label{fig:perf_horizon}
 \end{figure}
 
@@ -950,7 +950,7 @@ Core Claim & Supporting Evidence in Paper & Boundary Conditions \& Caveats \\
 
 \section{7. Conclusion}\label{conclusion}
 
-We conduct a large-scale, fully reproducible prospective evaluation of GNN-based inflation forecasting across 20 European economies at three horizons, comparing 12 model families under 8 trade-graph constructions and 20 random seeds. Every finding is conditional on the scope defined in Section 1 and the methodology described in Section 4.
+We conduct a large-scale, fully reproducible prospective evaluation of GNN-based inflation forecasting across 20 European economies at three horizons, comparing 13 model families under 8 trade-graph constructions and 20 random seeds. Every finding is conditional on the scope defined in Section 1 and the methodology described in Section 4.
 
 Our principal findings are:
 
