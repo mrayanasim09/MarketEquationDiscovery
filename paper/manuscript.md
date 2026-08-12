@@ -725,12 +725,12 @@ src="experiments/results/v2_1/manuscript/performance_by_horizon.png"
 style="width:95.0%" />
 <figcaption><strong>Figure 3: Performance by Forecast Horizon.</strong>
 MAE and RMSE as a function of forecast horizon (<span
-class="math inline"><em>h</em> = 1, 2, 4</span> quarters) for all 12
+class="math inline"><em>h</em> = 1, 2, 4</span> quarters) for all 13
 model families. Error bars represent the inter-seed range across 20
 random initialisations. The Temporal Graph model shows the largest
 improvement relative to ARIMA at <span
-class="math inline"><em>h</em> = 4</span>, while GCN leads at <span
-class="math inline"><em>h</em> = 1</span>.</figcaption>
+class="math inline"><em>h</em> = 4</span>, while GCN leads among GNN architectures at <span
+class="math inline"><em>h</em> = 1</span> (narrowly behind overall benchmark leader ARIMA).</figcaption>
 </figure>
 
 <figure id="fig:error_dist" data-latex-placement="H">
