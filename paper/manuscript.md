@@ -535,7 +535,7 @@ is better)*
 percentage points. Results for neural and GNN models are averaged over
 20 random seeds. Best values per horizon in bold. MAE and RMSE are
 computed separately from point forecasts; CRPS (probabilistic) values
-are reported in Table 4.*
+are reported in Table 5.*
 
 Key observations:
 
