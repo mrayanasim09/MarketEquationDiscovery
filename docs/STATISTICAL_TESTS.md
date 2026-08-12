@@ -13,7 +13,7 @@ To account for serial correlation in the forecast error differentials up to hori
 In addition to asymptotic p-values, we compute moving-block bootstrap confidence intervals for the test statistics. The block length is selected dynamically based on the forecast horizon ($L = h + 1$) to preserve the dependence structure of the errors.
 
 ## Multiple Testing Correction
-Given the vast combinatorial space of evaluations (12 models $\times$ 8 graph variants $\times$ 3 horizons $\times$ 20 seeds), the probability of Type I errors (false positives) is significantly inflated.
+Given the vast combinatorial space of evaluations (13 models $\times$ 8 graph variants $\times$ 3 horizons $\times$ 20 seeds), the probability of Type I errors (false positives) is significantly inflated.
 - We apply the **Benjamini-Hochberg False Discovery Rate (FDR)** correction across all pairwise model comparisons within a given horizon.
 - Significance is established only if the FDR-corrected p-value remains below $\alpha = 0.05$.
 

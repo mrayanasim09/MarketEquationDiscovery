@@ -23,9 +23,9 @@ keywords:
 abstract: >
   This study forecasts quarterly CPI inflation (year-over-year) for 20 European
   economies using Graph Neural Networks built on dynamic quarterly trade networks.
-  A prospective expanding-window benchmark (2017Q1–2025Q3) evaluates 12 models
+  A prospective expanding-window benchmark (2017Q1–2025Q3) evaluates 13 models
   across 8 graph adjacency specifications and 3 forecast horizons using
-  38,380 model fits and 781,740 forecast rows.
+  39,188 model fits and 783,760 forecast rows.
 preferred-citation:
   type: article
   authors:

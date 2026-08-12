@@ -12,7 +12,7 @@
 
 ## Abstract
 
-This paper investigates whether explicitly modelling dynamic, directed bilateral trade relationships using Spatio-Temporal Graph Neural Networks (ST-GNNs) improves quarterly CPI inflation (YoY) forecasts for 20 European economies. A prospective expanding-window benchmark spanning 2017Q1–2025Q3 evaluates 12 models across 8 graph adjacency specifications and 3 forecast horizons (h = 1, 2, 4 quarters). The benchmark comprises 38,380 model fits and 781,740 forecast rows, evaluated with RMSE, MAE, sMAPE, CRPS, and 80%/95% prediction interval metrics. Statistical significance is assessed using Harvey-Leybourne-Newbold corrected Diebold-Mariano tests with Bartlett HAC variance, moving-block bootstrap confidence intervals (block = 4, draws = 2,000), and Benjamini-Hochberg FDR correction (q = 0.05).
+This paper investigates whether explicitly modelling dynamic, directed bilateral trade relationships using Spatio-Temporal Graph Neural Networks (ST-GNNs) improves quarterly CPI inflation (YoY) forecasts for 20 European economies. A prospective expanding-window benchmark spanning 2017Q1–2025Q3 evaluates 13 models across 8 graph adjacency specifications and 3 forecast horizons (h = 1, 2, 4 quarters). The benchmark comprises 39,188 model fits and 783,760 forecast rows, evaluated with RMSE, MAE, sMAPE, CRPS, and 80%/95% prediction interval metrics. Statistical significance is assessed using Harvey-Leybourne-Newbold corrected Diebold-Mariano tests with Bartlett HAC variance, moving-block bootstrap confidence intervals (block = 4, draws = 2,000), and Benjamini-Hochberg FDR correction (q = 0.05).
 
 **Key finding:** No graph model achieves statistically significant superiority over non-graph baselines across all 20 initialization seeds after FDR correction. The `temporal_graph` model with an `identity_no_trade` adjacency (effectively ablating cross-country information) ranks first at h = 2 and h = 4, suggesting that temporal dynamics dominate any trade-network signal at the quarterly horizon.
 
@@ -145,8 +145,8 @@ python -m src.models.generate_v2_1_report
 | Prospective test | 2017Q1 – 2025Q3 (expanding-window, no look-ahead) |
 | Forecast horizons | h = 1, 2, 4 quarters ahead |
 | Neural seeds | 20 (seeds 42 – 61) |
-| Total model fits | 38,380 |
-| Total forecast rows | 781,740 |
+| Total model fits | 39,188 |
+| Total forecast rows | 783,760 |
 
 ---
 

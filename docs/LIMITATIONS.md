@@ -13,7 +13,7 @@ Neural network architectures typically require vast amounts of data to converge 
 The spatio-temporal models capture associative predictive correlations, not structural causality. The identification of predictive superiority via trade linkages does not constitute proof of mechanistic contagion channels.
 
 ## Computational Requirements
-Executing the full 20-seed evaluation across 12 models and expanding windows requires substantial computational resources. The requirement for repeated training limits the depth of hyperparameter tuning that could be performed for the deep learning models compared to deterministic baselines.
+Executing the full 20-seed evaluation across 13 models and expanding windows requires substantial computational resources. The requirement for repeated training limits the depth of hyperparameter tuning that could be performed for the deep learning models compared to deterministic baselines.
 
 ## Baseline Convergence
 Certain deterministic baselines, notably VAR and dynamic factor models, exhibited numerical instability and convergence warnings during the earliest windows of the expanding evaluation due to low degrees of freedom.

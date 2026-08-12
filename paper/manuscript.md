@@ -7,7 +7,7 @@ author:
     orcid: 0000-0003-2461-5638
 date: "2026-07-24"
 abstract: |
-  We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1–2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 12 model families under a prospective expanding-window design, testing eight trade-graph constructions against an *identity (no-trade)* graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design — though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
+  We present a controlled prospective ablation benchmark demonstrating that incorporating bilateral trade-network topology into Spatio-Temporal Graph Neural Networks (GNNs) fails to improve out-of-sample forecast accuracy for quarterly CPI inflation across 20 European Union economies (2017Q1–2025Q3). While GNNs are increasingly proposed for macroeconomic forecasting to capture spatial spillovers, their performance gains are rarely ablated against non-spatial controls. We evaluate 13 model families under a prospective expanding-window design, testing eight trade-graph constructions against an *identity (no-trade)* graph control. Across all horizons ($h=1,2,4$), GNNs using the identity graph consistently achieve lower point-forecast error than any trade-based variant, and no trade-graph model achieves majority-seed significance against formally estimated parametric baselines, assessed using formal statistical testing with multiple-seed reproducibility confirmation. These findings suggest that temporal recurrence, rather than trade-network topology, is the more plausible source of any GNN forecast gains within this design — though the absence of architecture-specific tuning means this cannot be fully isolated. For the forecasting community, this negative result establishes that spatial or network-based models should not be assumed to capture meaningful economic spillovers without passing an identity-graph ablation control. This highlights the risk of over-parameterisation in network-based macroeconomic forecasting and underscores the need for rigorous architectural controls.
 keywords:
   - inflation forecasting
   - graph neural networks
@@ -85,7 +85,7 @@ Findings under materially different design choices may differ.
 Our contributions are:
 
 - A fully reproducible, prospective expanding-window benchmark covering
-  12 model families, 8 graph variants, 3 horizons, and 20 seeds ---
+  13 model families, 8 graph variants, 3 horizons, and 20 seeds ---
   totalling 39,188 model evaluations and 783,760 forecast rows.
 
 - The first systematic ablation of GNN trade-graph topology against an
@@ -400,8 +400,8 @@ explicitly in the limitations (Section 6.4).
                       Temporal Graph      hidden = 16, lr = 0.01, 30 epochs
 
 Neural and graph models are trained with 20 random seeds (42--61) to
-quantify estimation uncertainty. Total benchmark: **38,380 model fits**,
-**781,740 forecast rows**.
+quantify estimation uncertainty. Total benchmark: **39,188 model fits**,
+**783,760 forecast rows**.
 
 Among the baseline model families, the **Dynamic Factor Model (DFM, 1 common factor)** serves as the designated non-GNN cross-country benchmark. Unlike country-specific models (ARIMA, Ridge) that treat each economy in isolation, the DFM captures common latent inflation co-movement across all 20 EU economies simultaneously. Any GNN gain over the DFM would suggest that bilateral network structure adds value beyond simple common-factor co-movement; failure to beat the DFM would imply that cross-country spillovers, to the extent they exist, are already captured by a single global factor.
 
@@ -630,7 +630,7 @@ The analysis in this section distinguishes two conceptually separate
 exercises that must not be conflated.
 
 **Part A --- Heuristic point-forecast rankings (Table 3).** Table 3
-ranks all 12 model families by MAE and RMSE. This ranking includes
+ranks all 13 model families by MAE and RMSE. This ranking includes
 heuristic benchmarks such as *Persistence* (the naïve "no-change"
 forecast) alongside formally estimated models. These rankings are purely
 descriptive: they characterise the relative ordering of out-of-sample
@@ -948,7 +948,7 @@ boundary conditions and caveats.
 
 We conduct a large-scale, fully reproducible prospective evaluation of
 GNN-based inflation forecasting across 20 European economies at three
-horizons, comparing 12 model families under 8 trade-graph constructions
+horizons, comparing 13 model families under 8 trade-graph constructions
 and 20 random seeds. Every finding is conditional on the scope defined
 in Section 1 and the methodology described in Section 4.
 

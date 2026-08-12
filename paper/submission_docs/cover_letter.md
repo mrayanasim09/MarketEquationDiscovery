@@ -11,7 +11,7 @@ Dear Editor,
 
 Please consider our manuscript, "Temporal Architecture or Trade Topology? A Prospective Ablation Study of Graph Neural Networks for Inflation Forecasting," for publication in the *International Journal of Forecasting* as a revised submission. 
 
-The study presents a controlled prospective ablation benchmark for quarterly CPI inflation forecasting across 20 EU economies. Its central contribution is to isolate whether bilateral trade-network topology adds out-of-sample predictive value beyond graph architecture alone. Across 12 model families, 8 graph constructions, 3 horizons, and 20 random seeds (amounting to over 38,000 model fits), identity-graph controls consistently outperform trade-based graphs within the studied scope. 
+The study presents a controlled prospective ablation benchmark for quarterly CPI inflation forecasting across 20 EU economies. Its central contribution is to isolate whether bilateral trade-network topology adds out-of-sample predictive value beyond graph architecture alone. Across 13 model families, 8 graph constructions, 3 horizons, and 20 random seeds (amounting to 39,188 model fits), identity-graph controls consistently outperform trade-based graphs within the studied scope. 
 
 We believe this negative but methodologically important result is highly relevant to readers interested in forecasting evaluation, graph learning, and macroeconomic prediction. Specifically, it establishes the necessity of identity-graph ablation as a standard control when evaluating network-based models, highlighting the risk of over-parameterisation in macroeconomic panel forecasting.
 

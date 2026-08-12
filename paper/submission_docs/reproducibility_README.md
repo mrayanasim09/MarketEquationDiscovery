@@ -25,7 +25,7 @@ This runs the following six steps end-to-end:
 | Step | Module | Description |
 |------|--------|-------------|
 | 1 | `validate_v2_1_contract` | Verifies SHA256 hashes of processed inputs |
-| 2 | `run_benchmark_engine_v2_1` | Runs all 12 model families × 8 graphs × 3 horizons × 20 seeds |
+| 2 | `run_benchmark_engine_v2_1` | Runs all 13 model families × 8 graphs × 3 horizons × 20 seeds |
 | 3 | `validate_v2_1_results` | Verifies SHA256 hashes of all output artefacts |
 | 4 | `analyze_v2_1_results` | Generates Tables 3–6 and significance summaries |
 | 5 | `generate_v2_1_manuscript` | Generates Tables 1–6 (`.tex` + `.csv`) and 6 diagnostic figures |
@@ -37,7 +37,7 @@ Estimated runtime: ~12 hours on Apple Silicon M-series; longer on CPU-only hardw
 
 All outputs are written to `experiments/results/v2_1/`:
 
-- `forecasts.parquet` — 781,740 forecast rows (all models × countries × origins × seeds)
+- `forecasts.parquet` — 783,760 forecast rows (all models × countries × origins × seeds)
 - `metrics.parquet` — MAE / RMSE / CRPS per (model, variant, horizon, seed)
 - `dm_tests.parquet` — Diebold-Mariano test statistics and BH-corrected p-values
 - `manuscript/table_*.tex` and `.csv` — LaTeX and CSV tables
